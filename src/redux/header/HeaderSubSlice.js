@@ -2,13 +2,24 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 const Baseurl = process.env.NEXT_PUBLIC_API_URL;
 
+
+const getStoredSubCategories = () => {
+  if (typeof window === "undefined") return [];
+  try {
+    const data = localStorage.getItem("subCategories");
+    if (!data || data === "undefined") return []; // <-- extra check
+    const parsed = JSON.parse(data);
+    return Array.isArray(parsed)
+      ? parsed.sort((a, b) => (a.createdAt > b.createdAt ? 1 : -1))
+      : [];
+  } catch (e) {
+    console.error("Failed to parse subCategories from localStorage", e);
+    return [];
+  }
+};
+
 const initialState = {
-  subCategories:
-    typeof window !== "undefined" && localStorage.getItem("subCategories")
-      ? JSON.parse(localStorage.getItem("subCategories")).sort((a, b) =>
-          a.createdAt > b.createdAt ? 1 : -1
-        )
-      : [],
+  subCategories: getStoredSubCategories(),
   status: "idle",
   error: null,
 };

@@ -10,20 +10,32 @@ import { AiOutlineMinus, AiOutlinePlus } from "react-icons/ai";
 import { FaShippingFast } from "react-icons/fa";
 import { BiSolidCoinStack } from "react-icons/bi";
 import { useDispatch, useSelector } from "react-redux";
-import { addToCart, decrementCart, removeFromCart } from "@/redux/cart/CartSlice";
+import {
+  addToCart,
+  decrementCart,
+  removeFromCart,
+} from "@/redux/cart/CartSlice";
 import { useRouter } from "next/navigation";
 const CartLeft = () => {
-  const { CartItems, TotalMrp, TotalPrice, amountToGetfeeDelivery, DeliveryCharge, amountToGetfeeDeliveryPercentage } = useSelector((state) => state.cart);
-  const { loginData, isAuth, user_address, current_address } = useSelector((store) => store.Athentication);
-  const dispatch = useDispatch()
+  const {
+    CartItems,
+    TotalMrp,
+    TotalPrice,
+    amountToGetfeeDelivery,
+    DeliveryCharge,
+    amountToGetfeeDeliveryPercentage,
+  } = useSelector((state) => state.cart);
+  const { loginData, current_address } = useSelector(
+    (store) => store.Athentication
+  );
+  const dispatch = useDispatch();
   const [close, setClose] = useState(true);
-  const [count, setCount] = useState(1);
   const [addressModel, setAddressModel] = useState(false);
   const [Remove, setRemove] = useState(false);
   const [info, setInfo] = useState(false);
   const infoRef = useRef(null);
   const [isCoupon, setIsCoupon] = useState(false);
-  const router = useRouter()
+  const router = useRouter();
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -70,20 +82,22 @@ const CartLeft = () => {
       day: "2-digit",
       timeZone,
     }).format(date);
-  const deliveryTime = "11:00 PM"
+  const deliveryTime = "11:00 PM";
   const { today, tomorrow, after3Days } = useMemo(() => {
     const now = new Date();
     const t = (d) => new Date(d.getTime()); // clone
     const today = t(now);
-    const tomorrow = t(now); tomorrow.setDate(tomorrow.getDate() + 1);
-    const after3Days = t(now); after3Days.setDate(after3Days.getDate() + 3);
+    const tomorrow = t(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const after3Days = t(now);
+    after3Days.setDate(after3Days.getDate() + 3);
     return { today, tomorrow, after3Days };
   }, []);
   return (
     <>
       <div className="hidden sm:flex flex-row justify-between w-full items-center px-3 py-3 bg-white">
         <span className="text-base ">From Saved Address</span>
-        <div className="whitespace-nowrap text-xs">
+        {/* <div className="whitespace-nowrap text-xs">
           <Button
             type="submit"
             variant="outlined"
@@ -93,7 +107,7 @@ const CartLeft = () => {
           >
             Enter Delivery Pincode
           </Button>
-        </div>
+        </div> */}
       </div>
 
       {close && (
@@ -112,10 +126,12 @@ const CartLeft = () => {
               />
             </div>
           ) : (
-            <div className="bg-[#d1e7dd] py-1.5 flex justify-between items-center px-5 rounded">
+            <div className="bg-[#d1e7dd] py-2 mb-2 flex justify-between items-center px-5 rounded">
               <div className="flex flex-row gap-1 items-center text-sm lg:text-base">
                 <FaShippingFast className="text-[#0f5132]" />
-                <span className="text-[#0f5132] font-bold">Congratulations!</span>
+                <span className="text-[#0f5132] font-bold">
+                  Congratulations!
+                </span>
                 <span className="text-[#0f5132] text-[0.7rem] sm:text-base font-medium">
                   You've got free shipping!
                 </span>
@@ -132,42 +148,43 @@ const CartLeft = () => {
       {/* current_address */}
       {/* {current_address?.HNo}, {current_address?.locality}, {current_address?.City},{" "}
                       {current_address?.State} - {current_address?.Pincode} */}
-      {
-        current_address &&
+      {current_address && (
         <div className="shadow rounded-md p-4 bg-white flex justify-between items-start">
           <div className="flex flex-col gap-1">
             <p className="text-[12px] sm:text-sm text-gray-800  checkOutStyles">
               Deliver to:{" "}
-              <span className="font-semibold text-[#111112] checkOutStyles">{loginData?.Name}, {current_address?.Pincode}</span>
+              <span className="font-semibold  text-cyan-800 text-shadow-md  text-sm checkOutStyles">
+                {loginData?.Name}, {current_address?.Pincode}
+              </span>
               <span className="ml-2 px-1 pppo9y-0.5 text-[10px] sm:text-xs border rounded-sm text-gray-600 bg-gray-100">
                 {current_address?.Type}
               </span>
             </p>
-            <p className=" text-[10px] sm:text-sm text-[#717478] mt-1 checkOutStyles">
-              {current_address?.HNo}, {current_address?.locality}, {current_address?.City},
-              {current_address?.State} 
+            <p className="text-cyan-800 text-sm  flex flex-row items-center select-none checkOutStyles">
+              {current_address?.HNo}, {current_address?.locality},{" "}
+              {current_address?.City},{current_address?.State}
             </p>
           </div>
-          <button className="text-blue-600 text-sm h-7 w-20 sm:h-10 sm:w-23 rounded-sm border border-[#e0e0e0] shadow-sm checkOutStyles" onClick={()=>router.push("/accounts/address")}>
+          <button
+            className="text-blue-600 text-sm h-7 w-20 sm:h-10 sm:w-23 rounded-sm border border-[#e0e0e0] shadow-sm checkOutStyles"
+            onClick={() => router.push("/accounts/address")}
+          >
             Change
           </button>
         </div>
-      }
-
+      )}
 
       <div className="flex flex-col g-0">
         {CartItems?.length > 0 &&
-
           CartItems.map((item, index) => (
-
             <React.Fragment key={index}>
               <div className="flex flex-row p-3 bg-white hover:shadow-md transition-shadow duration-300 rounded-sm shadow">
                 {/* Product Image + Quantity */}
-                <div className="w-1/5 flex flex-col items-center gap-5">
+                <div className="w-1/5 h-auto flex flex-col items-center gap-5">
                   <div>
                     <img
                       src={item.thumbnail}
-                      className="w-30 h-30 object-contain hover:scale-105 transition-transform"
+                      className="w-30 h-full object-contain hover:scale-105 transition-transform"
                       alt={item.name}
                     />
                   </div>
@@ -189,33 +206,35 @@ const CartLeft = () => {
                 {/* Product Details */}
                 <div className="flex flex-col justify-between pl-8 w-3/4">
                   <div className="w-full flex flex-col">
-                    <span className="text-[1rem] hidden sm:block text-black font-medium text-[#212121]">
-                      {item.name}
+                    <div className="text-[1rem] hidden sm:block  font-medium text-[#212121]">
+                      {item.name.replace(/^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$/g, "")}
+                    </div>
+                    <span className="text-[1rem] block sm:hidden text-black line-clamp-1 font-medium line-clamp-1">
+                      {item.name.replace(/^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$/g, "")}
                     </span>
-                    <span className="text-[1rem] block sm:hidden text-black font-medium">
-                      {item.name.slice(0, 20)}...
-                    </span>
-                    <span className="text-[.9rem] text-gray-600 font-normal">
-                      {item.storage || "Variant Info"}
-                    </span>
-                    <span className="text-[.8rem] text-gray-600">
+                    {item?.storage?.length === 0 && (
+                      <span className="text-[.8rem]  text-gray-500 font-normal ">
+                        {item.storage || "Variant Info"}
+                      </span>
+                    )}
+                    {/* <span className="text-[.8rem] text-black">
                       Seller : {item.shopName}
-                    </span>
+                    </span> */}
 
                     {/* Price Section */}
                     <div className="flex flex-row gap-2 items-center ">
-                      <span className="line-through tex-gray-400 text-sm">
+                      <span className="line-through tex-gray-400 text-xs sm:text-sm">
                         ₹{item.Mrp.toLocaleString()}
                       </span>
-                      <span className="text-xl text-[#212121] font-semibold">
+                      <span className="sm:text-xl text-[1rem] text-blue-900 font-semibold">
                         ₹{item.Price.toLocaleString()}
                       </span>
-                      <span className="text-green-700 text-sm flex flex-row gap-2 items-center">
-                        {Math.round(
-                          ((item.Mrp - item.Price) / item.Mrp) * 100
-                        )}
+                      <span className="text-green-700 sm:text-sm text-xs flex flex-row gap-2 items-center">
+                        {Math.round(((item.Mrp - item.Price) / item.Mrp) * 100)}
                         % Off{" "}
-                        <IoIosInformationCircle onClick={() => setInfo(!info)} />
+                        <IoIosInformationCircle
+                          onClick={() => setInfo(!info)}
+                        />
                       </span>
                     </div>
 
@@ -226,13 +245,16 @@ const CartLeft = () => {
                     </div>
                     <div className="flex text-sm flex-row gap-2 items-center">
                       Or Pay ₹ {(item.Price / 12).toFixed(0)} +
-                      <BiSolidCoinStack color="yellow" />100
+                      <BiSolidCoinStack color="yellow" />
+                      100
                     </div>
                   </div>
                   {/* Mobile Delivery Info */}
                   <div className="block lg:hidden ">
                     <span className="text-xs text-center whitespace-nowrap">
-                      <strong className="text-sm">Delivery on{" "}{formatInTZ(tomorrow)}</strong>
+                      <strong className="text-sm">
+                        Delivery on {formatInTZ(tomorrow)}
+                      </strong>
                     </span>
                   </div>
                   {/* Buttons */}
@@ -265,30 +287,32 @@ const CartLeft = () => {
                 <div className="hidden lg:block">
                   <span className="text-sm whitespace-nowrap">
                     {/* Delivery by 11 PM, Tomorrow */}
-                    <strong className="text-sm">Delivery on {formatInTZ(tomorrow)}</strong>
+                    <strong className="text-sm">
+                      Delivery on {formatInTZ(tomorrow)}
+                    </strong>
                   </span>
                 </div>
               </div>
 
               {/* Mobile Buttons Row */}
-              <div className="w-full bg-white lg:px-5 flex lg:text-base text-xs justify-between items-center gap-1 flex-row sm:h-0 h-12 lg:my-0.5 border-b border-[#f0f0f0]">
-                {/* <span className="block lg:hidden cursor-pointer border-gray-300 border-r text-black lg:w-[25%] w-[35%] px-2 flex justify-center items-center h-full flex-row text-center hover:bg-gray-100">
+              <div className="w-full bg-white lg:px-5 flex lg:text-base text-xs justify-between items-center flex-row sm:h-0 h-12 lg:my-0.5 border border-[#f0f0f0]">
+                <span className="block lg:hidden w-full cursor-pointer border-gray-300 border-r text-black lg:w-[25%] w-[35%] px-2 flex justify-center items-center h-full flex-row text-center hover:bg-gray-100">
                   Save For Later
-                </span> */}
+                </span>
                 <span
                   onClick={() => handleRemove(item)}
-                  className=" lg:hidden cursor-pointer border-gray-300 border-r text-black lg:w-[25%] w-[35%] px-2 flex justify-center items-center h-full flex-row text-center hover:bg-gray-100"
+                  className=" lg:hidden cursor-pointer border-gray-300 border-r text-black w-full px-2 flex justify-center items-center h-full flex-row text-center hover:bg-gray-100"
                 >
                   Remove
                 </span>
-                <div className="block lg:hidden align-center text-center justift-center">
+                {/* <div className="block lg:hidden align-center text-center justift-center border w-full h-full border-[#f0f0f0] pl-2">
                   <span
                     onClick={() => setIsCoupon(!isCoupon)}
-                    className="cursor-pointer mr-3 rounded-sm text-black flex justify-center items-center h-full flex-row text-center hover:bg-gray-100 transition-colors"
+                    className="cursor-pointer mr-3 rounded-sm text-black flex justify-center items-center w-full h-full flex-row text-center hover:bg-gray-100 transition-colors"
                   >
                     Apply Coupon
                   </span>
-                </div>
+                </div> */}
               </div>
             </React.Fragment>
           ))}
@@ -395,7 +419,7 @@ const CartLeft = () => {
       {isCoupon && (
         <div
           px-4
-          className="inset-0 top-0 fixed bg-black/30 z-[999] flex justify-center items-center"
+          className="inset-0 top-0 fixed bg-black/30 sm:px-0 px-3 z-[999] flex justify-center items-center"
         >
           <div className="w-full max-w-md p-5 bg-white rounded-lg animate-fadeIn">
             <div className="w-full justify-between flex mb-3 items-center">

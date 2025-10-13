@@ -147,7 +147,7 @@ export const updateAddress = createAsyncThunk(
 export const deleteAddress = createAsyncThunk(
   "Athentication/deleteAddress",
   async (formData, thunkAPI) => {
-    try {      
+    try {
       const config = {
         Headers: { "Content-Type": "application/json" },
       };
@@ -228,6 +228,7 @@ const AthenticationSlice = createSlice({
       state.loginData = "";
       state.isAuth = false;
       state.current_address = "";
+      state.mob = "";
       state.user_address = [];
     },
     setCurrentAddress(state, action) {
@@ -241,7 +242,6 @@ const AthenticationSlice = createSlice({
     },
     updateAddressLocally(state, action) {
       state.user_address = action.payload;
-      
       state.current_address = state.user_address[0];
       if (typeof window !== "undefined") {
         localStorage.setItem(
@@ -289,7 +289,7 @@ const AthenticationSlice = createSlice({
         state.userLoading = false;
         state.error = action.payload;
       });
-      builder
+    builder
       .addCase(add_Address.pending, (state) => {
         state.userLoading = true;
       })
@@ -302,7 +302,7 @@ const AthenticationSlice = createSlice({
             localStorage.setItem(
               "user_address",
               JSON.stringify(state.loginData.Addresses)
-            )
+            );
           }
         }
         state.userLoading = false;
@@ -324,7 +324,7 @@ export const {
   removeAddress,
   setCheckoutAuthenticationStatus,
   set_checkout_authentication_status,
-  setCheckoutStep
+  setCheckoutStep,
 } = AthenticationSlice.actions;
 
 export default AthenticationSlice.reducer;

@@ -67,13 +67,11 @@ const Coupons = () => {
   const { availableCoupons } = useSelector((state) => state.coupon);
   const router = useRouter();
   const [modal, setModal] = useState({ type: null, index: null });
-
   // Format date to display in a user-friendly way
   const formatDate = (dateString) => {
     const options = { year: 'numeric', month: 'short', day: 'numeric' };
     return new Date(dateString).toLocaleDateString('en-US', options);
   };
-
   return (
     <div className="sm:px-4 px-2 relative py-2 w-full sm:h-[70vh] sm:mb-0 mb-10 overflow-y-auto">
       <div className="font-semibold flex flex-row justify-between items-center gap-2 text-lg text-[#2f415d] mb-4">

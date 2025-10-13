@@ -1,153 +1,186 @@
-
 "use client";
-import { Checkbox, FormControlLabel } from "@mui/material";
-import { FaShippingFast } from "react-icons/fa";
-import { FaAngleDown, FaAngleUp } from "react-icons/fa";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
-import { getCartData, hydrateCart } from "@/redux/cart/CartSlice";
+import { FaAngleDown, FaAngleUp } from "react-icons/fa";
+import { getCartData } from "@/redux/cart/CartSlice";
 
 const CartRight = () => {
   const [priceDetails, setPriceDetails] = useState(true);
   const router = useRouter();
+  const dispatch = useDispatch();
 
-  // Get cart state from Redux store
   const {
     CartItems,
-    TotalMrp,
-    TotalPrice,
-    TotalAmount,
-    Netpayable,
-    SmallCartFee,
     DeliveryCharge,
+    SmallCartFee,
     RainFee,
     HandlingFee,
     wallet,
     coupon,
-    amountToGetfeeDelivery
+    amountToGetfeeDelivery,
   } = useSelector((state) => state.cart);
 
-  // Calculate values
-  const itemCount = CartItems.reduce((total, item) => total + item.cart_Quentity, 0);
-  const discountAmount = TotalMrp - TotalPrice;
-  const totalSavings = discountAmount + (coupon || 0) + (DeliveryCharge === 0 ? 40 : 0);
-  const freeShippingThreshold = 500; // Your threshold for free shipping
-
-  const dispatch = useDispatch()
   useEffect(() => {
     dispatch(getCartData());
   }, [dispatch]);
+
+  const TotalMrp = CartItems.reduce(
+    (total, item) => total + (item.Product_total_Mrp || 0),
+    0
+  );
+  const TotalPrice = CartItems.reduce(
+    (total, item) => total + (item.Product_total_Price || 0),
+    0
+  );
+  const discountAmount = Math.max(TotalMrp - TotalPrice, 0);
+  const couponDiscount = coupon || 0;
+  const totalSavings = discountAmount + couponDiscount;
+
+  const calculatedTotalAmount =
+    TotalPrice +
+    (DeliveryCharge || 0) +
+    (SmallCartFee || 0) +
+    (RainFee || 0) +
+    (HandlingFee || 0) -
+    couponDiscount -
+    (wallet || 0);
+
+  const calculatedNetPayable = Math.max(calculatedTotalAmount, 0);
+
   return (
     <div className="bg-white w-full px-3 py-3 rounded-sm">
+      {/* Price Details Header */}
       <div
-        className="flex flex-row justify-between items-center cursor-pointer"
+        className="flex justify-between items-center cursor-pointer"
         onClick={() => setPriceDetails(!priceDetails)}
       >
-        <span className="text-gray-700 text-xl">Price Details</span>
+        <span className="text-gray-700 sm:text-xl text-md font-semibold">
+          Price Details
+        </span>
         {priceDetails ? <FaAngleUp /> : <FaAngleDown />}
       </div>
 
       {priceDetails && (
-        <div className="border-b py-3 border-gray-200">
-          <div className="grid grid-cols-2 my-2">
-            <span>Price ({CartItems?.length} {CartItems?.length === 1 ? 'item' : 'items'})</span>
-            <span className="flex justify-end">₹{TotalMrp.toLocaleString()}</span>
+        <div className="border-b py-3 border-gray-200 space-y-2 ">
+          {/* Total MRP */}
+          <div className="grid grid-cols-2">
+            <span>Total MRP</span>
+            <span className="flex justify-end line-through text-gray-500">
+              ₹{TotalMrp.toLocaleString()}
+            </span>
           </div>
 
-          <div className="grid grid-cols-2 my-2">
+          {/* Total Price */}
+          <div className="grid grid-cols-2">
+            <span>Total Price</span>
+            <span className="flex justify-end">
+              ₹{TotalPrice.toLocaleString()}
+            </span>
+          </div>
+
+          {/* Discount */}
+          <div className="grid grid-cols-2">
             <span>Discount</span>
             <span className="flex justify-end text-green-600">
               -₹{discountAmount.toLocaleString()}
             </span>
           </div>
 
-          <div className="grid grid-cols-2 my-2">
-            <span className="flex items-center gap-2">Shipping</span>
-            <span className={`flex justify-end ${DeliveryCharge === 0 ? 'text-green-600' : ''}`}>
-              {DeliveryCharge === 0 ? 'FREE' : `₹${DeliveryCharge.toLocaleString()}`}
+          {/* Coupon */}
+          <div className="grid grid-cols-2">
+            <span>Coupon</span>
+            <span
+              className={`flex justify-end ${
+                couponDiscount > 0 ? "text-green-600" : "text-gray-400"
+              }`}
+            >
+              {couponDiscount > 0
+                ? `-₹${couponDiscount.toLocaleString()}`
+                : "Not Available"}
             </span>
           </div>
 
-          {SmallCartFee > 0 && (
-            <div className="grid grid-cols-2 my-2">
-              <span>Small Cart Fee</span>
-              <span className="flex justify-end">₹{SmallCartFee.toLocaleString()}</span>
-            </div>
-          )}
-
-          {RainFee > 0 && (
-            <div className="grid grid-cols-2 my-2">
-              <span>Rain Protection Fee</span>
-              <span className="flex justify-end">₹{RainFee.toLocaleString()}</span>
-            </div>
-          )}
-
-          <div className="grid grid-cols-2 my-2">
-            <span>Handling Fee</span>
-            <span className="flex justify-end">₹{HandlingFee.toLocaleString()}</span>
-          </div>
-
-          {coupon > 0 && (
-            <div className="grid grid-cols-2 my-2">
-              <span>Coupon Discount</span>
-              <span className="flex justify-end text-green-600">
-                -₹{coupon.toLocaleString()}
-              </span>
-            </div>
-          )}
-
+          {/* Wallet */}
           {wallet > 0 && (
-            <div className="grid grid-cols-2 my-2">
+            <div className="grid grid-cols-2">
               <span>Wallet Balance</span>
               <span className="flex justify-end text-green-600">
                 -₹{wallet.toLocaleString()}
               </span>
             </div>
           )}
+
+          {/* Other Charges */}
+          {DeliveryCharge > 0 && (
+            <div className="grid grid-cols-2">
+              <span>Shipping</span>
+              <span className="flex justify-end">
+                ₹{DeliveryCharge.toLocaleString()}
+              </span>
+            </div>
+          )}
+          {SmallCartFee > 0 && (
+            <div className="grid grid-cols-2">
+              <span>Small Cart Fee</span>
+              <span className="flex justify-end">
+                ₹{SmallCartFee.toLocaleString()}
+              </span>
+            </div>
+          )}
+          {RainFee > 0 && (
+            <div className="grid grid-cols-2">
+              <span>Rain Protection Fee</span>
+              <span className="flex justify-end">
+                ₹{RainFee.toLocaleString()}
+              </span>
+            </div>
+          )}
+          {HandlingFee > 0 && (
+            <div className="grid grid-cols-2">
+              <span>Handling Fee</span>
+              <span className="flex justify-end">
+                ₹{HandlingFee.toLocaleString()}
+              </span>
+            </div>
+          )}
+
+          {/* You Saved */}
+          <div className="grid grid-cols-2 text-green-600">
+            <span>You Saved</span>
+            <span className="flex justify-end">
+              ₹{totalSavings.toLocaleString()}
+            </span>
+          </div>
         </div>
       )}
 
+      {/* Total Amount */}
       <div className="grid grid-cols-2 my-4 py-2 border-b border-gray-200">
-        <span className="font-semibold text-lg">Total Amount</span>
+        <span className="text-sm sm:text-lg font-semibold">Total Amount</span>
         <span className="flex justify-end font-semibold text-lg">
-          ₹{TotalAmount.toLocaleString()}
+          ₹{calculatedTotalAmount.toLocaleString()}
         </span>
       </div>
 
-      {Netpayable !== TotalAmount && (
+      {/* Net Payable */}
+      {calculatedNetPayable !== calculatedTotalAmount && (
         <div className="grid grid-cols-2 my-2">
           <span className="font-semibold">Net Payable</span>
           <span className="flex justify-end font-semibold">
-            ₹{Netpayable.toLocaleString()}
+            ₹{calculatedNetPayable.toLocaleString()}
           </span>
         </div>
       )}
 
-      <div className="text-center my-4">
-        <span className="font-semibold text-green-600">
-          You saved ₹{totalSavings.toLocaleString()}
-        </span>
-      </div>
-
+      {/* Free Shipping Info */}
       {DeliveryCharge > 0 && amountToGetfeeDelivery > 0 && (
         <div className="text-center mb-4 text-sm text-gray-600">
           Add ₹{amountToGetfeeDelivery.toLocaleString()} more for free shipping
         </div>
       )}
 
-      <div className="flex flex-col gap-2 text-gray-600">
-        <div className="flex items-center gap-2">
-          <FaShippingFast size={18} />
-          <span>Shipping & taxes calculated at checkout</span>
-        </div>
-        <FormControlLabel
-          control={<Checkbox required />}
-          label="I agree with terms and conditions"
-        />
-      </div>
-
-      {/* Desktop Checkout Button */}
+      {/* Checkout Buttons */}
       <div className="hidden lg:block mt-4">
         <button
           onClick={() => router.push("/checkout")}
@@ -156,18 +189,20 @@ const CartRight = () => {
           Proceed To Checkout
         </button>
       </div>
-      {/* Mobile Checkout Button */}
-      <div className="lg:hidden fixed bottom-0 left-0 z-[100]  right-0 bg-white border-t border-gray-200 py-2 px-4">
+
+      <div className="lg:hidden fixed bottom-0 left-0 z-[100] px-4 right-0 bg-white border-t border-gray-200 p-2">
         <div className="flex justify-between items-center">
           <div>
-            <div className="text-sm">Total Amount</div>
-            <div className="font-semibold">₹{Netpayable.toLocaleString()}</div>
+            <div className="text-xs">Total Amount</div>
+            <div className="font-semibold text-sm">
+              ₹{calculatedNetPayable.toLocaleString()}
+            </div>
           </div>
           <button
             onClick={() => router.push("/checkout")}
-            className="px-6 py-2 bg-[#143741] hover:bg-[#0e2a33] text-white rounded-sm text-sm transition-colors"
+            className="px-7 py-2 bg-[#143741] hover:bg-[#0e2a33] text-white text-sm transition-colors"
           >
-            Checkout
+            Place Order
           </button>
         </div>
       </div>

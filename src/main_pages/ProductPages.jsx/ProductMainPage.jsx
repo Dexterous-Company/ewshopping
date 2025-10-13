@@ -20,9 +20,8 @@ const ProductMainPage = ({ slug }) => {
   }, [slug]);
 
   return (
-   <div className="bg-[#F1F2F4] md:bg-transparent mb-10">
+   <div className="bg-[#F1F2F4]  md:bg-transparent mb-10 px-0 sm:px-10">
       <ProductLayout />
-      {/* <TabsListing /> */}
     </div>
   );
 };

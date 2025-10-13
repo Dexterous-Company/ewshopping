@@ -1,62 +1,193 @@
 "use client";
-import React, { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { add_Address } from '@/redux/athentication/Athentication';
-import { RxCross2 } from 'react-icons/rx';
+import React, { useState, useEffect, useRef } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { add_Address } from "@/redux/athentication/Athentication";
+import { RxCross2 } from "react-icons/rx";
+import {
+  FaUser,
+  FaPhone,
+  FaHome,
+  FaMapMarkerAlt,
+  FaLandmark,
+  FaBuilding,
+  FaFlag,
+  FaSearch,
+  FaSpinner,
+} from "react-icons/fa";
+import toast from "react-hot-toast";
+import useGoogleMapsAutocomplete from "@/hooks/useGoogleMapsAutocomplete";
+
+const InputField = ({
+  label,
+  value,
+  onChangeText,
+  placeholder,
+  icon,
+  keyboardType = "text",
+  maxLength,
+  error,
+  onBlur,
+  editable = true,
+  type = "text",
+}) => {
+  return (
+    <div className="w-full mb-4">
+      <label className="block text-sm font-medium text-gray-700 mb-1">
+        {label}
+        {error && <span className="text-red-500 ml-1">*</span>}
+      </label>
+      <div
+        className={`relative flex items-center rounded-lg border ${
+          error ? "border-red-500 bg-red-50" : "border-gray-300 bg-gray-50"
+        }`}
+      >
+        <div className="flex items-center justify-center w-12 h-12 bg-gray-800 rounded-l-lg">
+          {icon}
+        </div>
+        <input
+          type={type}
+          className="flex-1 px-3 py-3 text-gray-900 bg-transparent outline-none"
+          value={value}
+          onChange={(e) => onChangeText(e.target.value)}
+          placeholder={placeholder}
+          onBlur={onBlur}
+          disabled={!editable}
+          maxLength={maxLength}
+        />
+      </div>
+      {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+    </div>
+  );
+};
 
 const AddAddressForm = ({ setShowAddress }) => {
   const dispatch = useDispatch();
   const { loginData } = useSelector((state) => state.Athentication);
-  const [formData, setFormData] = useState({
-    Name: loginData?.Name || "",
-    Mobile: loginData?.Mobile || "",
-    Alternative_Mobile: "",
-    HNo: "",
-    Area: "",
-    locality: "",
-    LandMark: "",
-    City: "",
-    State: "",
-    Pincode: "",
-    Type: "Home",
-    clientId: loginData?._id || ""
-  });
 
-  const [focusedFields, setFocusedFields] = useState({
-    Name: false,
-    Mobile: false,
-    HNo: false,
-    locality: false,
-    City: false,
-    State: false,
-    Pincode: false,
-    Alternative_Mobile: false
-  });
+  const GOOGLE_MAPS_API_KEY = "AIzaSyD9On5PRHixcY4UO4T-0DowNTcDyBhMrlI";
+  const {
+    isLoaded,
+    loadError,
+    isGettingLocation,
+    locationError,
+    initAutocomplete,
+    getCurrentLocation,
+    reverseGeocode,
+    fillAddressFields,
+    setLocationError,
+  } = useGoogleMapsAutocomplete(GOOGLE_MAPS_API_KEY);
 
-  const [errors, setErrors] = useState({
-    Name: "",
-    Mobile: "",
-    HNo: "",
-    locality: "",
-    City: "",
-    State: "",
-    Pincode: ""
-  });
+  const autocompleteInputRef = useRef(null);
+  const autocompleteInstanceRef = useRef(null);
 
-  const handleFocus = (field) => {
-    setFocusedFields(prev => ({ ...prev, [field]: true }));
-  };
+  const [searchMode, setSearchMode] = useState(true); // true for search, false for live location
+  const [locationData, setLocationData] = useState(null);
+  const [currentLocationLoading, setCurrentLocationLoading] = useState(false);
 
-  const handleBlur = (field, value) => {
-    if (!value) {
-      setFocusedFields(prev => ({ ...prev, [field]: false }));
+  const [Name, setName] = useState(loginData?.Name || "");
+  const [Mobile, setMobile] = useState(loginData?.Mobile || "");
+  const [Alternative_Mobile, setAlternative_Mobile] = useState("");
+  const [HNo, setHNo] = useState("");
+  const [Area, setArea] = useState("");
+  const [locality, setLocality] = useState("");
+  const [LandMark, setLandMark] = useState("");
+  const [City, setCity] = useState("");
+  const [State, setState] = useState("");
+  const [Pincode, setPincode] = useState("");
+  const [Type, setType] = useState("Home");
+
+  const [buttonPress, setbuttonPress] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [isPincodeValid, setIsPincodeValid] = useState(false);
+  const [showAddressNew, setShowAddressNew] = useState(false);
+
+  // Initialize Google Maps Autocomplete when loaded
+  useEffect(() => {
+    if (
+      isLoaded &&
+      autocompleteInputRef.current &&
+      !autocompleteInstanceRef.current
+    ) {
+      const autocomplete = initAutocomplete(autocompleteInputRef.current);
+
+      if (autocomplete) {
+        autocompleteInstanceRef.current = autocomplete;
+
+        autocomplete.addListener("place_changed", () => {
+          const place = autocomplete.getPlace();
+          if (place && place.address_components) {
+            const addressData = fillAddressFields(place);
+            updateFormWithAddressData(addressData);
+          }
+        });
+      }
     }
-    validateField(field, value);
+  }, [isLoaded, initAutocomplete, fillAddressFields]);
+
+  const updateFormWithAddressData = async (addressData) => {
+    setHNo(addressData.HNo || HNo);
+    setArea(addressData.Area || Area);
+    setLocality(addressData.locality || locality);
+    setCity(addressData.City || City);
+    setState(addressData.State || State);
+    setPincode(addressData.Pincode || Pincode);
+    setLandMark(addressData.LandMark || LandMark);
+
+    // Also update the search input with the formatted address
+    if (autocompleteInputRef.current && addressData.formatted_address) {
+      autocompleteInputRef.current.value = addressData.formatted_address;
+    }
+    if (addressData.Pincode.length === 6) {
+      const success = await fetchCityStateByPincode(addressData.Pincode);
+      setIsPincodeValid(success);
+    } else {
+      setIsPincodeValid(false);
+      setCity("");
+      setState("");
+      setArea("");
+    }
   };
+
+  const handleUseCurrentLocation = async () => {
+    try {
+      setCurrentLocationLoading(true);
+      setLocationError(null);
+      const position = await getCurrentLocation();
+      const place = await reverseGeocode(position.lat, position.lng);
+
+      if (place) {
+        const addressData = fillAddressFields(place);
+        addressData.formatted_address = place.formatted_address;
+        updateFormWithAddressData(addressData);
+
+        // Also update the search input with the formatted address
+        if (autocompleteInputRef.current) {
+          autocompleteInputRef.current.value = place.formatted_address;
+        }
+      }
+    } catch (error) {
+      console.error("Error getting current location:", error);
+      setLocationError(error.message);
+      toast.error(error.message);
+    } finally {
+      setCurrentLocationLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (Type === "Other") {
+      setShowAddressNew(true);
+      setName("");
+      setMobile("");
+    } else {
+      setShowAddressNew(false);
+      setName(loginData?.Name || "");
+      setMobile(loginData?.Mobile || "");
+    }
+  }, [Type, loginData]);
 
   const validateField = (name, value) => {
     let error = "";
-
     switch (name) {
       case "Name":
         if (!value.trim()) error = "Name is required";
@@ -94,327 +225,520 @@ const AddAddressForm = ({ setShowAddress }) => {
       default:
         break;
     }
-
-    setErrors(prev => ({ ...prev, [name]: error }));
     return error;
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+  const validateForm = () => {
+    const newErrors = {
+      Name: validateField("Name", Name),
+      Mobile: validateField("Mobile", Mobile),
+      HNo: validateField("HNo", HNo),
+      locality: validateField("locality", locality),
+      City: validateField("City", City),
+      State: validateField("State", State),
+      Pincode: validateField("Pincode", Pincode),
+      Alternative_Mobile: validateField(
+        "Alternative_Mobile",
+        Alternative_Mobile
+      ),
+    };
+    setErrors(newErrors);
+    return !Object.values(newErrors).some((error) => error !== "");
+  };
 
-    // Clear error when user starts typing
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: "" }));
+  const add_address = async (e) => {
+    e.preventDefault();
+    setbuttonPress(true);
+
+    if (validateForm()) {
+      const form_data = {
+        Name,
+        Mobile,
+        Alternative_Mobile,
+        HNo,
+        Area,
+        locality,
+        LandMark,
+        City,
+        State,
+        Pincode,
+        Type,
+        clientId: loginData?._id || "",
+      };
+
+      try {
+        const add_address_post = await dispatch(add_Address(form_data));
+
+        if (add_address_post.payload?.success) {
+          const client = add_address_post.payload.client;
+          const data_address = client.Addresses;
+          await dispatch(add_Address(data_address));
+          toast.success("Address added successfully");
+          setShowAddress(false);
+          // Reset form
+          setAlternative_Mobile("");
+          setHNo("");
+          setArea("");
+          setLocality("");
+          setLandMark("");
+          setCity("");
+          setState("");
+          setPincode("");
+          setType("Home");
+        }
+      } catch (error) {
+        console.error("Error adding address:", error);
+        toast.error("Failed to add address");
+      } finally {
+        setbuttonPress(false);
+      }
+    } else {
+      setbuttonPress(false);
     }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const fetchCityStateByPincode = async (pincode) => {
+    if (pincode.length === 6) {
+      try {
+        const response = await fetch(
+          `https://api.postalpincode.in/pincode/${pincode}`
+        );
+        const data = await response.json();
 
-    // Validate all fields before submission
-    let isValid = true;
-    const newErrors = { ...errors };
-
-    Object.keys(formData).forEach(key => {
-      if (key in newErrors) {
-        const error = validateField(key, formData[key]);
-        if (error) isValid = false;
+        if (data[0].Status === "Success" && data[0].PostOffice?.length) {
+          const districts = [
+            ...new Set(data[0].PostOffice.map((po) => po.Division)),
+          ];
+          const states = [...new Set(data[0].PostOffice.map((po) => po.State))];
+          setCity(districts[0] || "");
+          setState(states[0] || "");
+          setLocationData(data[0]);
+          setErrors((prev) => ({ ...prev, Pincode: "" }));
+          return true;
+        } else {
+          setErrors((prev) => ({ ...prev, Pincode: "Invalid Pincode" }));
+          setCity("");
+          setState("");
+          setLocationData(null);
+          return false;
+        }
+      } catch (error) {
+        console.log("Error fetching city/state:", error);
+        setCity("");
+        setState("");
+        setLocationData(null);
+        setErrors((prev) => ({ ...prev, Pincode: "Error fetching data" }));
+        return false;
       }
-    });
+    } else {
+      setCity("");
+      setState("");
+      setLocationData(null);
+      return false;
+    }
+  };
 
-    if (!isValid) return;
+  useEffect(() => {
+    if (Pincode.length === 6) {
+      fetchCityStateByPincode(Pincode);
+    }
+  }, [Pincode.length === 6]);
+  const handlePincodeChange = async (text) => {
+    const cleaned = text.replace(/\D/g, "");
+    setPincode(cleaned);
 
-    const addressData = {
-      ...formData,
-      clientId: loginData?._id || ""
-    };
+    if (cleaned.length === 6) {
+      const success = await fetchCityStateByPincode(cleaned);
+      setIsPincodeValid(success);
+    } else {
+      setIsPincodeValid(false);
+      setCity("");
+      setState("");
+      setArea("");
+    }
+  };
 
-    dispatch(add_Address(addressData))
-      .unwrap()
-      .then(() => setShowAddress(false))
-      .catch((error) => console.error("Error adding address:", error));
+  const handleMobileChange = (setter) => (value) => {
+    const cleaned = value.replace(/\D/g, "").slice(0, 10);
+    setter(cleaned);
+  };
+
+  const handleNameChange = (value) => {
+    const cleaned = value.replace(/[^a-zA-Z\s]/g, "");
+    setName(cleaned);
   };
 
   return (
-    <div className='bg-white flex flex-col relative rounded-md items-center justify-center border border-gray-200 shadow-sm'>
-      <div className="bg-white p-6 rounded-md w-full max-w-3xl">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-gray-800 font-semibold text-lg flex items-center gap-2">
-            <input type="radio" checked readOnly className="h-4 w-4" />
-            ADD A NEW ADDRESS
+    <div className="flex items-center justify-center z-50 sm:p-2 p-1">
+      <div className="bg-white rounded-xl w-full  flex flex-col shadow-xl">
+        {/* Header */}
+        <div className="flex justify-between items-center sm:p-4 p-1 border-b border-gray-200 bg-white rounded-t-xl">
+          <h2 className="text-lg font-bold text-gray-900">
+            Add Shipping Address
           </h2>
           <button
             onClick={() => setShowAddress(false)}
-            className="text-gray-500 hover:text-gray-700"
-            aria-label="Close address form"
+            className="text-gray-500 hover:text-gray-700 transition-colors p-1"
           >
             <RxCross2 size={20} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Name Field */}
-            <div className="relative">
-              <label
-                className={`absolute left-3 transition-all duration-200 ${focusedFields.Name || formData.Name ? 'top-1 text-xs text-blue-600 bg-white px-1 -ml-1' : 'top-3 text-gray-500'}`}
-              >
-                Name {errors.Name && <span className="text-red-500">*</span>}
-              </label>
-              <input
-                type="text"
-                name="Name"
-                className={`border ${errors.Name ? 'border-red-500' : 'border-gray-300'} px-3 pt-5 pb-2 rounded w-full focus:border-blue-500 focus:ring-1 focus:ring-blue-500`}
-                onFocus={() => handleFocus('Name')}
-                onBlur={(e) => handleBlur('Name', e.target.value)}
-                onChange={handleChange}
-                value={formData.Name}
-              />
-              {errors.Name && <p className="text-red-500 text-xs mt-1">{errors.Name}</p>}
+        {/* Form Content */}
+        <div className="flex-1 overflow-y-auto sm:p-6 p-2Ca">
+          <form onSubmit={add_address}>
+            <div className="space-y-4">
+              {/* Address Selection Mode Toggle */}
+              <div className="mb-4">
+                <div className="flex border border-gray-300 rounded-lg overflow-hidden mb-4">
+                  <button
+                    type="button"
+                    className={`flex-1 py-3 px-4 flex items-center justify-center gap-2 font-medium transition-colors ${
+                      searchMode
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
+                    onClick={() => setSearchMode(true)}
+                  >
+                    <FaSearch size={16} />
+                    Search & Select
+                  </button>
+                  <button
+                    type="button"
+                    className={`flex-1 py-3 px-4 flex items-center justify-center gap-2 font-medium transition-colors ${
+                      !searchMode
+                        ? "bg-green-600 text-white"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
+                    onClick={() => setSearchMode(false)}
+                  >
+                    <FaMapMarkerAlt size={16} />
+                    Use Live Location
+                  </button>
+                </div>
+
+                {/* Search and Select Mode */}
+                {searchMode && (
+                  <div className="p-2 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="relative mb-2">
+                      <input
+                        ref={autocompleteInputRef}
+                        type="text"
+                        id="autocomplete-search"
+                        className="border-2 border-blue-300 px-3 py-3 rounded w-full focus:border-blue-500 focus:ring-2 focus:ring-blue-200 bg-white"
+                        placeholder="Start typing your area..."
+                      />
+                    </div>
+                    {loadError && (
+                      <p className="text-red-500 text-xs mt-1">
+                        Google Maps loading failed: {loadError}
+                      </p>
+                    )}
+                    {!isLoaded && !loadError && (
+                      <p className="text-blue-600 text-xs mt-1 flex items-center gap-2">
+                        <FaSpinner className="animate-spin" />
+                        Loading Google Maps...
+                      </p>
+                    )}
+                    <p className="text-xs text-gray-600 mt-2">
+                      💡 Start typing your address and select from Google Maps
+                      suggestions to auto-fill the form
+                    </p>
+                  </div>
+                )}
+
+                {/* Live Location Mode */}
+                {!searchMode && (
+                  <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                    <div className="text-center">
+                      <FaMapMarkerAlt
+                        size={32}
+                        className="text-green-500 mx-auto mb-3"
+                      />
+                      <h3 className="font-semibold text-green-800 mb-2">
+                        Use Your Current Location
+                      </h3>
+                      <p className="text-sm text-green-600 mb-4">
+                        We'll use your device's GPS to automatically fill your
+                        address details.
+                      </p>
+
+                      <button
+                        type="button"
+                        onClick={handleUseCurrentLocation}
+                        disabled={currentLocationLoading}
+                        className="bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-6 rounded-lg flex items-center justify-center gap-2 mx-auto disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        {currentLocationLoading ? (
+                          <>
+                            <FaSpinner className="animate-spin" />
+                            Detecting Location...
+                          </>
+                        ) : (
+                          <>
+                            <FaMapMarkerAlt />
+                            Detect My Location
+                          </>
+                        )}
+                      </button>
+
+                      {locationError && (
+                        <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                          <p className="text-red-600 text-sm">
+                            {locationError}
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => setLocationError(null)}
+                            className="text-red-500 hover:text-red-700 text-xs mt-1"
+                          >
+                            Dismiss
+                          </button>
+                        </div>
+                      )}
+
+                      {currentLocationLoading && (
+                        <div className="mt-3">
+                          <p className="text-green-600 text-sm flex items-center justify-center gap-2">
+                            <FaSpinner className="animate-spin" />
+                            Accessing your location... Please allow location
+                            access if prompted.
+                          </p>
+                        </div>
+                      )}
+
+                      <p className="text-xs text-gray-500 mt-3">
+                        🔒 Your location data is only used to fill the address
+                        form and is not stored.
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="bg-white rounded-lg p-4">
+                {showAddressNew && (
+                  <>
+                    <InputField
+                      label="Full Name"
+                      value={Name}
+                      onChangeText={handleNameChange}
+                      placeholder="Enter Name"
+                      icon={<FaUser className="text-white text-lg" />}
+                      error={errors.Name}
+                      onBlur={() =>
+                        setErrors({
+                          ...errors,
+                          Name: validateField("Name", Name),
+                        })
+                      }
+                    />
+                    <InputField
+                      label="Mobile"
+                      value={Mobile}
+                      onChangeText={handleMobileChange(setMobile)}
+                      placeholder="Enter Mobile"
+                      icon={<FaPhone className="text-white text-lg" />}
+                      type="tel"
+                      maxLength={10}
+                      error={errors.Mobile}
+                      onBlur={() =>
+                        setErrors({
+                          ...errors,
+                          Mobile: validateField("Mobile", Mobile),
+                        })
+                      }
+                    />
+                  </>
+                )}
+
+                <InputField
+                  label="Alternative Mobile"
+                  value={Alternative_Mobile}
+                  onChangeText={handleMobileChange(setAlternative_Mobile)}
+                  placeholder="Alternative Mobile"
+                  icon={<FaPhone className="text-white text-lg" />}
+                  type="tel"
+                  maxLength={10}
+                  error={errors.Alternative_Mobile}
+                  onBlur={() =>
+                    setErrors({
+                      ...errors,
+                      Alternative_Mobile: validateField(
+                        "Alternative_Mobile",
+                        Alternative_Mobile
+                      ),
+                    })
+                  }
+                />
+
+                <InputField
+                  label="Flat No/House No/Building No"
+                  value={HNo}
+                  onChangeText={setHNo}
+                  placeholder="Enter House No"
+                  icon={<FaHome className="text-white text-lg" />}
+                  error={errors.HNo}
+                  onBlur={() =>
+                    setErrors({ ...errors, HNo: validateField("HNo", HNo) })
+                  }
+                />
+
+                <InputField
+                  label="Area & Locality"
+                  value={locality}
+                  onChangeText={setLocality}
+                  placeholder="Enter Locality"
+                  icon={<FaMapMarkerAlt className="text-white text-lg" />}
+                  error={errors.locality}
+                  onBlur={() =>
+                    setErrors({
+                      ...errors,
+                      locality: validateField("locality", locality),
+                    })
+                  }
+                />
+
+                <InputField
+                  label="Landmark"
+                  value={LandMark}
+                  onChangeText={setLandMark}
+                  placeholder="Enter Landmark"
+                  icon={<FaLandmark className="text-white text-lg" />}
+                />
+
+                <InputField
+                  label="Pincode"
+                  value={Pincode}
+                  onChangeText={handlePincodeChange}
+                  placeholder="Enter Pincode"
+                  icon={<FaMapMarkerAlt className="text-white text-lg" />}
+                  type="text"
+                  maxLength={6}
+                  error={errors.Pincode}
+                  onBlur={() =>
+                    setErrors({
+                      ...errors,
+                      Pincode: validateField("Pincode", Pincode),
+                    })
+                  }
+                />
+
+                {isPincodeValid && (
+                  <>
+                    {/* Area Dropdown */}
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Town/Village/Area
+                      </label>
+                      <div className="relative flex items-center rounded-lg border border-gray-300 bg-gray-50">
+                        <div className="flex items-center justify-center w-12 h-12 bg-gray-800 rounded-l-lg">
+                          <FaMapMarkerAlt className="text-white text-lg" />
+                        </div>
+                        <select
+                          value={Area}
+                          onChange={(e) => setArea(e.target.value)}
+                          className="flex-1 px-3 py-3 text-gray-900 bg-transparent outline-none appearance-none"
+                        >
+                          <option value="">Select Area</option>
+                          {locationData?.PostOffice?.length > 0 ? (
+                            locationData.PostOffice.map((po, index) => (
+                              <option key={index} value={po.Name}>
+                                {po.Name}
+                              </option>
+                            ))
+                          ) : (
+                            <option value="">No areas available</option>
+                          )}
+                        </select>
+                        <div className="absolute right-3 pointer-events-none">
+                          <svg
+                            className="w-4 h-4 text-gray-500"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 9l-7 7-7-7"
+                            />
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
+
+                    <InputField
+                      label="City"
+                      value={City}
+                      onChangeText={setCity}
+                      placeholder="Enter City"
+                      icon={<FaBuilding className="text-white text-lg" />}
+                      error={errors.City}
+                      onBlur={() =>
+                        setErrors({
+                          ...errors,
+                          City: validateField("City", City),
+                        })
+                      }
+                    />
+
+                    <InputField
+                      label="State"
+                      value={State}
+                      onChangeText={setState}
+                      placeholder="Enter State"
+                      icon={<FaFlag className="text-white text-lg" />}
+                      error={errors.State}
+                      editable={false}
+                      onBlur={() =>
+                        setErrors({
+                          ...errors,
+                          State: validateField("State", State),
+                        })
+                      }
+                    />
+                  </>
+                )}
+
+                {/* Address Type Selection */}
+                <div className="mb-4">
+                  <label className="block text-base font-semibold text-gray-900 mb-3">
+                    Save as
+                  </label>
+                  <div className="flex gap-3">
+                    {["Home", "Work", "Other"].map((t) => (
+                      <button
+                        key={t}
+                        type="button"
+                        onClick={() => setType(t)}
+                        className={`px-6 py-2 rounded-full border transition-colors ${
+                          Type === t
+                            ? "bg-[#e26f4e] border-[#e26f4e] text-white"
+                            : "border-gray-300 text-gray-600 hover:border-gray-400"
+                        }`}
+                      >
+                        {t}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
+          </form>
+        </div>
 
-            {/* Mobile Field */}
-            <div className="relative">
-              <label
-                className={`absolute left-3 transition-all duration-200 ${focusedFields.Mobile || formData.Mobile ? 'top-1 text-xs text-blue-600 bg-white px-1 -ml-1' : 'top-3 text-gray-500'}`}
-              >
-                10-digit mobile number {errors.Mobile && <span className="text-red-500">*</span>}
-              </label>
-              <input
-                type="tel"
-                name="Mobile"
-                className={`border ${errors.Mobile ? 'border-red-500' : 'border-gray-300'} px-3 pt-5 pb-2 rounded w-full focus:border-blue-500 focus:ring-1 focus:ring-blue-500`}
-                onFocus={() => handleFocus('Mobile')}
-                onBlur={(e) => handleBlur('Mobile', e.target.value)}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/\D/g, "").slice(0, 10);
-                  setFormData(prev => ({ ...prev, Mobile: value }));
-                }}
-                value={formData.Mobile}
-              />
-              {errors.Mobile && <p className="text-red-500 text-xs mt-1">{errors.Mobile}</p>}
-            </div>
-
-            {/* House Number Field */}
-            <div className="relative">
-              <label
-                className={`absolute left-3 transition-all duration-200 ${focusedFields.HNo || formData.HNo ? 'top-1 text-xs text-blue-600 bg-white px-1 -ml-1' : 'top-3 text-gray-500'}`}
-              >
-                House No/Building {errors.HNo && <span className="text-red-500">*</span>}
-              </label>
-              <input
-                type="text"
-                name="HNo"
-                className={`border ${errors.HNo ? 'border-red-500' : 'border-gray-300'} px-3 pt-5 pb-2 rounded w-full focus:border-blue-500 focus:ring-1 focus:ring-blue-500`}
-                onFocus={() => handleFocus('HNo')}
-                onBlur={(e) => handleBlur('HNo', e.target.value)}
-                onChange={handleChange}
-                value={formData.HNo}
-              />
-              {errors.HNo && <p className="text-red-500 text-xs mt-1">{errors.HNo}</p>}
-            </div>
-
-            {/* Area Field */}
-            <div className="relative">
-              <label
-                className={`absolute left-3 transition-all duration-200 ${focusedFields.Area || formData.Area ? 'top-1 text-xs text-blue-600 bg-white px-1 -ml-1' : 'top-3 text-gray-500'}`}
-              >
-                Road/Area/Colony
-              </label>
-              <input
-                type="text"
-                name="Area"
-                className="border border-gray-300 px-3 pt-5 pb-2 rounded w-full focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                onFocus={() => handleFocus('Area')}
-                onBlur={(e) => handleBlur('Area', e.target.value)}
-                onChange={handleChange}
-                value={formData.Area}
-              />
-            </div>
-
-            {/* Pincode Field */}
-            <div className="relative">
-              <label
-                className={`absolute left-3 transition-all duration-200 ${focusedFields.Pincode || formData.Pincode ? 'top-1 text-xs text-blue-600 bg-white px-1 -ml-1' : 'top-3 text-gray-500'}`}
-              >
-                Pincode {errors.Pincode && <span className="text-red-500">*</span>}
-              </label>
-              <input
-                type="text"
-                name="Pincode"
-                className={`border ${errors.Pincode ? 'border-red-500' : 'border-gray-300'} px-3 pt-5 pb-2 rounded w-full focus:border-blue-500 focus:ring-1 focus:ring-blue-500`}
-                onFocus={() => handleFocus('Pincode')}
-                onBlur={(e) => handleBlur('Pincode', e.target.value)}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/\D/g, "").slice(0, 6);
-                  setFormData(prev => ({ ...prev, Pincode: value }));
-                }}
-                value={formData.Pincode}
-              />
-              {errors.Pincode && <p className="text-red-500 text-xs mt-1">{errors.Pincode}</p>}
-            </div>
-
-            {/* Locality Field */}
-            <div className="relative">
-              <label
-                className={`absolute left-3 transition-all duration-200 ${focusedFields.locality || formData.locality ? 'top-1 text-xs text-blue-600 bg-white px-1 -ml-1' : 'top-3 text-gray-500'}`}
-              >
-                Locality {errors.locality && <span className="text-red-500">*</span>}
-              </label>
-              <input
-                type="text"
-                name="locality"
-                className={`border ${errors.locality ? 'border-red-500' : 'border-gray-300'} px-3 pt-5 pb-2 rounded w-full focus:border-blue-500 focus:ring-1 focus:ring-blue-500`}
-                onFocus={() => handleFocus('locality')}
-                onBlur={(e) => handleBlur('locality', e.target.value)}
-                onChange={handleChange}
-                value={formData.locality}
-              />
-              {errors.locality && <p className="text-red-500 text-xs mt-1">{errors.locality}</p>}
-            </div>
-          </div>
-
-          {/* Landmark Field */}
-          <div className="relative mt-4">
-            <label
-              className={`absolute left-3 transition-all duration-200 ${focusedFields.LandMark || formData.LandMark ? 'top-1 text-xs text-blue-600 bg-white px-1 -ml-1' : 'top-3 text-gray-500'}`}
-            >
-              Landmark (Optional)
-            </label>
-            <input
-              type="text"
-              name="LandMark"
-              className="border border-gray-300 px-3 pt-5 pb-2 rounded w-full focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-              onFocus={() => handleFocus('LandMark')}
-              onBlur={(e) => handleBlur('LandMark', e.target.value)}
-              onChange={handleChange}
-              value={formData.LandMark}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-            {/* City Field */}
-            <div className="relative">
-              <label
-                className={`absolute left-3 transition-all duration-200 ${focusedFields.City || formData.City ? 'top-1 text-xs text-blue-600 bg-white px-1 -ml-1' : 'top-3 text-gray-500'}`}
-              >
-                City/District/Town {errors.City && <span className="text-red-500">*</span>}
-              </label>
-              <input
-                type="text"
-                name="City"
-                className={`border ${errors.City ? 'border-red-500' : 'border-gray-300'} px-3 pt-5 pb-2 rounded w-full focus:border-blue-500 focus:ring-1 focus:ring-blue-500`}
-                onFocus={() => handleFocus('City')}
-                onBlur={(e) => handleBlur('City', e.target.value)}
-                onChange={handleChange}
-                value={formData.City}
-              />
-              {errors.City && <p className="text-red-500 text-xs mt-1">{errors.City}</p>}
-            </div>
-
-            {/* State Field */}
-            <div className="relative">
-              <label
-                className={`absolute left-3 transition-all duration-200 ${focusedFields.State || formData.State ? 'top-1 text-xs text-blue-600 bg-white px-1 -ml-1' : 'top-3 text-gray-500'}`}
-              >
-                State {errors.State && <span className="text-red-500">*</span>}
-              </label>
-              <select
-                name="State"
-                className={`border ${errors.State ? 'border-red-500' : 'border-gray-300'} px-3 pt-5 pb-2 rounded w-full text-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500`}
-                onFocus={() => handleFocus('State')}
-                onBlur={(e) => handleBlur('State', e.target.value)}
-                onChange={handleChange}
-                value={formData.State}
-              >
-                <option value="">--Select State--</option>
-                <option value="Andhra Pradesh">Andhra Pradesh</option>
-                <option value="Delhi">Delhi</option>
-                <option value="Karnataka">Karnataka</option>
-                <option value="Maharashtra">Maharashtra</option>
-                <option value="Tamil Nadu">Tamil Nadu</option>
-                <option value="Telangana">Telangana</option>
-                <option value="West Bengal">West Bengal</option>
-              </select>
-              {errors.State && <p className="text-red-500 text-xs mt-1">{errors.State}</p>}
-            </div>
-
-            {/* Alternate Phone Field */}
-            <div className="relative">
-              <label
-                className={`absolute left-3 transition-all duration-200 ${focusedFields.Alternative_Mobile || formData.Alternative_Mobile ? 'top-1 text-xs text-blue-600 bg-white px-1 -ml-1' : 'top-3 text-gray-500'}`}
-              >
-                Alternate Phone (Optional)
-              </label>
-              <input
-                type="tel"
-                name="Alternative_Mobile"
-                className={`border ${errors.Alternative_Mobile ? 'border-red-500' : 'border-gray-300'} px-3 pt-5 pb-2 rounded w-full focus:border-blue-500 focus:ring-1 focus:ring-blue-500`}
-                onFocus={() => handleFocus('Alternative_Mobile')}
-                onBlur={(e) => handleBlur('Alternative_Mobile', e.target.value)}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/\D/g, "").slice(0, 10);
-                  setFormData(prev => ({ ...prev, Alternative_Mobile: value }));
-                }}
-                value={formData.Alternative_Mobile}
-              />
-              {errors.Alternative_Mobile && <p className="text-red-500 text-xs mt-1">{errors.Alternative_Mobile}</p>}
-            </div>
-          </div>
-
-          <div className="mt-4 flex gap-6">
-            <label className="flex items-center text-gray-700">
-              <input
-                type="radio"
-                name="Type"
-                className="mr-2 text-blue-600"
-                value="Home"
-                checked={formData.Type === "Home"}
-                onChange={handleChange}
-              />
-              Home
-            </label>
-            <label className="flex items-center text-gray-700">
-              <input
-                type="radio"
-                name="Type"
-                className="mr-2 text-blue-600"
-                value="Work"
-                checked={formData.Type === "Work"}
-                onChange={handleChange}
-              />
-              Work
-            </label>
-            <label className="flex items-center text-gray-700">
-              <input
-                type="radio"
-                name="Type"
-                className="mr-2 text-blue-600"
-                value="Other"
-                checked={formData.Type === "Other"}
-                onChange={handleChange}
-              />
-              Other
-            </label>
-          </div>
-
-          <div className="mt-6 flex items-center gap-6">
-            <button
-              type="submit"
-              className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 font-medium"
-            >
-              SAVE AND DELIVER HERE
-            </button>
-            <button
-              type="button"
-              className="text-blue-600 font-medium hover:underline"
-              onClick={() => setShowAddress(false)}
-            >
-              CANCEL
-            </button>
-          </div>
-        </form>
+        {/* Footer Button */}
+        <div className="border-t border-gray-200 bg-white p-4 rounded-b-xl">
+          <button
+            onClick={add_address}
+            disabled={buttonPress}
+            className="w-full py-3 bg-[#2f415d] text-white rounded-lg font-bold text-lg hover:bg-[#1e2e45] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {buttonPress ? "Adding Address..." : "Add Address"}
+          </button>
+        </div>
       </div>
     </div>
   );

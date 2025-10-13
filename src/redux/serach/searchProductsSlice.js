@@ -15,10 +15,24 @@ export const searchProducts = createAsyncThunk(
   }
 );
 
+// Async thunk for loading more products
+export const loadMoreProducts = createAsyncThunk(
+  "search/loadMoreProducts",
+  async (params, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(`${Baseurl}/api/v1/search`, { params });
+      return response.data;
+    } catch (err) {
+      return rejectWithValue(err.response.data);
+    }
+  }
+);
+
 const initialState = {
   query: "",
   results: [],
   loading: false,
+  loadingMore: false,
   error: null,
   filters: {
     category: "",
@@ -30,9 +44,9 @@ const initialState = {
     rating: "",
   },
   pagination: {
-    page: 1,
-    limit: 30,
-    totalResults: 0,
+    currentPage: 1,
+    limit: 20, // Make sure this matches your API's default limit
+    total: 0,
     totalPages: 1,
     hasNext: false,
     hasPrevious: false,
@@ -49,57 +63,52 @@ const initialState = {
   }
 };
 
-
 const searchSlice = createSlice({
   name: "search",
   initialState,
   reducers: {
     setSearchQuery: (state, action) => {
       state.query = action.payload;
-      state.pagination.page = 1; // Reset to first page on new query
+      state.pagination.currentPage = 1;
     },
     setCategoryFilter: (state, action) => {
       state.filters.category = action.payload;
-      state.pagination.page = 1;
+      state.pagination.currentPage = 1;
     },
     setBrandFilter: (state, action) => {
       state.filters.brand = action.payload;
-      state.pagination.page = 1;
+      state.pagination.currentPage = 1;
     },
     setColorFilter: (state, action) => {
       state.filters.color = action.payload;
-      state.pagination.page = 1;
+      state.pagination.currentPage = 1;
     },
     setPriceRange: (state, action) => {
       state.filters.minPrice = action.payload.minPrice;
       state.filters.maxPrice = action.payload.maxPrice;
-      state.pagination.page = 1;
+      state.pagination.currentPage = 1;
     },
     setAvailabilityFilter: (state, action) => {
       state.filters.availability = action.payload;
-      state.pagination.page = 1;
+      state.pagination.currentPage = 1;
     },
     setRatingFilter: (state, action) => {
       state.filters.rating = action.payload;
-      state.pagination.page = 1;
+      state.pagination.currentPage = 1;
     },
     setSortOption: (state, action) => {
       state.sort = action.payload;
-    },
-    setPage: (state, action) => {
-      state.pagination.page = action.payload;
-    },
-    setLimit: (state, action) => {
-      state.pagination.limit = action.payload;
+      state.pagination.currentPage = 1;
     },
     resetFilters: (state) => {
       state.filters = initialState.filters;
       state.sort = initialState.sort;
-      state.pagination.page = 1;
+      state.pagination.currentPage = 1;
     },
   },
   extraReducers: (builder) => {
     builder
+      // Initial search
       .addCase(searchProducts.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -109,12 +118,29 @@ const searchSlice = createSlice({
         state.results = action.payload.products;
         state.pagination = {
           ...action.payload.pagination,
-          totalResults: action.payload.pagination.total,
+          hasNext: action.payload.pagination.currentPage < action.payload.pagination.totalPages,
         };
-        state.availableFilters = action.payload.filters.available;
+        state.availableFilters = action.payload.filters?.available || initialState.availableFilters;
       })
       .addCase(searchProducts.rejected, (state, action) => {
         state.loading = false;
+        state.error = action.payload?.message || action.error.message;
+      })
+      // Loading more products
+      .addCase(loadMoreProducts.pending, (state) => {
+        state.loadingMore = true;
+        state.error = null;
+      })
+      .addCase(loadMoreProducts.fulfilled, (state, action) => {
+        state.loadingMore = false;
+        state.results = [...state.results, ...action.payload.products];
+        state.pagination = {
+          ...action.payload.pagination,
+          hasNext: action.payload.pagination.currentPage < action.payload.pagination.totalPages,
+        };
+      })
+      .addCase(loadMoreProducts.rejected, (state, action) => {
+        state.loadingMore = false;
         state.error = action.payload?.message || action.error.message;
       });
   },
@@ -129,14 +155,13 @@ export const {
   setAvailabilityFilter,
   setRatingFilter,
   setSortOption,
-  setPage,
-  setLimit,
   resetFilters,
 } = searchSlice.actions;
 
 // Selectors
 export const selectSearchResults = (state) => state.search.results;
 export const selectSearchLoading = (state) => state.search.loading;
+export const selectSearchLoadingMore = (state) => state.search.loadingMore;
 export const selectSearchError = (state) => state.search.error;
 export const selectSearchQuery = (state) => state.search.query;
 export const selectSearchFilters = (state) => state.search.filters;

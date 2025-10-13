@@ -19,26 +19,16 @@ const MainCart = () => {
   if (!mounted) return null; // Prevents SSR mismatch
   return (
     <>
-      {/* <div className="hidden sm:block ">
-        <Header />
-      </div> */}
-      {/* #f1f3f6 */}
       {CartItems && CartItems?.length > 0 ? (
         <>
-          <div className="h-screen sm:mb-0 mb-14 overflow-y-auto no-scrollbar bg-[#f5f6fb] relative overflow-x-hidden ">
-            <div className="block md:hidden sticky inset-0 top-0 z-[10] w-full shadow-md bg-white">
-              <div className="bg-white mx-3 flex flex-row gap-2 h-13 items-center">
-                <IoIosArrowRoundBack size={30} />
-                <span>My Cart</span>
-              </div>
-            </div>
-            <div className="w-full bg-[#f5f6f7] sm:mt-17  gap-2 relative px-4 mt-4">
-              <div className="w-full flex flex-col lg:flex-row  lg:justify-center  my-2 gap-2">
-                <div className="lg:w-7/12 mx-0 lg:mx-2 flex flex-col bg-[#f5f6f7] lg:px-0 px-3 space-y-1 border border-[#ddd]">
+          <div className="sm:h-screen h-fit sm:mb-0 mb-14 overflow-y-auto no-scrollbar bg-[#f5f6fb] relative overflow-x-hidden">
+            <div className="w-full bg-[#f5f6f7] sm:mt-2 gap-2 relative sm:px-4 px-0 mt-4">
+              <div className="w-full flex flex-col lg:flex-row  my-2 gap-2">
+                <div className="lg:w-full py-2 mx-0 lg:mx-2 flex flex-col bg-[#fff] lg:px-0 px-0 space-y-1">
                   <CartLeft />
                 </div>
-                <div className="lg:w-4/12 flex flex-col lg:mx-0 mr-5 w-full lg:p-5  rounded-sm lg:mr-5">
-                  <div className="lg:sticky lg:top-2 lg:h-[calc(100vh-120px)] lg:overflow-y-auto no-scrollbar">
+                <div className="lg:w-1/2 sm:px-0 px-3 flex flex-col lg:mx-0 mr-5 w-full lg:p-5  rounded-sm lg:mr-5">
+                  <div className="lg:sticky  lg:h-[calc(100vh-120px)] lg:overflow-y-auto no-scrollbar">
                     <CartRight />
                   </div>
                 </div>

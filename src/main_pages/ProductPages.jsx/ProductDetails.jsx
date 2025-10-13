@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { FaAngleDown, FaAngleRight, FaAngleUp } from "react-icons/fa";
 import { IoIosArrowForward } from "react-icons/io";
 import ProductTabs from "./TabsListing";
+import { TbTruckDelivery } from "react-icons/tb";
 
 const ProductDetailsSkeleton = () => {
   return (
@@ -76,62 +77,91 @@ const ProductDetailsSkeleton = () => {
     </div>
   );
 };
-
-
 const ProductDetailSection = ({ title, data, defaultOpen = false }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
+
   return (
-    <div className="w-full h-fit mb-4 divide-y divide-gray-300 font-sans ">
+    <div className="w-full h-fit mb-4 divide-y divide-gray-300 font-sans">
+      {/* Header */}
       <div
-        className="flex flex-row justify-between items-center font-medium cursor-pointer font-sans"
-        onClick={() => {
-          if (window.innerWidth > 600) {
-            setIsOpen(!isOpen);
-          }
-        }}
+        className="flex justify-between items-center font-medium cursor-pointer py-2"
+        onClick={() => setIsOpen(!isOpen)}
       >
-        <span className="text-base sm:text-lg font-semibold text-gray-800">{title !== "" ? title : "General"}</span>
+        <span className="text-base sm:text-lg font-semibold text-gray-800">
+          {title || "General"}
+        </span>
         {isOpen ? (
-          <FaAngleUp className="text-gray-500 hidden sm:block" />
+          <FaAngleUp className="text-gray-500" />
         ) : (
-          <FaAngleDown className="text-gray-500 hidden sm:block" />
+          <FaAngleDown className="text-gray-500" />
         )}
       </div>
-      {isOpen && (
-        <div
-          className={`mt-3 overflow-hidden h-fit  transition-all duration-500 ease-in-out`}
-          style={{ maxHeight: isOpen ? "h-fit" : "0px" }}
-        >
-          <table className="w-full">
-            <tbody>
-              {data.map((item, index) => (
-                <tr key={index} className="border-b border-gray-100">
-                  <th className="py-3 pr-4 font-medium text-gray-600 text-left w-1/3 text-sm sm:text-base">
-                    {item.label}
-                  </th>
-                  <td className="py-3 text-gray-800 text-sm sm:text-base">{item.value}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+
+      {/* Content */}
+      <div
+        className={`overflow-hidden transition-all duration-300`}
+        style={{ maxHeight: isOpen ? `${data.length * 50}px` : "0px" }}
+      >
+        <table className="w-full mt-2">
+          <tbody>
+            {data.map((item, index) => (
+              <tr key={index} className="border-b border-gray-100">
+                <th className="py-2 pr-4 font-medium text-gray-600 text-left w-1/3 text-sm sm:text-base">
+                  {item.label}
+                </th>
+                <td className="py-2 text-gray-800 text-sm sm:text-base">
+                  {item.value}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+const DeliveryRange = ({ noof_delivery_days = 4 }) => {
+  const now = new Date();
+
+  // Format a date in "DD MMM YYYY"
+  const formatDate = (date) =>
+    date.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+
+  // Calculate end date
+  const endDate = new Date();
+  endDate.setDate(now.getDate() + noof_delivery_days);
+
+  return (
+    <div className="mb-2 p-4 bg-white shadow-md border border-gray-100 rounded-xl flex items-center gap-3 sm:gap-4">
+      <div className="flex-shrink-0 text-blue-600 text-2xl">
+        <TbTruckDelivery />
+      </div>
+      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+        <span className="text-gray-700 font-medium text-sm sm:text-base">
+          Delivery:
+        </span>
+        <span className="text-gray-900 font-semibold text-sm sm:text-base">
+          {formatDate(now)} to {formatDate(endDate)}
+        </span>
+      </div>
     </div>
   );
 };
 const ProductDetails = () => {
-  const {
-    rating,
-    totalRatings,
-    ratingBreakdown,
-    customerReviews,
-    error,
-  } = useSelector((state) => state.reviews);
+  const { rating, totalRatings, ratingBreakdown, customerReviews, error } =
+    useSelector((state) => state.reviews);
 
   const dispatch = useDispatch();
-  const [modelOpen, setModelOpen] = useState({ type: "ship" })
+  const [modelOpen, setModelOpen] = useState({ type: "ship" });
   const router = useRouter();
-  const { product, selectedVariant, status } = useSelector((state) => state.info);
+  const { product, selectedVariant, status } = useSelector(
+    (state) => state.info
+  );
   const [showVariantModal, setShowVariantModal] = useState(false);
   const [tempSelection, setTempSelection] = useState({
     field1: "",
@@ -139,7 +169,6 @@ const ProductDetails = () => {
     field3: "",
   });
   const productData = product?.[0] || {};
-  console.log(productData, "productData");
 
   const generalFields = productData?.generalFields || [];
   const variants = productData?.simpleAttributes || [];
@@ -151,10 +180,15 @@ const ProductDetails = () => {
   const shortText = words.slice(0, 30).join(" ");
   const isLong = words.length > 30;
 
-
   // Helper function to ensure valid image src
   const getValidImageSrc = (src) => {
     return src && src.trim() !== "" ? src : "https://via.placeholder.com/64";
+  };
+
+  const handleClick = () => {
+    const sellerName = productData?.shopName;
+    const url = `/sellerproduct?sellername=${encodeURIComponent(sellerName)}`;
+    router.push(url);
   };
 
   // Get available variant fields
@@ -163,7 +197,6 @@ const ProductDetails = () => {
     productData.fieldname2,
     productData.fieldname3,
   ].filter(Boolean);
-
 
   // State for selected values
   const [selectedValues, setSelectedValues] = useState({
@@ -221,36 +254,49 @@ const ProductDetails = () => {
       : 0;
 
   // Render star ratings
-  const renderStars = (rating) => {
-    const stars = [];
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 >= 0.5;
+  // const renderStars = (rating) => {
+  //   const stars = [];
+  //   const fullStars = Math.floor(rating);
+  //   const hasHalfStar = rating % 1 >= 0.5;
 
+  //   for (let i = 1; i <= 5; i++) {
+  //     if (i <= fullStars) {
+  //       stars.push(
+  //         <IoStar key={i} className="text-yellow-500 text-sm md:text-base" />
+  //       );
+  //     } else if (i === fullStars + 1 && hasHalfStar) {
+  //       stars.push(
+  //         <IoStarHalf
+  //           key={i}
+  //           className="text-yellow-500 text-sm md:text-base"
+  //         />
+  //       );
+  //     } else {
+  //       stars.push(
+  //         <IoStarOutline
+  //           key={i}
+  //           className="text-yellow-500 text-sm md:text-base"
+  //         />
+  //       );
+  //     }
+  //   }
+
+  //   return stars;
+  // };
+
+  const renderStars = (ratingValue) => {
+    // If rating exists, use it; else default to 5
+    const ratingNum = ratingValue != null ? ratingValue : 5;
+
+    const stars = [];
     for (let i = 1; i <= 5; i++) {
-      if (i <= fullStars) {
-        stars.push(
-          <IoStar key={i} className="text-yellow-500 text-sm md:text-base" />
-        );
-      } else if (i === fullStars + 1 && hasHalfStar) {
-        stars.push(
-          <IoStarHalf
-            key={i}
-            className="text-yellow-500 text-sm md:text-base"
-          />
-        );
-      } else {
-        stars.push(
-          <IoStarOutline
-            key={i}
-            className="text-yellow-500 text-sm md:text-base"
-          />
-        );
-      }
+      stars.push(
+        <IoStar key={i} className="text-yellow-500 text-sm md:text-base" />
+      );
     }
 
     return stars;
   };
-
   // Get unique values for a specific field
   const getUniqueValues = (fieldIndex, filterValues = {}) => {
     const filtered = variants.filter((variant) => {
@@ -287,11 +333,14 @@ const ProductDetails = () => {
     const isColorField = fieldName.toLowerCase().includes("color");
 
     return (
-      <div className=" hidden md:block" key={fieldIndex} >
+      <div
+        className=" hidden md:block bg-white shadow-lg rounded-2xl p-4 w-full"
+        key={fieldIndex}
+      >
         <h3 className="text-sm font-semibold mb-3 uppercase tracking-wider text-gray-600">
           {fieldName}
         </h3>
-        <div className="flex flex-wrap gap-3">
+        <div className="flex md:flex-wrap gap-3">
           {options.map((option, index) => (
             <button
               key={index}
@@ -302,32 +351,44 @@ const ProductDetails = () => {
                 }))
               }
               className={`
-                ${isColorField ? "w-16 h-16" : "px-4 py-2 min-w-[60px]"}
-                border-2 rounded-md transition-all flex items-center justify-center
-                ${currentValue === option
-                  ? isColorField
-                    ? "border-rose-500 shadow-md"
-                    : "border-black bg-black text-white"
-                  : "border-gray-200 hover:border-gray-400"
-                }
-              `}
+        ${
+          isColorField
+            ? "w-20 h-auto py-2"
+            : "px-4 py-2 sm:min-w-fit xl:min-w-[60px]"
+        }
+        border-2 rounded-md transition-all flex flex-col items-center justify-center
+        ${
+          currentValue === option
+            ? isColorField
+              ? "border-rose-500 shadow-md"
+              : "border-black bg-black text-white"
+            : "border-gray-200 hover:border-gray-400"
+        }
+      `}
               aria-label={`Select ${option}`}
             >
               {isColorField ? (
-                <img
-                  src={getValidImageSrc(
-                    variants.find((v) =>
-                      fieldIndex === 0
-                        ? v.fieldValue1 === option
-                        : fieldIndex === 1
-                          ? v.fieldValue2 === option
-                          : v.fieldValue3 === option
-                    )?.thumbnail
-                  )}
-                  alt={option}
-                  className="w-full h-full object-cover"
-                  loading="lazy"
-                />
+                <>
+                  <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center overflow-hidden">
+                    <img
+                      src={getValidImageSrc(
+                        variants.find((v) =>
+                          fieldIndex === 0
+                            ? v.fieldValue1 === option
+                            : fieldIndex === 1
+                            ? v.fieldValue2 === option
+                            : v.fieldValue3 === option
+                        )?.thumbnail
+                      )}
+                      alt={option}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-700 truncate mt-1 text-center max-w-[70px]">
+                    {option}
+                  </p>
+                </>
               ) : (
                 <span className="text-center">{option}</span>
               )}
@@ -337,6 +398,8 @@ const ProductDetails = () => {
       </div>
     );
   };
+
+  const { isAuth, loginData } = useSelector((state) => state.Athentication);
 
   // Render selected variant summary - for mobile
   const renderVariantSummary = () => {
@@ -364,132 +427,6 @@ const ProductDetails = () => {
     );
   };
 
-  // Render variant modal - for mobile
-  // const renderVariantModal = () => {
-  //   if (!showVariantModal) return null;
-  //   return (
-  //     <div className="fixed inset-0 z-100 bg-black/30 bg-opacity-50 flex items-end md:hidden">
-  //       <div className="w-full bg-white rounded-t-2xl p-4 max-h-[70vh] overflow-y-auto">
-  //         {/* Modal Header */}
-  //         <div className="border-b pb-4">
-  //           <div className="flex justify-between items-center">
-  //             <h3 className="font-bold text-lg">
-  //               {productData.name || "Product Name"}
-  //             </h3>
-  //             <button onClick={handleCancel} className="text-gray-500 text-2xl">
-  //               &times;
-  //             </button>
-  //           </div>
-  //           <div className="mt-2">
-  //             <span className="font-bold text-lg">
-  //               ₹{currentVariant.price?.toLocaleString("en-IN") || "99,999"}
-  //             </span>
-  //             {currentVariant.mrp && (
-  //               <span className="line-through text-gray-500 ml-2">
-  //                 ₹{currentVariant.mrp?.toLocaleString("en-IN")}
-  //               </span>
-  //             )}
-  //           </div>
-  //         </div>
-
-  //         {/* Variant Selectors */}
-  //         {variantFields.map((fieldName, fieldIndex) => {
-  //           if (!fieldName) return null;
-
-  //           const filterValues = {};
-  //           if (fieldIndex > 0) filterValues.fieldValue1 = tempSelection.field1;
-  //           if (fieldIndex > 1) {
-  //             filterValues.fieldValue1 = tempSelection.field1;
-  //             filterValues.fieldValue2 = tempSelection.field2;
-  //           }
-
-  //           const options = getUniqueValues(fieldIndex, filterValues);
-  //           const currentValue = tempSelection[`field${fieldIndex + 1}`];
-  //           const isColorField = fieldName.toLowerCase().includes("color");
-
-  //           return (
-  //             <div key={fieldIndex} className="mt-6">
-  //               <h4 className="font-medium text-gray-700 mb-3">
-  //                 {fieldName}: {currentValue}
-  //               </h4>
-  //               <div
-  //                 className={
-  //                   isColorField
-  //                     ? "grid grid-cols-4 gap-3"
-  //                     : "grid grid-cols-2 gap-3"
-  //                 }
-  //               >
-  //                 {options.map((option, index) => (
-  //                   <button
-  //                     key={index}
-  //                     onClick={() =>
-  //                       setTempSelection((prev) => ({
-  //                         ...prev,
-  //                         [`field${fieldIndex + 1}`]: option,
-  //                       }))
-  //                     }
-  //                     className={`
-  //                       ${isColorField ? "p-2" : "p-3"}
-  //                       border-2 rounded-lg ${currentValue === option
-  //                         ? isColorField
-  //                           ? "border-rose-500 bg-rose-50"
-  //                           : "border-black bg-black text-white"
-  //                         : "border-gray-200"
-  //                       }
-  //                     `}
-  //                   >
-  //                     {isColorField ? (
-  //                       <>
-  //                         <div className="w-full aspect-square bg-gray-100 rounded flex items-center justify-center overflow-hidden">
-  //                           <img
-  //                             src={getValidImageSrc(
-  //                               variants.find((v) =>
-  //                                 fieldIndex === 0
-  //                                   ? v.fieldValue1 === option
-  //                                   : fieldIndex === 1
-  //                                     ? v.fieldValue2 === option
-  //                                     : v.fieldValue3 === option
-  //                               )?.thumbnail
-  //                             )}
-  //                             alt={option}
-  //                             className="w-full h-full object-cover"
-  //                             loading="lazy"
-  //                           />
-  //                         </div>
-  //                         <span className="text-xs mt-1 block truncate">
-  //                           {option}
-  //                         </span>
-  //                       </>
-  //                     ) : (
-  //                       option
-  //                     )}
-  //                   </button>
-  //                 ))}
-  //               </div>
-  //             </div>
-  //           );
-  //         })}
-
-  //         {/* Action Buttons */}
-  //         <div className="flex gap-3 mt-8 sticky bottom-0 bg-white pt-4 pb-2">
-  //           <button
-  //             onClick={handleCancel}
-  //             className="flex-1 py-3 border border-gray-300 rounded-lg font-medium"
-  //           >
-  //             Cancel
-  //           </button>
-  //           <button
-  //             onClick={handleApply}
-  //             className="flex-1 py-3 bg-black text-white rounded-lg font-medium"
-  //           >
-  //             Apply
-  //           </button>
-  //         </div>
-  //       </div>
-  //     </div>
-  //   );
-  // };
-
   const renderVariantModal = () => {
     if (!showVariantModal) return null;
     return (
@@ -499,7 +436,16 @@ const ProductDetails = () => {
           <div className="sticky top-0 bg-white border-b px-4 pt-4 pb-3 z-10">
             <div className="flex justify-between items-center">
               <h3 className="font-semibold text-lg text-gray-900">
-                {productData.name || "Product Name"}
+                {productData.name || "Product Name"}{" "}
+                {(() => {
+                  const parts = [
+                    currentVariant?.fieldValue1,
+                    currentVariant?.fieldValue2,
+                    currentVariant?.fieldValue3,
+                  ].filter(Boolean); // remove empty values
+
+                  return `(${parts.join(", ")})`;
+                })()}
               </h3>
               <button
                 onClick={handleCancel}
@@ -521,11 +467,12 @@ const ProductDetails = () => {
           </div>
 
           {/* Variant Selectors */}
-          <div className="px-4 pb-9">
+          <div className=" pb-9">
             {variantFields.map((fieldName, fieldIndex) => {
               if (!fieldName) return null;
               const filterValues = {};
-              if (fieldIndex > 0) filterValues.fieldValue1 = tempSelection.field1;
+              if (fieldIndex > 0)
+                filterValues.fieldValue1 = tempSelection.field1;
               if (fieldIndex > 1) {
                 filterValues.fieldValue1 = tempSelection.field1;
                 filterValues.fieldValue2 = tempSelection.field2;
@@ -557,13 +504,15 @@ const ProductDetails = () => {
                             [`field${fieldIndex + 1}`]: option,
                           }))
                         }
-                        className={`${isColorField ? "p-2" : "py-3 px-4"
-                          } border rounded-lg transition-all ${currentValue === option
+                        className={`${
+                          isColorField ? "p-2" : "py-3 px-4"
+                        } border rounded-lg transition-all ${
+                          currentValue === option
                             ? isColorField
                               ? "border-rose-500 bg-rose-50"
-                              : "border-black bg-black text-white"
+                              : "border-black/30 bg-black text-white"
                             : "border-gray-300 hover:border-gray-400"
-                          }`}
+                        }`}
                       >
                         {isColorField ? (
                           <>
@@ -574,8 +523,8 @@ const ProductDetails = () => {
                                     fieldIndex === 0
                                       ? v.fieldValue1 === option
                                       : fieldIndex === 1
-                                        ? v.fieldValue2 === option
-                                        : v.fieldValue3 === option
+                                      ? v.fieldValue2 === option
+                                      : v.fieldValue3 === option
                                   )?.thumbnail
                                 )}
                                 alt={option}
@@ -618,7 +567,6 @@ const ProductDetails = () => {
     );
   };
 
-
   if (status === "loading" || !product || product.length === 0) {
     return <ProductDetailsSkeleton />;
   }
@@ -634,40 +582,161 @@ const ProductDetails = () => {
       title: "Shipping & Return Policy",
       items: [
         "Dispatch: Within 24 Hours",
-        "1 Year Brand Warranty",
+        "The warranty for this product is provided by the brand and varies depending on the product.",
         "Free shipping on orders above ₹500",
         "delivery: 7–10 business days",
         "Cash on delivery available",
-        "Easy 30 days returns and exchanges",
+        "Easy 7 days returns and exchanges",
       ],
     },
     {
       title: "Free and Easy Returns",
       description:
-        "If you're not completely satisfied with your purchase, you can return it within 30 days for a full refund or exchange. Items must be unused, unworn, and in original condition with tags attached.",
+        "If you're not completely satisfied with your purchase, you can return it within 7 days for a full refund or exchange. Items must be unused, unworn, and in original condition with tags attached.",
     },
     {
       title: "Special Offers",
       description:
         "We frequently run special promotions and discounts. Subscribe to our newsletter to stay updated on the latest deals and offers.",
     },
-  ]
+  ];
   return (
     <>
       {variantFields?.length > 0 && (
         <div className="border border-gray-200 p-3 block sm:hidden bg-white mb-2  ">
-          <div className="mb-3" >Select Variant</div>
-          <div className="divide-y divide-gray-200 flex flex-col gap-2" >
+          <div className="mb-3">Select Variant</div>
+          <div className="">
+            <div className="flex justify-between items-center">
+              <h3 className="font-semibold text-lg text-gray-900">
+                {productData.name || "Product Name"}{" "}
+                {(() => {
+                  const parts = [
+                    currentVariant?.fieldValue1,
+                    currentVariant?.fieldValue2,
+                    currentVariant?.fieldValue3,
+                  ].filter(Boolean); // remove empty values
+
+                  return `(${parts.join(", ")})`;
+                })()}
+              </h3>
+              <button
+                onClick={handleCancel}
+                className="text-gray-400 hover:text-gray-600 text-2xl"
+              >
+                &times;
+              </button>
+            </div>
+            <div className="mt-2 flex items-center gap-2">
+              <span className="font-bold text-lg text-gray-900">
+                ₹{currentVariant.price?.toLocaleString("en-IN") || "99,999"}
+              </span>
+              {currentVariant.mrp && (
+                <span className="line-through text-gray-500 text-sm">
+                  ₹{currentVariant.mrp?.toLocaleString("en-IN")}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Variant Selectors */}
+          <div className="px-4 pb-9">
+            {variantFields.map((fieldName, fieldIndex) => {
+              if (!fieldName) return null;
+              const filterValues = {};
+              if (fieldIndex > 0)
+                filterValues.fieldValue1 = tempSelection.field1;
+              if (fieldIndex > 1) {
+                filterValues.fieldValue1 = tempSelection.field1;
+                filterValues.fieldValue2 = tempSelection.field2;
+              }
+
+              const options = getUniqueValues(fieldIndex, filterValues);
+              const currentValue = tempSelection[`field${fieldIndex + 1}`];
+              const isColorField = fieldName.toLowerCase().includes("color");
+
+              return (
+                <div key={fieldIndex} className="mt-6">
+                  <h4 className="font-medium text-gray-800 mb-3">
+                    {fieldName}:{" "}
+                    <span className="text-gray-600">{currentValue}</span>
+                  </h4>
+                  <div
+                    className={
+                      isColorField
+                        ? "grid grid-cols-5 gap-3"
+                        : "grid grid-cols-2 gap-3"
+                    }
+                  >
+                    {options.map((option, index) => (
+                      <button
+                        key={index}
+                        onClick={() =>
+                          setTempSelection((prev) => ({
+                            ...prev,
+                            [`field${fieldIndex + 1}`]: option,
+                          }))
+                        }
+                        className={`${
+                          isColorField ? "p-2" : "py-3 px-4"
+                        } border rounded-lg transition-all ${
+                          currentValue === option
+                            ? isColorField
+                              ? "border-rose-500 bg-rose-50"
+                              : "border-black bg-black text-white"
+                            : "border-gray-300 hover:border-gray-400"
+                        }`}
+                      >
+                        {isColorField ? (
+                          <>
+                            <div className="w-full aspect-square bg-gray-100 rounded flex items-center justify-center overflow-hidden">
+                              <img
+                                src={getValidImageSrc(
+                                  variants.find((v) =>
+                                    fieldIndex === 0
+                                      ? v.fieldValue1 === option
+                                      : fieldIndex === 1
+                                      ? v.fieldValue2 === option
+                                      : v.fieldValue3 === option
+                                  )?.thumbnail
+                                )}
+                                alt={option}
+                                className="w-full h-full object-cover"
+                                loading="lazy"
+                              />
+                            </div>
+                            <span className="text-xs mt-1 block truncate text-gray-700">
+                              {option}
+                            </span>
+                          </>
+                        ) : (
+                          option
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div className="divide-y divide-gray-200 flex flex-col gap-2">
             {variantFields.map((fieldName, index) => {
               if (!fieldName) return null;
               const currentValue = selectedValues[`field${index + 1}`];
               return (
-                <div key={index} className="flex items-center justify-between py-1 " onClick={() => setShowVariantModal(true)}>
-                  <span className="text-sm font-medium text-gray-700">
-                    {fieldName}:
-                  </span>
-                  <div className="flex flex-row items-center gap-3 text-base text-black"  >
-                    <span className="font-medium">{currentValue}</span>
+                <div
+                  key={index}
+                  className="flex items-center justify-between py-1 "
+                  onClick={() => setShowVariantModal(true)}
+                >
+                  <div className="flex flex-row items-center gap-2">
+                    <span className="text-sm font-medium text-gray-700">
+                      {fieldName}:
+                    </span>
+                    <span className="font-medium line-clamp-1">
+                      {currentValue}
+                    </span>
+                  </div>
+                  <div className="flex flex-row items-center gap-3 text-base text-black">
                     <FaAngleRight />
                   </div>
                 </div>
@@ -675,25 +744,39 @@ const ProductDetails = () => {
             })}
           </div>
         </div>
-      )
-      }
+      )}
       <div className="w-full mx-auto font-sans bg-white  text-gray-800 px-4 py-6">
         {/* Header */}
         <div className="sm:mb-6 mb-3">
-
           <span className="text-sm font-semibold text-gray-600 uppercase tracking-wider">
-            {productData.brand || "N AND J"}
+            {productData.brand || "N AND J"}{" "}
+            {currentVariant
+              ? [
+                  currentVariant.fieldValue1,
+                  currentVariant.fieldValue2,
+                  currentVariant.fieldValue3,
+                ]
+                  .filter(Boolean)
+                  .join(" + ")
+              : ""}
           </span>
           <h1 className=" text-xl sm:text-2xl md:text-2xl font-semibold mt-1 mb-2 text-gray-900">
-            {productData.name || "Product Layout Style1"}
+            {productData.name} {console.log("currentVariant", currentVariant)}
+            {(() => {
+              const parts = [
+                currentVariant?.fieldValue1,
+                currentVariant?.fieldValue2,
+                currentVariant?.fieldValue3,
+              ].filter(Boolean); // remove empty values
+
+              return `(${parts.join(", ")})`;
+            })()}
           </h1>
 
           <div className="flex items-center flex-wrap gap-2 mt-3">
-            <div className="flex items-center">
-              {renderStars(rating?.toFixed(1) || 0)}
-              <span className="ml-1 text-sm text-gray-600">
-                {"0.0" || rating}
-              </span>
+            <div className="flex items-center gap-1">
+              {renderStars(product.rating)}
+              <span className="pl-2">{rating || "5"}</span>
             </div>
             <span className="text-sm text-gray-500 hidden md:inline">|</span>
             <span className="text-sm text-gray-600 hidden md:inline">
@@ -704,97 +787,190 @@ const ProductDetails = () => {
               href="#rating"
               className="text-sm text-blue-600 hover:text-blue-800 hover:underline hidden md:inline"
             >
-              Write a Review
+              {isAuth ? "Write a Review" : null}
             </a>
           </div>
         </div>
         {/* Price Section */}
-        <div className="sm:mb-6 mb-3 bg-gray-50 rounded-lg">
-          <div className="flex items-center p-3 sm:flex-wrap flex-row  gap-2 sm:gap-3">
-            <span className="sm:text-2xl text-xl font-bold text-[#212121]">
-              ₹{currentVariant.price?.toLocaleString("en-IN") || "99.00"}
-            </span>
-            <span className="line-through sm:text-base text-sm text-gray-500">
-              ₹{currentVariant.mrp?.toLocaleString("en-IN") || "135.00"}
-            </span>
+        <div className="sm:mb-6 mb-4 p-4 bg-white shadow-md rounded-xl border border-gray-100">
+          <div className="flex flex-row items-center gap-3 sm:gap-4">
+            {/* Price */}
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl sm:text-3xl font-bold text-gray-900">
+                ₹{currentVariant.price?.toLocaleString("en-IN") || "99.00"}
+              </span>
+              {currentVariant.mrp &&
+                currentVariant.mrp > currentVariant.price && (
+                  <span className="text-gray-400 line-through text-sm sm:text-base">
+                    ₹{currentVariant.mrp?.toLocaleString("en-IN") || "135.00"}
+                  </span>
+                )}
+            </div>
+
+            {/* Discount */}
             {discountPercentage > 0 && (
-              <span className="px-2 sm:py-1 py-0.4 w-fit bg-green-100 text-green-800 sm:text-sm text-xs font-semibold rounded">
+              <span className="px-3 py-1 w-fit rounded-lg bg-green-50 text-green-800 font-semibold text-sm sm:text-base">
                 {discountPercentage}% OFF
               </span>
             )}
+
+            {/* Stock */}
             <span
-              className={`ml-auto text-sm  font-medium px-2 py-1 rounded ${currentVariant.availablestock > 0
-                ? "bg-green-100 text-green-800"
-                : "bg-red-100 text-red-800"
-                }`}
+              className={` sm:mt-0 w-fit sm:ml-auto px-3 py-1 rounded-lg text-sm sm:text-base font-medium ${
+                currentVariant.availablestock > 0
+                  ? "bg-green-50 text-green-800"
+                  : "bg-red-50 text-red-800"
+              }`}
             >
               {currentVariant.availablestock > 0 ? "In Stock" : "Out of Stock"}
             </span>
           </div>
+
+          {/* Savings Info */}
           {discountPercentage > 0 && (
-            <div className="text-sm text-gray-600 px-2 pb-2">
-              You save: ₹{(currentVariant.mrp - currentVariant.price).toFixed(2)}
+            <div className="mt-2 text-sm text-gray-600">
+              You save: ₹
+              {(currentVariant.mrp - currentVariant.price).toFixed(2)}
             </div>
           )}
+
+          {/* Optional Additional Info */}
+          <div className="mt-3 text-gray-500 text-sm sm:text-base flex flex-wrap gap-2">
+            <span>
+              Country of Origin:{" "}
+              <strong className="text-black">
+                {productData.CountryofOrigin || "N/A"}
+              </strong>
+            </span>
+            <span>
+              Maximum Quantity:{" "}
+              <strong className="text-black">
+                {currentVariant.maximumQuantity || 1}
+              </strong>
+            </span>
+          </div>
         </div>
 
         <div className="flex flex-col gap-4">
           {/* Render variant selectors dynamically - desktop */}
-          {
-            variantFields && (
-              <div className="flex gap-2 ">
-                {variantFields.map((_, index) => (
-                  <div key={index} className="w-1/3">
-                    {renderVariantSelector(index)}
-                  </div>
-                ))}
-              </div>
-            )
-          }
+          {variantFields && (
+            <div className="grid sm:grid-cols-3 gap-2 grid-cols-1">
+              {variantFields.map((_, index) => (
+                <div key={index} className="w-full ">
+                  {renderVariantSelector(index)}
+                </div>
+              ))}
+            </div>
+          )}
           {/* Render variant summary - mobile */}
           {/* {renderVariantSummary()} */}
-          <div>
-            <span className="text-[#212121] text-base font-semibold">Seller Name:</span>
-            <span className="py-1 px-1 w-fit bg-[#2f415d]/10 text-black mx-4 rounded-xs">{'\u00a0'}{productData.shopName}</span>
-          </div>
-          {/* description */}
-          {
-            currentVariant?.availablestock && (
-              <div className="flex flex-row gap-1">
-                <span className="text-[#212121] text-base font-semibold">Available stock:</span>
+          <div className="flex flex-col gap-3 w-full bg-white shadow-lg rounded-2xl p-6">
+            {/* Seller Name */}
+            <div className="flex items-center gap-2">
+              <span className="text-gray-800 text-base font-semibold">
+                Seller:
+              </span>
+              <span
+                onClick={handleClick}
+                className="text-blue-600 font-medium cursor-pointer hover:underline transition"
+              >
+                {isNaN(productData?.shopName)
+                  ? productData?.shopName
+                  : "Ewshopping"}
+              </span>
+            </div>
+
+            {/* Available Stock */}
+            {currentVariant?.availablestock !== undefined && (
+              <div className="flex items-center gap-2">
+                <span className="text-gray-800 text-base font-semibold">
+                  Available Stock:
+                </span>
                 <span
-                  className={`text-sm  font-medium px-2 py-1 rounded ${currentVariant.availablestock > 0
-                    ? "bg-green-100 text-green-800"
-                    : "bg-red-100 text-red-800"
-                    }`}
+                  className={`text-sm font-medium px-3 py-1 rounded-full ${
+                    currentVariant.availablestock > 0
+                      ? "bg-green-100 text-green-800"
+                      : "bg-red-100 text-red-800"
+                  }`}
                 >
-                  {currentVariant.availablestock > 0 ? productData?.availablestock : "Out of Stock"}
+                  {currentVariant.availablestock > 0
+                    ? currentVariant.availablestock
+                    : "Out of Stock"}
                 </span>
               </div>
-            )
-          }
-          <div>
-            {
-              productData?.shortDescription && (
-                <div className="flex flex-row gap-1">
-                  <div className="flex flex-row gap-2">
-                    <div className="text-[#212121] text-base font-semibold">Description:</div>
-                    <div className="text-[#212121] text-sm font-medium ">
-                      {showMore ? productData?.shortDescription : shortText}
-                      {isLong && !showMore && "..."}
-                      {isLong && (
-                        <button
-                          className="text-blue-600 text-sm font-medium pl-5"
-                          onClick={() => setShowMore(!showMore)}>
-                          {showMore ? "Show Less" : "Show More"}
-                        </button>
-                      )}
-                    </div>
-                  </div>
+            )}
+          </div>
 
+          <div className="w-full bg-white shadow-lg rounded-2xl p-6 flex flex-col sm:flex-row gap-8 border border-gray-100">
+            {/* Highlights Section */}
+            <div className="sm:w-1/2">
+              <h2 className="text-lg sm:text-xl font-bold mb-4 font-sans pb-2 border-b border-gray-200 text-gray-800">
+                Highlights
+              </h2>
+              <ul className="flex flex-col gap-3 mt-3">
+                <li className="flex items-center py-2 border-b border-gray-100 hover:bg-gray-50 rounded-md transition">
+                  <span className="font-semibold text-gray-700 w-36">
+                    Brand Name
+                  </span>
+                  <span className="text-gray-600">{productData?.brand}</span>
+                </li>
+                {variantFields.map((fieldName, index) => {
+                  if (!fieldName) return null;
+                  const currentValue = selectedValues[`field${index + 1}`];
+                  return (
+                    <li
+                      key={index}
+                      className="flex  items-center py-2 border-b border-gray-100 hover:bg-gray-50 rounded-md transition"
+                    >
+                      <span className="font-semibold text-gray-700 w-36">
+                        {fieldName}
+                      </span>
+                      <span className="text-gray-600">{currentValue}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+
+            {/* Payment Options Section */}
+            <div className="sm:w-1/2">
+              <h2 className="text-lg sm:text-xl font-bold mb-4 font-sans pb-2 border-b border-gray-200 text-gray-800">
+                Payment Options
+              </h2>
+              <ul className="flex flex-col gap-2 mt-3 text-gray-700 list-disc list-inside">
+                <li className="hover:text-gray-900 transition">
+                  Cash on Delivery
+                </li>
+                <li className="hover:text-gray-900 transition">
+                  Net Banking & Credit/Debit/ATM Card
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <DeliveryRange noof_delivery_days={productData.noof_delivery_days} />
+          <div>
+            {productData?.shortDescription && (
+              <div className="flex flex-row gap-1">
+                <div className="flex flex-row gap-2">
+                  <div className="text-[#212121] text-base font-semibold">
+                    Description:
+                  </div>
+                  <div className="text-[#212121] text-sm font-medium ">
+                    {showMore ? productData?.shortDescription : shortText}
+                    {isLong && !showMore && "..."}
+                    {isLong && (
+                      <button
+                        className="text-blue-600 text-sm font-medium pl-5"
+                        onClick={() => setShowMore(!showMore)}
+                      >
+                        {showMore ? "Show Less" : "Show More"}
+                      </button>
+                    )}
+                  </div>
                 </div>
-              )
-            }
+              </div>
+            )}
           </div>
           {/* Additional Info */}
           <div className="space-y-3">
@@ -805,10 +981,10 @@ const ProductDetails = () => {
                 <span className="font-medium">₹500</span>
               </span>
             </div>
-
           </div>
-          {/* Coupon Section */}
-          {/* <div className="bg-gradient-to-r from-green-50 to-cyan-50 p-4 rounded-lg border border-green-100">
+          <>
+            {/* Coupon Section */}
+            {/* <div className="bg-gradient-to-r from-green-50 to-cyan-50 p-4 rounded-lg border border-green-100">
             <div className="flex items-start gap-3">
               <RiCoupon2Fill className="text-green-600 text-xl mt-1 flex-shrink-0" />
               <div>
@@ -826,6 +1002,7 @@ const ProductDetails = () => {
               </div>
             </div>
           </div> */}
+          </>
 
           <div className="bg-blue-50 p-4 rounded-lg">
             <h4 className="font-semibold text-blue-800 mb-2">
@@ -837,68 +1014,45 @@ const ProductDetails = () => {
               reaching you.
             </p>
           </div>
-          <div className="w-full border border-gray-200 p-4 flex flex-col sm:flex-row gap-6">
-            {/* Highlights Section */}
-            <div className="sm:w-1/2">
-              <h2 className="text-md sm:text-lg font-semibold mb-4 font-sans pb-2 border-b border-gray-200 text-start">
-                Highlights
-              </h2>
-              <ul className="flex flex-col gap-2 w-full text-start list-none mt-2">
-                <li className="flex gap-2 py-1">
-                  <span className="text-sm sm:text-md font-medium sm:font-semibold w-32 text-gray-700">Brand Name</span>
-                  <span className="text-md text-gray-600">{productData?.brand}</span>
-                </li>
-                {variantFields.map((fieldName, index) => {
-                  if (!fieldName) return null;
-                  const currentValue = selectedValues[`field${index + 1}`];
-                  return (
-                    <li key={index} className="flex gap-2 py-1">
-                      <span className="text-sm sm:text-md font-medium sm:font-semibold w-32 text-gray-700">{fieldName}</span>
-                      <span className="text-sm text-gray-600">{currentValue}</span>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-
-            {/* Payment Options Section */}
-            <div className="sm:w-1/2">
-              <h2 className="text-md sm:text-lg font-semibold mb-4 font-sans pb-2 border-b border-gray-200 text-start">
-                Payment Options
-              </h2>
-              <ul className="flex flex-col gap-2 mt-2 list-disc list-inside text-gray-700">
-                <li>Cash on Delivery</li>
-                <li>Net banking & Credit/Debit/ATM card</li>
-              </ul>
-            </div>
-          </div>
 
           {/* specifications */}
-          <div className="bg-white border border-[#f0f0f0] rounded-lg p-3 mt-2 ">
-            <div className="mb-7">
-              <h2 className="text-xl font-semibold border-[#f0f0f0] mb-4 font-sans">Specifications</h2>
+          <div className="bg-white shadow-md rounded-2xl p-6 mt-4 border border-gray-100">
+            {/* Header */}
+            <div className="mb-6 border-b border-gray-200 pb-3">
+              <h2 className="text-2xl font-bold text-gray-800 font-sans tracking-wide">
+                Specifications
+              </h2>
             </div>
+
+            {/* Dynamic Sections */}
             {dynamicSections.map((section, idx) => (
               <ProductDetailSection
                 key={idx}
                 title={section.title}
                 data={section.data}
-                defaultOpen={idx === 0}
+                defaultOpen={idx === 0} // only first open initially
               />
             ))}
+
+            {/* General Info */}
             {productData.length > 0 && productData?.CountryofOrigin && (
               <ProductDetailSection
                 title="General Information"
                 data={[
-                  { label: "Country of Origin", value: productData?.CountryofOrigin },
+                  {
+                    label: "Country of Origin",
+                    value: productData?.CountryofOrigin,
+                  },
                   ...(productData?.brand
                     ? [{ label: "Brand", value: productData?.brand }]
                     : []),
                 ]}
+                className="mb-4"
               />
             )}
           </div>
-          <div className="space-y-8 border border-gray-200 p-3 rounded-lg">
+
+          <div className="space-y-8 p-6 rounded-2xl shadow-lg bg-white ">
             <div
               className="w-full flex flex-row justify-between items-center cursor-pointer"
               onClick={() =>
@@ -910,7 +1064,11 @@ const ProductDetails = () => {
               <h3 className="text-base sm:text-xl font-semibold text-gray-800">
                 Shipping & Returns
               </h3>
-              {modelOpen?.type === "ship" ? <FaAngleUp className="text-gray-500" /> : <FaAngleDown className="text-gray-500" />}
+              {modelOpen?.type === "ship" ? (
+                <FaAngleUp className="text-gray-500" />
+              ) : (
+                <FaAngleDown className="text-gray-500" />
+              )}
             </div>
 
             {modelOpen?.type === "ship" && (
@@ -923,22 +1081,25 @@ const ProductDetails = () => {
                     {section.items ? (
                       <ul className="space-y-3">
                         {section.items.map((item, i) => (
-                          <li key={i} className="flex items-start sm:text-base text-sm gap-3 text-gray-700">
+                          <li
+                            key={i}
+                            className="flex items-start sm:text-base text-sm gap-3 text-gray-700"
+                          >
                             <IoIosArrowForward className="text-blue-500 mt-1 flex-shrink-0" />
                             <span>{item}</span>
                           </li>
                         ))}
                       </ul>
                     ) : (
-                      <p className="text-gray-700 text-sm sm:text-base">{section.description}</p>
+                      <p className="text-gray-700 text-sm sm:text-base">
+                        {section.description}
+                      </p>
                     )}
                   </div>
                 ))}
               </div>
             )}
           </div>
-
-
         </div>
 
         <ProductTabs />

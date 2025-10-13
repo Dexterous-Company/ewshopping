@@ -194,7 +194,7 @@ const Header = () => {
         <Link href="/" className="hidden sm:block md:w-[20vw] lg:w-[40vw]">
           <div className="md:block lg:hidden h-10">
             <img
-              src="/logoe.png"
+              src="/Logoe.png"
               alt="Logo Small"
               className="w-full h-10 object-contain"
             />

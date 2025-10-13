@@ -7,7 +7,7 @@ import React, { useEffect, useState } from "react";
 const Baseurl = process.env.NEXT_PUBLIC_API_URL;
 
 const ProductTags = ({ slug }) => {
-  const [prodType, setProdType] = useState([])
+  const [prodType, setProdType] = useState([]);
   const [prods, setProds] = useState([]);
   const [brandData, setbrandData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -16,11 +16,14 @@ const ProductTags = ({ slug }) => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [categoryResponse, productsResponse, brandResponse] = await Promise.all([
-          fetch(`${Baseurl}/api/v1/categorytag/subcat/${slug}`),
-          fetch(`${Baseurl}/api/v1/approve_card/getProductBySubCatUrl/${slug}`),
-          fetch(`${Baseurl}/api/v1/brandPromotion/getTopBrands`)
-        ]);
+        const [categoryResponse, productsResponse, brandResponse] =
+          await Promise.all([
+            fetch(`${Baseurl}/api/v1/categorytag/subcat/${slug}`),
+            fetch(
+              `${Baseurl}/api/v1/approve_card/getProductBySubCatUrl/${slug}`
+            ),
+            fetch(`${Baseurl}/api/v1/brandPromotion/getTopBrands`),
+          ]);
 
         const categoryData = await categoryResponse.json();
         const productsData = await productsResponse.json();
@@ -44,17 +47,20 @@ const ProductTags = ({ slug }) => {
   }
 
   return (
-    <div>
+    <div className="sm:pb-0 pb-25">
       <ShowingCategories prodType={prodType} />
-      <Brands brandData={brandData} />
-      <div className="text-sl font-medium px-5 py-4 text-2xl">
+      <div className="text-lg font-medium px-5 sm:py-4 py-2 sm:text-2xl">
         Offers Products
       </div>
       <div className="px-5 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
         {prods.length > 0 ? (
-          prods.map((product) => (
-            <OffersProducts key={product._id} product={product} />
-          ))
+          prods
+            .filter(
+              (product) => product.slugUrl !== "a3x-ocean-green,-64-gb-4gb-ram-"
+            )
+            .map((product) => (
+              <OffersProducts key={product._id} product={product} />
+            ))
         ) : (
           <div className="col-span-full text-center py-8">
             No products found in this category

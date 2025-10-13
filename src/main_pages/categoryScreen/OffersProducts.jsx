@@ -5,16 +5,23 @@ import { FaStar, FaStarHalfAlt, FaRegStar } from "react-icons/fa";
 
 const OffersProducts = ({ product }) => {
   // Calculate discount percentage
-  const discountPercentage = product.mrpRange && product.priceRange
-    ? Math.round(((parseInt(product.mrpRange) - parseInt(product.priceRange)) / parseInt(product.mrpRange)) * 100)
-    : 0;
-
+  const discountPercentage =
+    product.mrpRange && product.priceRange
+      ? Math.round(
+          ((parseInt(product.mrpRange) - parseInt(product.priceRange)) /
+            parseInt(product.mrpRange)) *
+            100
+        )
+      : 0;
 
   return (
-    <Link href={`/product/${product.slugUrl}`} className="bg-white rounded-lg relative overflow-hidden transition-shadow duration-300 shadow-sm hover:shadow-md">
+    <Link
+      href={`/product/${product.slugUrl}`}
+      className="bg-white rounded-sm relative overflow-hidden transition-shadow duration-300 shadow-sm hover:shadow-md"
+    >
       {/* Badge - Show discount if available */}
       {discountPercentage > 0 && (
-        <span className="absolute top-2 left-2 text-white text-xs px-2 py-1 font-semibold rounded z-10 bg-red-600">
+        <span className="absolute top-2 left-2 text-white text-xs px-2 py-1 font-semibold rounded z-10 bg-[#2eab2c]">
           {discountPercentage}% OFF
         </span>
       )}
@@ -28,7 +35,7 @@ const OffersProducts = ({ product }) => {
 
       {/* Images */}
       <div className="relative aspect-square">
-        <div className="relative w-full h-full group">
+        <div className="relative aspect-square group">
           {product.thumbnail && product.thumbnail.length > 0 ? (
             <>
               <Image
@@ -54,21 +61,17 @@ const OffersProducts = ({ product }) => {
 
       {/* Product Info */}
       <div className="p-3">
-        <h3 className="text-sm font-semibold line-clamp-2 mb-1 h-10">
-          {product.name?.length > 40
-            ? `${product.name?.slice(0, 37)}...`
-            : product.name}
+        <h3 className="text-sm font-semibold line-clamp-1 mb-1">
+          {product.name}
         </h3>
-        <p className="text-xs text-gray-500 mb-2 line-clamp-1">
-          {product.shortDescription?.length > 50
-            ? `${product.shortDescription?.slice(0, 47)}...`
-            : product.shortDescription}
+        <p className="text-xs text-gray-500 line-clamp-1">
+          {product.shortDescription}
         </p>
 
-        <div className="flex items-center gap-2 mb-2">
-          <p className="text-base font-bold text-[#212121]">
+        <div className="flex flex-col mb-1">
+          <span className="text-base font-bold text-blue-900">
             ₹{product.priceRange}
-          </p>
+          </span>
           {product.mrpRange && product.mrpRange !== product.priceRange && (
             <p className="text-xs line-through text-gray-400">
               ₹{product.mrpRange}

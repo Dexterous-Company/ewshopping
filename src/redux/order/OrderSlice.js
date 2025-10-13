@@ -3,12 +3,25 @@ import axios from "axios";
 const Baseurl = process.env.NEXT_PUBLIC_API_URL;
 
 // Helper function to safely access localStorage
+// const getLocalStorageItem = (key) => {
+//   if (typeof window !== "undefined") {
+//     const item = localStorage.getItem(key);
+//     return item ? JSON.parse(item) : null;
+//   }
+//   return null;
+// };
+
 const getLocalStorageItem = (key) => {
-  if (typeof window !== 'undefined') {
+  if (typeof window !== "undefined") {
     const item = localStorage.getItem(key);
-    return item ? JSON.parse(item) : null;
+    try {
+      const parsed = item ? JSON.parse(item) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
   }
-  return null;
+  return [];
 };
 
 const initialState = {
@@ -76,7 +89,7 @@ export const getTotalOrderByClId = createAsyncThunk(
   async (clientid, thunkAPI) => {
     try {
       const url = `${Baseurl}/api/v1/order/orderbyclientid/${clientid}`;
-      const resp = await axios.get(url);      
+      const resp = await axios.get(url);
       return resp.data;
     } catch (error) {
       return thunkAPI.rejectWithValue(
@@ -126,14 +139,17 @@ const OrderSlice = createSlice({
     clearOrder(state) {
       state.clientOrder = [];
       state.currentOrder = "";
-      if (typeof window !== 'undefined') {
+      if (typeof window !== "undefined") {
         localStorage.setItem("clientOrder", JSON.stringify(state.clientOrder));
-        localStorage.setItem("currentOrder", JSON.stringify(state.currentOrder));
+        localStorage.setItem(
+          "currentOrder",
+          JSON.stringify(state.currentOrder)
+        );
       }
     },
     setpaymentUpdateOrder(state, action) {
       state.paymentUpdateOrder = action.payload.order;
-      if (typeof window !== 'undefined') {
+      if (typeof window !== "undefined") {
         localStorage.setItem(
           "paymentUpdateOrder",
           JSON.stringify(state.paymentUpdateOrder)
@@ -142,7 +158,7 @@ const OrderSlice = createSlice({
     },
     setpaymentUpdateOrderClear(state) {
       state.paymentUpdateOrder = "";
-      if (typeof window !== 'undefined') {
+      if (typeof window !== "undefined") {
         localStorage.setItem(
           "paymentUpdateOrder",
           JSON.stringify(state.paymentUpdateOrder)
@@ -151,8 +167,11 @@ const OrderSlice = createSlice({
     },
     setcurrentOrder(state, action) {
       state.currentOrder = action.payload;
-      if (typeof window !== 'undefined') {
-        localStorage.setItem("currentOrder", JSON.stringify(state.currentOrder));
+      if (typeof window !== "undefined") {
+        localStorage.setItem(
+          "currentOrder",
+          JSON.stringify(state.currentOrder)
+        );
       }
     },
   },
@@ -163,13 +182,20 @@ const OrderSlice = createSlice({
       })
       .addCase(newOrder.fulfilled, (state, action) => {
         if (action.payload?.success) {
-          state.clientOrder = [action.payload.order, ...state.clientOrder];
+          state.clientOrder = [
+            action.payload.order,
+            ...(Array.isArray(state.clientOrder) ? state.clientOrder : []),
+          ];
         }
-        if (typeof window !== 'undefined') {
-          localStorage.setItem("clientOrder", JSON.stringify(state.clientOrder));
+        if (typeof window !== "undefined") {
+          localStorage.setItem(
+            "clientOrder",
+            JSON.stringify(state.clientOrder)
+          );
         }
         state.ordersLoading = false;
       })
+
       .addCase(newOrder.rejected, (state) => {
         state.ordersLoading = false;
       })
@@ -178,8 +204,11 @@ const OrderSlice = createSlice({
       })
       .addCase(getOrderbyClId.fulfilled, (state, action) => {
         state.clientOrder = action.payload || [];
-        if (typeof window !== 'undefined') {
-          localStorage.setItem("clientOrder", JSON.stringify(state.clientOrder));
+        if (typeof window !== "undefined") {
+          localStorage.setItem(
+            "clientOrder",
+            JSON.stringify(state.clientOrder)
+          );
         }
         state.isordersLoading = false;
       })
@@ -191,8 +220,11 @@ const OrderSlice = createSlice({
       })
       .addCase(getTotalOrderByClId.fulfilled, (state, action) => {
         state.totalClientOrder = action.payload?.order || [];
-        if (typeof window !== 'undefined') {
-          localStorage.setItem("clientOrder", JSON.stringify(state.clientOrder));
+        if (typeof window !== "undefined") {
+          localStorage.setItem(
+            "clientOrder",
+            JSON.stringify(state.clientOrder)
+          );
         }
         state.isordersLoading = false;
       })

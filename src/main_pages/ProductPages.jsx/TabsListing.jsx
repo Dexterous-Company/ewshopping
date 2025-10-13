@@ -17,7 +17,7 @@ const StarRating = ({
   size = "md",
 }) => {
   const starSize = size === "lg" ? "text-xl" : "text-base";
-
+  const { loginData } = useSelector((store) => store.Athentication);
   return (
     <div className="inline-flex gap-1">
       {[1, 2, 3, 4, 5].map((star) => {
@@ -25,8 +25,9 @@ const StarRating = ({
           return (
             <span
               key={star}
-              className={`${interactive ? "cursor-pointer" : ""
-                } ${starSize} text-yellow-400`}
+              className={`${
+                interactive ? "cursor-pointer" : ""
+              } ${starSize} text-yellow-400`}
               onClick={() => interactive && setRating(star)}
             >
               <FaStar />
@@ -36,8 +37,9 @@ const StarRating = ({
           return (
             <span
               key={star}
-              className={`${interactive ? "cursor-pointer" : ""
-                } ${starSize} text-yellow-400`}
+              className={`${
+                interactive ? "cursor-pointer" : ""
+              } ${starSize} text-yellow-400`}
               onClick={() => interactive && setRating(star)}
             >
               <FaStarHalfAlt />
@@ -47,8 +49,9 @@ const StarRating = ({
           return (
             <span
               key={star}
-              className={`${interactive ? "cursor-pointer" : ""
-                } ${starSize} text-gray-300`}
+              className={`${
+                interactive ? "cursor-pointer" : ""
+              } ${starSize} text-gray-300`}
               onClick={() => interactive && setRating(star)}
             >
               <FaStar />
@@ -81,13 +84,6 @@ export default function ProductTabs() {
   const navigate = useRouter();
   const { loginData } = useSelector((state) => state.Athentication);
 
-  // useEffect(() => {
-  //   if (productData?._id && loginData?._id && customerReviews.length > 0) {
-  //     const userReview = customerReviews.find((review) => review.userId === loginData._id);
-  //     console.log(userReview, "userReview");
-  //     setHasUserReviewed(!!userReview);
-  //   }
-  // }, [customerReviews, loginData, productData]);
   useEffect(() => {
     if (productData?._id && loginData?._id && customerReviews.length > 0) {
       const userReview = customerReviews.find(
@@ -95,11 +91,9 @@ export default function ProductTabs() {
           review.userId === loginData._id &&
           review.productId === productData._id
       );
-      console.log(userReview, "userReview");
       setHasUserReviewed(!!userReview);
     }
   }, [customerReviews, loginData, productData]);
-
 
   // Review form state
   const [formData, setFormData] = useState({
@@ -150,7 +144,8 @@ export default function ProductTabs() {
           productId: productData._id,
           reviewData: formData,
         })
-      ).unwrap()
+      )
+        .unwrap()
         .then(() => {
           setFormData({
             name: loginData?.name || "",
@@ -178,7 +173,6 @@ export default function ProductTabs() {
     }
   };
 
-
   const renderReviewsTab = () => {
     if (status === "loading" && customerReviews.length === 0) {
       return (
@@ -192,13 +186,6 @@ export default function ProductTabs() {
       );
     }
 
-    // if (status === "failed") {
-    //   return (
-    //     <div className="bg-red-50 p-4 rounded-lg text-red-600 my-6">
-    //       Error loading reviews: {error?.message || "Please try again later"}
-    //     </div>
-    //   );
-    // }
     return (
       <div className="mt-5 border border-gray-200 rounded-lg p-3">
         <h3 className=" text-base sm:text-xl font-semibold text-gray-800">
@@ -230,7 +217,10 @@ export default function ProductTabs() {
                   (r) => r.stars === stars
                 ) || { percentage: 0, count: 0 };
                 return (
-                  <div key={stars} className="flex items-center space-x-3 gap-2">
+                  <div
+                    key={stars}
+                    className="flex items-center space-x-3 gap-2"
+                  >
                     <span className="text-gray-600 w-8">{stars} Star</span>
                     <div className="flex-1 bg-gray-200 h-2 rounded-full overflow-hidden">
                       <div
@@ -261,7 +251,9 @@ export default function ProductTabs() {
                       </div>
                       <div className="flex-1">
                         <div className="flex justify-between items-start">
-                          <h5 className="font-semibold text-gray-800">{review.name}</h5>
+                          <h5 className="font-semibold text-gray-800">
+                            {review.name}
+                          </h5>
                           <span className="text-sm text-gray-500">
                             {new Date(review.createdAt).toLocaleDateString()}
                           </span>
@@ -286,7 +278,6 @@ export default function ProductTabs() {
               </div>
             )}
           </div>
-
         </div>
         {/* Review Form */}
         {hasUserReviewed ? (
@@ -297,21 +288,22 @@ export default function ProductTabs() {
                 You have already reviewed this product.
                 {customerReviews.find((r) => r.userId === loginData._id)
                   ?.content && (
-                    <span>
-                      {" "}
-                      Your review: "
-                      {
-                        customerReviews.find((r) => r.userId === loginData._id)
-                          .content
-                      }
-                      "
-                    </span>
-                  )}
+                  <span>
+                    {" "}
+                    Your review: "
+                    {
+                      customerReviews.find((r) => r.userId === loginData._id)
+                        .content
+                    }
+                    "
+                  </span>
+                )}
               </p>
             </div>
           </div>
         ) : (
           <>
+            {loginData ? null : null}
             <div className="mt-8 bg-white p-6 rounded-lg shadow-sm border border-gray-100">
               <h4 className="text-lg font-semibold mb-4 text-gray-800">
                 Write a Review

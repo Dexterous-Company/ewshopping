@@ -48,10 +48,16 @@ const DesktopFilter = () => {
   const [isOpenCategory, setIsOpenCategory] = useState(true);
   const [showMoreCategories, setShowMoreCategories] = useState(false);
   const [showMoreBrands, setShowMoreBrands] = useState(false);
+  
+  // Get actual price range from available filters or use defaults
+  const minPriceFromFilters = availableFilters?.priceRange?.min || 0;
+  const maxPriceFromFilters = availableFilters?.priceRange?.max || 10000;
+  
   const [priceRange, setPriceRange] = useState(() => [
-    Number(searchParams.get('minPrice')) || 0,
-    Number(searchParams.get('maxPrice')) || 10000,
+    Number(searchParams.get('minPrice')) || minPriceFromFilters,
+    Number(searchParams.get('maxPrice')) || maxPriceFromFilters,
   ]);
+
   const [selectedBrands, setSelectedBrands] = useState(
     searchParams.getAll("brand[]") || []
   );
@@ -59,17 +65,22 @@ const DesktopFilter = () => {
     searchParams.get("color") ? [searchParams.get("color")] : []
   );
 
-  // Initialize filters from URL params
+  // Initialize filters from URL params and available filters
   useEffect(() => {
     setSelectedBrands(searchParams.getAll("brand[]") || []);
     setSelectedColors(
       searchParams.get("color") ? [searchParams.get("color")] : []
     );
+    
+    // Set price range from URL params or use available filter range
+    const urlMinPrice = searchParams.get('minPrice');
+    const urlMaxPrice = searchParams.get('maxPrice');
+    
     setPriceRange([
-      searchParams.get('minPrice') ? Number(searchParams.get('minPrice')) : 0,
-      searchParams.get('maxPrice') ? Number(searchParams.get('maxPrice')) : 10000
+      urlMinPrice ? Number(urlMinPrice) : minPriceFromFilters,
+      urlMaxPrice ? Number(urlMaxPrice) : maxPriceFromFilters
     ]);
-  }, [searchParams]);
+  }, [searchParams, minPriceFromFilters, maxPriceFromFilters]);
 
   // Active filters for display
   const activeFilters = [
@@ -79,13 +90,13 @@ const DesktopFilter = () => {
     ...(searchParams.get("color")
       ? [{ id: "color", value: searchParams.get("color") }]
       : []),
-    ...(searchParams.get("minPrice")
+    ...(searchParams.get("minPrice") || searchParams.get("maxPrice")
       ? [
           {
             id: "price",
-            value: `₹${searchParams.get("minPrice")}-₹${searchParams.get(
-              "maxPrice"
-            )}`,
+            value: `₹${searchParams.get("minPrice") || minPriceFromFilters}-₹${
+              searchParams.get("maxPrice") || maxPriceFromFilters
+            }`,
           },
         ]
       : []),
@@ -115,6 +126,14 @@ const DesktopFilter = () => {
     updateUrlParams({
       minPrice: priceRange[0].toString(),
       maxPrice: priceRange[1].toString(),
+    });
+  };
+
+  const handlePriceReset = () => {
+    setPriceRange([minPriceFromFilters, maxPriceFromFilters]);
+    updateUrlParams({
+      minPrice: null,
+      maxPrice: null,
     });
   };
 
@@ -165,6 +184,8 @@ const DesktopFilter = () => {
     } else if (filter.id === "price") {
       params.delete("minPrice");
       params.delete("maxPrice");
+      // Reset local price range state
+      setPriceRange([minPriceFromFilters, maxPriceFromFilters]);
     } else if (filter.id.startsWith("brand-")) {
       const brandValue = filter.value;
       params.delete("brand[]");
@@ -181,6 +202,8 @@ const DesktopFilter = () => {
     if (searchParams.get("q")) {
       params.set("q", searchParams.get("q"));
     }
+    // Reset local price range state
+    setPriceRange([minPriceFromFilters, maxPriceFromFilters]);
     router.push(`?${params.toString()}`);
   };
 
@@ -191,20 +214,14 @@ const DesktopFilter = () => {
     return `?${params.toString()}`;
   };
 
-  const colorOptions = [
-    { name: "Black", value: "black", hex: "#000000" },
-    { name: "White", value: "white", hex: "#ffffff", border: true },
-    { name: "Red", value: "red", hex: "#ef4444" },
-    { name: "Blue", value: "blue", hex: "#3b82f6" },
-    { name: "Green", value: "green", hex: "#10b981" },
-    { name: "Yellow", value: "yellow", hex: "#fbbf24" },
-    { name: "Pink", value: "pink", hex: "#ec4899" },
-    { name: "Purple", value: "purple", hex: "#8b5cf6" },
-    { name: "Gray", value: "gray", hex: "#6b7280" },
-    { name: "Brown", value: "brown", hex: "#78350f" },
-    { name: "Orange", value: "orange", hex: "#f97316" },
-    { name: "Gold", value: "gold", hex: "#f59e0b" },
-  ];
+  // Format price for display
+  const formatPrice = (price) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 0
+    }).format(price);
+  };
 
   return (
     <div className="hidden sm:block w-full">
@@ -309,7 +326,7 @@ const DesktopFilter = () => {
         </div>
 
         {/* Price Range Filter */}
-        {/* <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
+        <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
           <div
             className="flex justify-between items-center cursor-pointer"
             onClick={() => setIsOpenPrice(!isOpenPrice)}
@@ -332,10 +349,10 @@ const DesktopFilter = () => {
                 value={priceRange}
                 onChange={handlePriceChange}
                 valueLabelDisplay="auto"
-                valueLabelFormat={(value) => `₹${value}`}
-                min={0}
-                max={10000}
-                step={100}
+                valueLabelFormat={(value) => formatPrice(value)}
+                min={minPriceFromFilters}
+                max={maxPriceFromFilters}
+                step={Math.max(1, Math.floor((maxPriceFromFilters - minPriceFromFilters) / 100))}
               />
               <Box sx={{ 
                 display: 'flex', 
@@ -344,30 +361,45 @@ const DesktopFilter = () => {
                 mb: 2
               }}>
                 <Typography variant="body2" color="text.secondary">
-                  ₹{priceRange[0].toLocaleString()}
+                  {formatPrice(priceRange[0])}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  ₹{priceRange[1].toLocaleString()}
+                  {formatPrice(priceRange[1])}
                 </Typography>
               </Box>
-              <Button
-                fullWidth
-                variant="contained"
-                onClick={handlePriceApply}
-                sx={{
-                  bgcolor: '#e96f84',
-                  '&:hover': {
-                    bgcolor: '#d45f74',
-                  },
-                }}
-              >
-                Apply
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  fullWidth
+                  variant="contained"
+                  onClick={handlePriceApply}
+                  sx={{
+                    bgcolor: '#e96f84',
+                    '&:hover': {
+                      bgcolor: '#d45f74',
+                    },
+                  }}
+                >
+                  Apply
+                </Button>
+                <Button
+                  fullWidth
+                  variant="outlined"
+                  onClick={handlePriceReset}
+                  sx={{
+                    color: '#e96f84',
+                    borderColor: '#e96f84',
+                    '&:hover': {
+                      borderColor: '#d45f74',
+                      bgcolor: 'rgba(233, 111, 132, 0.04)',
+                    },
+                  }}
+                >
+                  Reset
+                </Button>
+              </div>
             </Box>
           )}
-        </div> */}
-
-     
+        </div>
 
         {/* Brands Filter */}
         <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">

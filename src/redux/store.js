@@ -16,6 +16,8 @@ import couponReducer from "./coupon/couponSlice";
 import wishlistReducer from "./wishlist/wishlistSlice";
 import subCategoryReducer from "../redux/subcategory/SubCategorySlice";
 import categoryReducer from "../redux/category/categorySlice";
+import shopProductsReducer from "../redux/sellerProduct/SellerProductSlice";
+import contactReducer from "../redux/contactUs/ContactUsSlice";
 
 export const store = configureStore({
   reducer: {
@@ -36,5 +38,7 @@ export const store = configureStore({
     wishlist: wishlistReducer,
     subcategory: subCategoryReducer,
     category: categoryReducer,
+    shopProducts: shopProductsReducer,
+    contacts: contactReducer,
   },
 });

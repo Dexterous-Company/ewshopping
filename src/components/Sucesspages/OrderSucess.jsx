@@ -17,7 +17,7 @@ const OrderSucess = () => {
   }, []);
   const today = new Date();
   const after3Days = new Date(today);
-  after3Days.setDate(today.getDate() + 3);
+  after3Days.setDate(today.getDate() + 7);
 
   const options = { weekday: 'short', month: 'short', day: 'numeric', year: '2-digit' };
   const formattedDate = after3Days.toLocaleDateString('en-US', options)

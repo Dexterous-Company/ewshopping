@@ -124,14 +124,14 @@ const Career = () => {
               </ul>
 
               {/* Contact Info */}
-              <div className="mt-8 bg-blue-50 rounded-lg p-4 border border-blue-100">
+              {/* <div className="mt-8 bg-blue-50 rounded-lg p-4 border border-blue-100">
                 <h3 className="font-semibold mb-2 text-[#2f615d]">Need Help?</h3>
                 <p className="text-sm text-gray-600 mb-3">Reach out to our HR team for job applications.</p>
                 <button className="w-full bg-[#2f415d] hover:bg-[#e96f84] text-white py-2 px-4 transition flex items-center justify-center">
                   <FiMail className="mr-2" />
                   Contact HR
                 </button>
-              </div>
+              </div> */}
             </div>
           </div>
 
@@ -169,7 +169,7 @@ const Career = () => {
             </div>
 
             {/* Contact HR Section */}
-            <div className="mt-8 grid md:grid-cols-2 gap-6">
+            {/* <div className="mt-8 grid md:grid-cols-2 gap-6">
               <div className="bg-white rounded-xl shadow-md p-6 border-t-4 border-[#2f415d]">
                 <div className="flex items-start">
                   <div className="bg-blue-100 p-3 rounded-full mr-4">
@@ -186,7 +186,6 @@ const Career = () => {
                   </div>
                 </div>
               </div>
-
               <div className="bg-white rounded-xl shadow-md p-6 border-t-4 border-[#e96f84]">
                 <div className="flex items-start">
                   <div className="bg-green-100 p-3 rounded-full mr-4">
@@ -203,7 +202,7 @@ const Career = () => {
                   </div>
                 </div>
               </div>
-            </div>
+            </div> */}
 
           </div>
         </div>

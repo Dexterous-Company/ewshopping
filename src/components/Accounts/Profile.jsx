@@ -22,11 +22,12 @@ import { getOrderbyClId, getTotalOrderByClId } from "@/redux/order/OrderSlice";
 import { getUserCoupons } from "@/redux/coupon/couponSlice";
 import toast from "react-hot-toast";
 
-
 const Profile = () => {
   const { items: wishlistItems } = useSelector((state) => state.wishlist);
   const { isAuth } = useSelector((state) => state.Athentication);
-  const { totalClientOrder } = useSelector((state) => state.order);
+  const { totalClientOrder, clientOrder } = useSelector((state) => state.order);
+  const { availableCoupons } = useSelector((state) => state.coupon);
+
   const dispatch = useDispatch();
   const [isEditing, setIsEditing] = useState(false);
   const [firstName, setFirstName] = useState("");
@@ -36,6 +37,26 @@ const Profile = () => {
   const [mobile, setMobile] = useState("");
   const router = useRouter();
   const [loginData, setLoginData] = useState(null);
+
+  const [orderReceived, setOrderReceived] = useState([]);
+  const [orderCancelled, setOrderCancelled] = useState([]);
+
+  useEffect(() => {
+    if (clientOrder?.order?.length > 0) {
+      const received = clientOrder.order.filter(
+        (data) => data.OrderStatusText === "Order Recieved"
+      );
+      setOrderReceived(received);
+
+      const cancelled = clientOrder.order.filter(
+        (data) => data.OrderStatusText === "Order Cancelled"
+      );
+      setOrderCancelled(cancelled);
+    } else {
+      setOrderReceived([]);
+      setOrderCancelled([]);
+    }
+  }, [clientOrder]);
 
   useEffect(() => {
     const data = JSON.parse(localStorage.getItem("loginData"));
@@ -51,7 +72,6 @@ const Profile = () => {
     }
   }, []);
 
-
   useEffect(() => {
     if (isAuth && loginData?._id) {
       dispatch(getOrderbyClId(loginData?._id));
@@ -61,7 +81,6 @@ const Profile = () => {
   useEffect(() => {
     dispatch(getUserCoupons(loginData?._id));
   }, [dispatch, loginData?._id]);
-  const { availableCoupons } = useSelector((state) => state.coupon);
 
   const handleSave = async () => {
     const updatedData = {
@@ -89,31 +108,31 @@ const Profile = () => {
     },
     {
       Name: "Orders",
-      count: 3,
+      count: clientOrder?.totalOrders,
       Icon: <LuBoxes />,
     },
+
     {
       Name: "Confirmed orders",
-      count: 3,
+      count: orderReceived.length,
       Icon: <RiCheckboxMultipleFill />,
     },
     {
       Name: "Canceled orders",
-      count: 3,
+      count: orderCancelled.length,
       Icon: <TbBoxModelOff />,
     },
-    {
-      Name: "Available Coins",
-      count: 3,
-      Icon: <MdOutlineEventAvailable />,
-    },
+    // {
+    //   Name: "Available Coins",
+    //   count: 3,
+    //   Icon: <MdOutlineEventAvailable />,
+    // },
     {
       Name: "Available Coupons",
-      count: 3,
+      count: availableCoupons.length,
       Icon: <RiCoupon2Fill />,
     },
   ];
-
 
   return (
     <div className="sm:px-4 px-2 relative py-2 w-full sm:h-[50vh] sm:mb-0 mb-10">
@@ -172,7 +191,7 @@ const Profile = () => {
               onChange={(e) => setLastName(e.target.value)}
             />
           </div>
-          <div className="mt-">
+          {/* <div className="mt-">
             <h1 className="text-[.9rem] mb-2">Your Gender</h1>
             <FormControl component="fieldset">
               <RadioGroup
@@ -201,9 +220,9 @@ const Profile = () => {
                 />
               </RadioGroup>
             </FormControl>
-          </div>
+          </div> */}
           {/* Email Address */}
-          <div className="mt-">
+          <div className="mt-2">
             <h1 className="text-[.9rem] mb-2">Email Address</h1>
             <TextField
               placeholder="Enter your email"
@@ -217,7 +236,7 @@ const Profile = () => {
           </div>
 
           {!isEditing ? (
-            <div className="mt">
+            <div className="mt-2">
               <h1 className="text-[.9rem] mb-2">Mobile Number</h1>
               <TextField
                 placeholder="Enter mobile number"
@@ -229,7 +248,9 @@ const Profile = () => {
                 onChange={(e) => setMobile(e.target.value)}
               />
             </div>
-          ) : (<></>)}
+          ) : (
+            <></>
+          )}
         </div>
         <div className="w-full sm:px-[3rem] whitespace-nowrap ">
           <h1 className="text-lg">Your Account Summary</h1>

@@ -37,6 +37,14 @@ const RegisterPage = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Fixed auto-capitalize first letter of each word in name
+  const capitalizeName = (name) => {
+    return name
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(" ");
+  };
+
   const validateField = (name, value) => {
     switch (name) {
       case "fullName":
@@ -82,8 +90,18 @@ const RegisterPage = () => {
   const handleFocus = (field) => {
     setFocusedFields((prev) => ({ ...prev, [field]: true }));
   };
+
   const handleBlur = (field) => {
     setFocusedFields((prev) => ({ ...prev, [field]: false }));
+
+    // Auto-capitalize name when blurring
+    if (field === "fullName" && formData.fullName) {
+      setFormData((prev) => ({
+        ...prev,
+        fullName: capitalizeName(prev.fullName),
+      }));
+    }
+
     // Skip overriding API error for email
     if (field === "email" && errors.email === "Email already exists") {
       return;
@@ -93,9 +111,16 @@ const RegisterPage = () => {
       [field]: validateField(field, formData[field]),
     }));
   };
+
   const handleChange = async (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    // For name field, allow normal typing but capitalize on blur
+    if (name === "fullName") {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
 
     if (name === "mobileNumber") {
       setErrors((prev) => ({
@@ -131,9 +156,7 @@ const RegisterPage = () => {
     }
     try {
       const userData = {
-        Name:
-          formData.fullName.charAt(0).toUpperCase() +
-          formData.fullName.slice(1).toLowerCase(),
+        Name: capitalizeName(formData.fullName),
         Email: formData.confirm_email,
         Mobile: formData.mobileNumber,
       };
@@ -157,7 +180,7 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="w-screen h-screen grid grid-cols-1 lg:grid-cols-2 bg-gradient-to-br from-gray-50 to-gray-100 font-poppins">
+    <div className="w-screen h-screen  grid grid-cols-1 lg:grid-cols-2 bg-gradient-to-br from-gray-50 to-gray-100 font-poppins">
       {/* Left Side - Enhanced Background Image with Overlay */}
       <div className="relative hidden lg:block h-full overflow-hidden">
         <div
@@ -175,7 +198,7 @@ const RegisterPage = () => {
             <h1 className="text-5xl font-bold mb-6 leading-tight">
               Welcome to
               <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
-                Ew Shopping
+                EwShopping
               </span>
             </h1>
             <p className="text-xl text-gray-200 leading-relaxed">
@@ -205,7 +228,7 @@ const RegisterPage = () => {
           {/* Mobile Header */}
           <div className="hidden sm:block text-center mb-8">
             <h1 className="text-3xl font-bold text-[#2f415d] mb-2">
-              Ew Shopping
+              EwShopping
             </h1>
             <p className="text-gray-600">Your favorite shopping destination</p>
           </div>
@@ -266,21 +289,15 @@ const RegisterPage = () => {
                 )}
               </div>
 
-              {/* Mobile Number Input */}
+              {/* Mobile Number Input - Non-editable */}
               <div className="relative group">
                 <input
                   type="tel"
                   id="mobileNumber"
                   name="mobileNumber"
                   value={formData.mobileNumber}
-                  onChange={handleChange}
-                  onFocus={() => handleFocus("mobileNumber")}
-                  onBlur={() => handleBlur("mobileNumber")}
-                  required
-                  autoComplete="off"
-                  className={`peer w-full px-4 py-3 border-2 ${
-                    errors.mobileNumber ? "border-red-500" : "border-gray-200"
-                  } rounded-xl shadow-sm text-base focus:outline-none focus:ring-2 focus:ring-[#2f415d]/20 focus:border-[#2f415d] transition-all duration-300 bg-gray-50/50 hover:bg-white`}
+                  readOnly
+                  className="peer w-full px-4 py-3 border-2 border-gray-200 rounded-xl shadow-sm text-base bg-gray-100 cursor-not-allowed"
                 />
                 <label
                   htmlFor="mobileNumber"
@@ -329,7 +346,6 @@ const RegisterPage = () => {
                   className={`peer w-full px-4 py-3 border-2 ${
                     errors.email ? "border-red-500" : "border-gray-200"
                   } rounded-xl shadow-sm text-base focus:outline-none focus:ring-2 focus:ring-[#2f415d]/20 focus:border-[#2f415d] transition-all duration-300 bg-gray-50/50 hover:bg-white`}
-                  // className={`peer w-full px-4 py-3 border-2 ${errors.email ? "border-red-500" : "border-gray-200"} rounded-xl shadow-sm text-base focus:outline-none focus:ring-2 focus:ring-[#2f415d]/20 focus:border-[#2f415d] transition-all duration-300 bg-gray-50/50 hover:bg-white`}
                 />
                 <label
                   htmlFor="email"
@@ -365,19 +381,21 @@ const RegisterPage = () => {
               <div className="bg-blue-50/50 rounded-lg p-4 border border-blue-100 text-center">
                 <p className="text-xs text-gray-600 leading-relaxed">
                   By registering, you agree to our{" "}
-                  <Link
-                    href="/pages/terms"
+                  <a
+                    href="/termsAndCondition"
+                    target="/_blank"
                     className="text-[#2f415d] hover:text-[#1e2a3a] underline font-medium transition-colors"
                   >
                     Terms of Use
-                  </Link>{" "}
+                  </a>{" "}
                   and{" "}
-                  <Link
-                    href="/pages/privacypolicy"
+                  <a
+                    href="/privacyPolicy"
+                    target="_blank"
                     className="text-[#2f415d] hover:text-[#1e2a3a] underline font-medium transition-colors"
                   >
                     Privacy Policy
-                  </Link>
+                  </a>
                   .
                 </p>
               </div>
@@ -385,25 +403,58 @@ const RegisterPage = () => {
               {/* Enhanced Submit Button */}
               <button
                 type="submit"
-                className="group w-full bg-gradient-to-r from-[#2f415d] to-[#1e2a3a] text-white py-4 px-8 rounded-xl hover:from-[#1e2a3a] hover:to-[#2f415d] transition-all duration-300 font-semibold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 active:translate-y-0"
+                disabled={isSubmitting}
+                className={`group w-full py-4 px-8 rounded-xl font-semibold text-lg shadow-lg transition-all duration-300 transform ${
+                  !isSubmitting
+                    ? "bg-gradient-to-r from-[#2f415d] to-[#1e2a3a] text-white hover:from-[#1e2a3a] hover:to-[#2f415d] hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0"
+                    : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                }`}
               >
                 <span className="flex items-center justify-center space-x-2">
-                  <span>Create Account</span>
-                  <svg
-                    className="w-5 h-5 group-hover:translate-x-1 transition-transform"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M13 7l5 5m0 0l-5 5m5-5H6"
-                    />
-                  </svg>
+                  {isSubmitting ? (
+                    <>
+                      <svg
+                        className="animate-spin w-5 h-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      <span>Creating Account...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Create Account</span>
+                      <svg
+                        className="w-5 h-5 group-hover:translate-x-1 transition-transform"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M13 7l5 5m0 0l-5 5m5-5H6"
+                        />
+                      </svg>
+                    </>
+                  )}
                 </span>
               </button>
+
               {/* Enhanced Login Link */}
               <div className="text-center pt-6 border-t border-gray-100">
                 <p className="text-gray-600">

@@ -1,5 +1,3 @@
-
-
 // import React from 'react'
 
 // const SideFilteringCode = () => {
@@ -128,7 +126,7 @@
 //                                     <img src="https://via.placeholder.com/70x70/FF0000/FFFFFF?text=Red" alt="Red" className="w-full h-full object-cover" title="Red" />
 //                                 </li>
 //                                 <li className="w-12 h-12 rounded-full bg-black border border-gray-200" title="Black" />
-//                                 <li className="w-12 h-12 rounded-full bg-red-500 border border-gray-200" title="Red" />
+//                                 <li className="w-12 h-12 rounded-full bg-blue-950 border border-gray-200" title="Red" />
 //                                 <li className="w-12 h-12 rounded-full bg-blue-500 border border-gray-200" title="Blue" />
 //                                 <li className="w-12 h-12 rounded-full bg-pink-400 border border-gray-200" title="Pink" />
 //                                 <li className="w-12 h-12 rounded-full bg-gray-500 border border-gray-200" title="Gray" />
@@ -212,175 +210,257 @@
 
 // export default SideFilteringCode
 
-import React from 'react'
+import React from "react";
 
 const SideFilteringCode = () => {
-    const activeFilters = [
-        { id: 1, value: "Women" },
-        { id: 2, value: "Blue" },
-        { id: 3, value: "XL" }
-    ];
+  const activeFilters = [
+    { id: 1, value: "Women" },
+    { id: 2, value: "Blue" },
+    { id: 3, value: "XL" },
+  ];
 
-    return (
-        <div>
-            <div className="col-12 col-sm-12 col-md-12 lg:w-2/12 bg-gray-50 ">
-                <div className="mb-6 border border-[#000]-500 px-2 py-3" style={{ backgroundColor: "#fff" }}>
-                    {/* Title */}
-                    <h2 className="text-base font-bold text-gray-900 uppercase mb-3">FILTER BY</h2>
-                    {/* Active Filters */}
-                    <div className="flex flex-wrap items-center gap-2 mb-3">
-                        {/* Women Filter */}
-                        <span className="border bg-gray-100 hover:bg-gray-200 rounded-sm px-3 py-1 text-sm flex items-center transition-colors">
-                            Women
-                            <svg className="w-3 h-3 ml-1 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                            </svg>
-                        </span>
+  return (
+    <div>
+      <div className="col-12 col-sm-12 col-md-12 lg:w-2/12 bg-gray-50 ">
+        <div
+          className="mb-6 border border-[#000]-500 px-2 py-3"
+          style={{ backgroundColor: "#fff" }}
+        >
+          {/* Title */}
+          <h2 className="text-base font-bold text-gray-900 uppercase mb-3">
+            FILTER BY
+          </h2>
+          {/* Active Filters */}
+          <div className="flex flex-wrap items-center gap-2 mb-3">
+            {/* Women Filter */}
+            <span className="border bg-gray-100 hover:bg-gray-200 rounded-sm px-3 py-1 text-sm flex items-center transition-colors">
+              Women
+              <svg
+                className="w-3 h-3 ml-1 text-gray-500"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </span>
 
-                        {/* Blue Filter */}
-                        <span className="border bg-gray-100 hover:bg-gray-200 rounded-sm px-3 py-1 text-sm flex items-center transition-colors">
-                            Blue
-                            <svg className="w-3 h-3 ml-1 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                            </svg>
-                        </span>
+            {/* Blue Filter */}
+            <span className="border bg-gray-100 hover:bg-gray-200 rounded-sm px-3 py-1 text-sm flex items-center transition-colors">
+              Blue
+              <svg
+                className="w-3 h-3 ml-1 text-gray-500"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </span>
 
-                        {/* XL Filter */}
-                        <span className="border bg-gray-100 hover:bg-gray-200 rounded-sm px-3 py-1 text-sm flex items-center transition-colors">
-                            XL
-                            <svg className="w-3 h-3 ml-1 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                            </svg>
-                        </span>
-                    </div>
+            {/* XL Filter */}
+            <span className="border bg-gray-100 hover:bg-gray-200 rounded-sm px-3 py-1 text-sm flex items-center transition-colors">
+              XL
+              <svg
+                className="w-3 h-3 ml-1 text-gray-500"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </span>
+          </div>
 
-                    {/* Clear All Link */}
-                    <a href="#" className="text-[0.8rem] underline font-medium text-black hover:text-[#e96f84] hover:underline">
-                        CLEAR ALL
-                    </a>
-                </div>
-                <div className="sidebar-widget mb-6 border border-[#000]-500 px-2 py-3">
-                    <div className="widget-title mb-3">
-                        <h2 className="text-lg font-semibold">CATEGORIES</h2>
-                    </div>
-                    <div className="widget-content">
-                        <ul className="space-y-2">
-                            {/* Clothing with nested items */}
-                            <li className="group relative">
-                                <a href="#" className="flex justify-between items-center py-1 hover:text-blue-500">
-                                    <span>Clothing</span>
-                                    <span className="text-gray-400 group-hover:text-blue-500">+</span>
-                                </a>
-                                <ul className="ml-4 mt-1 hidden group-hover:block">
-                                    <li className="group-sub relative">
-                                        <a href="#" className="flex justify-between items-center py-1 hover:text-blue-500">
-                                            <span>Men</span>
-                                            <span className="text-gray-400 group-sub-hover:text-blue-500">+</span>
-                                        </a>
-                                        <ul className="ml-4 hidden group-sub-hover:block">
-                                            <li>
-                                                <a href="#" className="flex justify-between items-center py-1 text-sm hover:text-blue-500">
-                                                    <span>Shirt</span>
-                                                    <span className="text-gray-500">(25)</span>
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a href="#" className="flex justify-between items-center py-1 text-sm hover:text-blue-500">
-                                                    <span>Jeans</span>
-                                                    <span className="text-gray-500">(6)</span>
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a href="#" className="flex justify-between items-center py-1 text-sm hover:text-blue-500">
-                                                    <span>Shoes</span>
-                                                    <span className="text-gray-500">(9)</span>
-                                                </a>
-                                            </li>
-                                        </ul>
-                                    </li>
-                                    <li>
-                                        <a href="#" className="flex justify-between items-center py-1 text-sm hover:text-blue-500">
-                                            <span>Women</span>
-                                            <span className="text-gray-500">(14)</span>
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a href="#" className="flex justify-between items-center py-1 text-sm hover:text-blue-500">
-                                            <span>Child</span>
-                                            <span className="text-gray-500">(26)</span>
-                                        </a>
-                                    </li>
-                                </ul>
-                            </li>
-                            {/* Jewellery with nested items */}
-                            <li className="group relative">
-                                <a href="#" className="flex justify-between items-center py-1 hover:text-blue-500">
-                                    <span>Jewellery</span>
-                                    <span className="text-gray-400 group-hover:text-blue-500">+</span>
-                                </a>
-                                <ul className="ml-4 mt-1 hidden group-hover:block">
-                                    <li>
-                                        <a href="#" className="flex justify-between items-center py-1 text-sm hover:text-blue-500">
-                                            <span>Ring</span>
-                                            <span className="text-gray-500">(12)</span>
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a href="#" className="flex justify-between items-center py-1 text-sm hover:text-blue-500">
-                                            <span>Necklaces</span>
-                                            <span className="text-gray-500">(15)</span>
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a href="#" className="flex justify-between items-center py-1 text-sm hover:text-blue-500">
-                                            <span>Earrings</span>
-                                            <span className="text-gray-500">(18)</span>
-                                        </a>
-                                    </li>
-                                </ul>
-                            </li>
-                            {/* Single line items */}
-                            <li>
-                                <a href="#" className="flex justify-between items-center py-1 hover:text-blue-500">
-                                    <span>Accessories</span>
-                                    <span className="text-gray-500">(14)</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="#" className="flex justify-between items-center py-1 hover:text-blue-500">
-                                    <span>Shoes</span>
-                                    <span className="text-gray-500">(18)</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="#" className="flex justify-between items-center py-1 hover:text-blue-500">
-                                    <span>Electronic</span>
-                                    <span className="text-gray-500">(22)</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="#" className="flex justify-between items-center py-1 hover:text-blue-500">
-                                    <span>Cosmetics</span>
-                                    <span className="text-gray-500">(27)</span>
-                                </a>
-                            </li>
-                            {/* Show More button */}
-                            <li>
-                                <a href="#" className="flex justify-between items-center py-1 text-blue-500 hover:text-blue-700">
-                                    <span>Show More</span>
-                                    <span className="text-gray-400">◇</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-
-            </div>
-
-
-
+          {/* Clear All Link */}
+          <a
+            href="#"
+            className="text-[0.8rem] underline font-medium text-black hover:text-[#e96f84] hover:underline"
+          >
+            CLEAR ALL
+          </a>
         </div>
-    )
-}
+        <div className="sidebar-widget mb-6 border border-[#000]-500 px-2 py-3">
+          <div className="widget-title mb-3">
+            <h2 className="text-lg font-semibold">CATEGORIES</h2>
+          </div>
+          <div className="widget-content">
+            <ul className="space-y-2">
+              {/* Clothing with nested items */}
+              <li className="group relative">
+                <a
+                  href="#"
+                  className="flex justify-between items-center py-1 hover:text-blue-500"
+                >
+                  <span>Clothing</span>
+                  <span className="text-gray-400 group-hover:text-blue-500">
+                    +
+                  </span>
+                </a>
+                <ul className="ml-4 mt-1 hidden group-hover:block">
+                  <li className="group-sub relative">
+                    <a
+                      href="#"
+                      className="flex justify-between items-center py-1 hover:text-blue-500"
+                    >
+                      <span>Men</span>
+                      <span className="text-gray-400 group-sub-hover:text-blue-500">
+                        +
+                      </span>
+                    </a>
+                    <ul className="ml-4 hidden group-sub-hover:block">
+                      <li>
+                        <a
+                          href="#"
+                          className="flex justify-between items-center py-1 text-sm hover:text-blue-500"
+                        >
+                          <span>Shirt</span>
+                          <span className="text-gray-500">(25)</span>
+                        </a>
+                      </li>
+                      <li>
+                        <a
+                          href="#"
+                          className="flex justify-between items-center py-1 text-sm hover:text-blue-500"
+                        >
+                          <span>Jeans</span>
+                          <span className="text-gray-500">(6)</span>
+                        </a>
+                      </li>
+                      <li>
+                        <a
+                          href="#"
+                          className="flex justify-between items-center py-1 text-sm hover:text-blue-500"
+                        >
+                          <span>Shoes</span>
+                          <span className="text-gray-500">(9)</span>
+                        </a>
+                      </li>
+                    </ul>
+                  </li>
+                  <li>
+                    <a
+                      href="#"
+                      className="flex justify-between items-center py-1 text-sm hover:text-blue-500"
+                    >
+                      <span>Women</span>
+                      <span className="text-gray-500">(14)</span>
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="#"
+                      className="flex justify-between items-center py-1 text-sm hover:text-blue-500"
+                    >
+                      <span>Child</span>
+                      <span className="text-gray-500">(26)</span>
+                    </a>
+                  </li>
+                </ul>
+              </li>
+              {/* Jewellery with nested items */}
+              <li className="group relative">
+                <a
+                  href="#"
+                  className="flex justify-between items-center py-1 hover:text-blue-500"
+                >
+                  <span>Jewellery</span>
+                  <span className="text-gray-400 group-hover:text-blue-500">
+                    +
+                  </span>
+                </a>
+                <ul className="ml-4 mt-1 hidden group-hover:block">
+                  <li>
+                    <a
+                      href="#"
+                      className="flex justify-between items-center py-1 text-sm hover:text-blue-500"
+                    >
+                      <span>Ring</span>
+                      <span className="text-gray-500">(12)</span>
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="#"
+                      className="flex justify-between items-center py-1 text-sm hover:text-blue-500"
+                    >
+                      <span>Necklaces</span>
+                      <span className="text-gray-500">(15)</span>
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="#"
+                      className="flex justify-between items-center py-1 text-sm hover:text-blue-500"
+                    >
+                      <span>Earrings</span>
+                      <span className="text-gray-500">(18)</span>
+                    </a>
+                  </li>
+                </ul>
+              </li>
+              {/* Single line items */}
+              <li>
+                <a
+                  href="#"
+                  className="flex justify-between items-center py-1 hover:text-blue-500"
+                >
+                  <span>Accessories</span>
+                  <span className="text-gray-500">(14)</span>
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#"
+                  className="flex justify-between items-center py-1 hover:text-blue-500"
+                >
+                  <span>Shoes</span>
+                  <span className="text-gray-500">(18)</span>
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#"
+                  className="flex justify-between items-center py-1 hover:text-blue-500"
+                >
+                  <span>Electronic</span>
+                  <span className="text-gray-500">(22)</span>
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#"
+                  className="flex justify-between items-center py-1 hover:text-blue-500"
+                >
+                  <span>Cosmetics</span>
+                  <span className="text-gray-500">(27)</span>
+                </a>
+              </li>
+              {/* Show More button */}
+              <li>
+                <a
+                  href="#"
+                  className="flex justify-between items-center py-1 text-blue-500 hover:text-blue-700"
+                >
+                  <span>Show More</span>
+                  <span className="text-gray-400">◇</span>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
-export default SideFilteringCode
+export default SideFilteringCode;

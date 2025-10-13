@@ -52,7 +52,7 @@ const Brands = ({ brandData }) => {
   if (!brandData || brandData.length === 0) {
     return (
       <div className="px-5 mt-8 mb-6">
-        <h2 className="font-bold text-2xl md:text-3xl text-gray-800 mb-4 relative inline-block after:absolute after:left-0 after:-bottom-2 after:h-1 after:w-10 after:bg-blue-500 after:rounded-full">
+        <h2 className="font-bold sm:text-2xl text-lg md:text-3xl text-gray-800 mb-4 relative inline-block after:absolute after:left-0 after:-bottom-2 after:h-1 after:w-10 after:bg-blue-500 after:rounded-full">
           Top Brands
         </h2>
         <div className="text-center py-10 bg-gray-50 rounded-xl border border-gray-100">
@@ -73,8 +73,8 @@ const Brands = ({ brandData }) => {
   };
 
   return (
-    <div className="px-5 mt-8 mb-10">
-      <h2 className="font-bold text-2xl md:text-3xl text-gray-800 mb-6 relative inline-block after:absolute after:left-0 after:-bottom-2 after:h-1 after:w-10 after:bg-blue-500 after:rounded-full">
+    <div className="px-5 sm:mt-8 mt-4">
+      <h2 className="font-bold text-lg md:text-3xl text-gray-800 mb-6 relative inline-block after:absolute after:left-0 after:-bottom-2 after:h-1 after:w-10 after:bg-blue-500 after:rounded-full">
         Top Brands
       </h2>
 
@@ -99,43 +99,51 @@ const Brands = ({ brandData }) => {
           onMouseEnter={() => setIsPaused(true)}
           onMouseLeave={() => setIsPaused(false)}
         >
-          {infiniteBrands.map((brand, index) => (
-            <div
-              key={`${brand._id}-${index}`}
-              onClick={(e) => handleClick(e, brand)}
-              className="relative flex flex-col items-center justify-end rounded-xl p-5 transition-all duration-300 cursor-pointer flex-shrink-0 w-52 h-40 group/item overflow-hidden"
-            >
-              {/* Background Image */}
-              <div
-                className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover/item:scale-110"
-                style={{
-                  backgroundImage: brand.desktopImage
-                    ? `url(${brand.desktopImage})`
-                    : "none",
-                  filter: "brightness(0.85)",
-                }}
-              >
-                {/* Gradient Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"></div>
+          <div className="overflow-x-auto w-full scrollbar-hide">
+            <div className="flex gap-3 px-2">
+              {infiniteBrands.map((brand, index) => (
+                <div
+                  key={`${brand._id}-${index}`}
+                  onClick={(e) => handleClick(e, brand)}
+                  className="relative flex flex-col items-center justify-end rounded-xl p-5 transition-all duration-300 cursor-pointer flex-shrink-0 
+                   w-1/3 sm:w-1/4 md:w-52 h-20 sm:h-40 group/item overflow-hidden"
+                >
+                  {/* Background Image */}
+                  <div
+                    className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover/item:scale-110"
+                    style={{
+                      backgroundImage: brand.desktopImage
+                        ? `url(${brand.desktopImage})`
+                        : "none",
+                      filter: "brightness(0.85)",
+                    }}
+                  >
+                    {/* Gradient Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"></div>
 
-                {/* Fallback if no image */}
-                {!brand.desktopImage && (
-                  <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-blue-100 to-indigo-200">
-                    <span className="text-3xl font-bold text-gray-700">
-                      {brand.name.charAt(0)}
-                    </span>
+                    {/* Fallback if no image */}
+                    {!brand.desktopImage && (
+                      <div
+                        className="h-full w-full flex items-center justify-center 
+                            bg-gradient-to-br from-blue-100 to-indigo-200"
+                      >
+                        <span className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-700">
+                          {brand.name.charAt(0)}
+                        </span>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
 
-              {/* Brand Info */}
-              <div className="relative z-10 text-center text-white">
-                <h3 className="text-lg font-bold truncate max-w-[180px] drop-shadow-md">
-                  {brand.name}
-                </h3>
-              </div>
+                  {/* Brand Info */}
+                  <div className="relative z-10 text-center text-white">
+                    <h3 className="sm:text-lg text-sm font-bold truncate  drop-shadow-md">
+                      {brand.name}
+                    </h3>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
         </div>
 
         {/* Right Button */}

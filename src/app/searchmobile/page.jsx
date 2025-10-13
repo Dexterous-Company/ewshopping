@@ -7,7 +7,7 @@ import { FaArrowLeft } from "react-icons/fa";
 
 const Baseurl = process.env.NEXT_PUBLIC_API_URL;
 
-const SearchHeader = ({ querySearch, setQuerySearch, onBack }) => {
+const SearchHeader = ({ querySearch, setQuerySearch, onBack, onKeyDown }) => {
   const inputRef = useRef(null);
 
   useEffect(() => {
@@ -24,12 +24,12 @@ const SearchHeader = ({ querySearch, setQuerySearch, onBack }) => {
   return (
     <div className="sticky top-0 bg-white z-10 p-4 border-b border-gray-200">
       <div className="flex items-center gap-3">
-        <button onClick={onBack} className="text-gray-600">
+        {/* <button onClick={onBack} className="text-gray-600">
           <FaArrowLeft size={18} />
-        </button>
+        </button> */}
         <div className="flex-1 relative">
           <form onSubmit={handleSearch}>
-            <div className="flex items-center rounded-lg bg-gray-100 px-3 py-2">
+            <div className="flex items-center rounded-lg bg-gray-100 px-3 py-3">
               <IoSearch className="text-gray-500 mr-2" size={18} />
               <input
                 ref={inputRef}
@@ -38,6 +38,7 @@ const SearchHeader = ({ querySearch, setQuerySearch, onBack }) => {
                 className="w-full bg-transparent outline-none text-sm"
                 value={querySearch}
                 onChange={(e) => setQuerySearch(e.target.value)}
+                onKeyDown={onKeyDown}
               />
               {querySearch && (
                 <button
@@ -55,10 +56,12 @@ const SearchHeader = ({ querySearch, setQuerySearch, onBack }) => {
   );
 };
 
-const SuggestionItem = ({ suggestion, onClick }) => {
+const SuggestionItem = ({ suggestion, onClick, isHighlighted }) => {
   return (
     <div
-      className="flex items-center p-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer"
+      className={`flex items-center p-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer ${
+        isHighlighted ? "bg-blue-50" : ""
+      }`}
       onClick={() => onClick(suggestion)}
     >
       {suggestion.mobileImage ? (
@@ -87,9 +90,13 @@ const SuggestionItem = ({ suggestion, onClick }) => {
   );
 };
 
-const RecentSearchItem = ({ item, onSelect, onRemove }) => {
+const RecentSearchItem = ({ item, onSelect, onRemove, isHighlighted }) => {
   return (
-    <div className="flex items-center justify-between p-3 border-b border-gray-100">
+    <div
+      className={`flex items-center justify-between p-3 border-b border-gray-100 ${
+        isHighlighted ? "bg-blue-50" : ""
+      }`}
+    >
       <div
         className="flex items-center flex-1 cursor-pointer"
         onClick={() => onSelect(item)}
@@ -110,10 +117,11 @@ const RecentSearchItem = ({ item, onSelect, onRemove }) => {
   );
 };
 
-const RecentSearches = ({ searches, onSelect, onClear }) => {
+const RecentSearches = ({ searches, onSelect, onClear, highlightedIndex }) => {
   if (searches.length === 0) return null;
+
   return (
-    <div className="mt-4">
+    <div className="">
       <div className="flex justify-between items-center px-4 mb-2">
         <h3 className="font-medium text-gray-700">Recent Searches</h3>
         <button onClick={onClear} className="text-blue-600 text-sm font-medium">
@@ -126,6 +134,7 @@ const RecentSearches = ({ searches, onSelect, onClear }) => {
             key={index}
             item={item}
             onSelect={onSelect}
+            isHighlighted={index === highlightedIndex}
             onRemove={(itemToRemove) => {
               const updatedSearches = searches.filter(
                 (item) => item !== itemToRemove
@@ -143,16 +152,18 @@ const RecentSearches = ({ searches, onSelect, onClear }) => {
   );
 };
 
-const TrendingSearches = ({ trending, onSelect }) => {
+const TrendingSearches = ({ trending, onSelect, highlightedIndex }) => {
   return (
-    <div className="mt-6 px-4">
+    <div className="mt-2 px-4">
       <h3 className="font-medium text-gray-700 mb-3">Trending Searches</h3>
       <div className="flex flex-wrap gap-2">
         {trending.map((item, index) => (
           <div
             key={index}
             onClick={() => onSelect(item)}
-            className="bg-gray-100 text-gray-800 px-3 py-1.5 rounded-full text-sm cursor-pointer"
+            className={`bg-gray-100 text-gray-800 px-3 py-1.5 rounded-full text-sm cursor-pointer ${
+              index === highlightedIndex ? "ring-2 ring-blue-500" : ""
+            }`}
           >
             {item}
           </div>
@@ -170,6 +181,9 @@ const SearchPage = () => {
   const [recentSearches, setRecentSearches] = useState([]);
   const [trendingSearches, setTrendingSearches] = useState([]);
   const [debounceTimeout, setDebounceTimeout] = useState(null);
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const [activeSection, setActiveSection] = useState(""); // "suggestions", "recent", "trending"
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   // Load recent searches from localStorage on mount
   useEffect(() => {
@@ -178,40 +192,63 @@ const SearchPage = () => {
       setRecentSearches(JSON.parse(savedSearches));
     }
 
-    // Mock trending searches - in a real app, this would come from an API
     setTrendingSearches([
-      "Smartphones",
-      "Laptops",
-      "Headphones",
-      "Watches",
-      "Shoes",
-      "T-shirts",
-      "Backpacks",
-      "Skincare",
+      "iPhone 13",
+      "iPhone 12",
+      "iPhone 11",
+      "iPhone 8",
+      "iPhone 7",
     ]);
   }, []);
 
+  // Enhanced API call
   const fetchSuggestions = useCallback(async (query) => {
     if (query.length < 2) {
       setSuggestions([]);
+      setHighlightedIndex(-1);
+      setActiveSection("");
+      setShowSuggestions(false);
       return;
     }
 
     setIsLoading(true);
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+
       const response = await fetch(
-        `${Baseurl}/api/v1/categorytag/autocomplete?q=${encodeURIComponent(
+        `${Baseurl}/api/v1/search/autocomplete?q=${encodeURIComponent(
           query
-        )}&limit=8`
+        )}&limit=12`,
+        {
+          signal: controller.signal,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
       );
+
+      clearTimeout(timeoutId);
 
       if (response.ok) {
         const data = await response.json();
-        setSuggestions(data.suggestions || []);
+        const suggestionsData = data.data?.suggestions || [];
+        setSuggestions(suggestionsData);
+        setShowSuggestions(true);
+
+        if (suggestionsData.length > 0) {
+          setHighlightedIndex(0);
+          setActiveSection("suggestions");
+        } else {
+          setHighlightedIndex(-1);
+          setActiveSection("");
+        }
       }
     } catch (error) {
-      console.error("Error fetching suggestions:", error);
-      setSuggestions([]);
+      if (error.name !== "AbortError") {
+        console.error("Error fetching suggestions:", error);
+        setSuggestions([]);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -220,6 +257,8 @@ const SearchPage = () => {
   // Handle input change with debounce
   const handleInputChange = (value) => {
     setQuerySearch(value);
+    setHighlightedIndex(-1);
+    setActiveSection("");
 
     // Clear previous timeout
     if (debounceTimeout) {
@@ -234,10 +273,11 @@ const SearchPage = () => {
       setDebounceTimeout(timeout);
     } else {
       setSuggestions([]);
+      setShowSuggestions(false);
     }
   };
 
-  const handleSearch = (searchTerm) => {
+  const handleSearch = (searchTerm, isSuggestion = false) => {
     if (!searchTerm.trim()) return;
 
     // Add to recent searches
@@ -249,34 +289,153 @@ const SearchPage = () => {
     localStorage.setItem("recentSearches", JSON.stringify(updatedSearches));
     setRecentSearches(updatedSearches);
 
-    // Navigate to search results
-    router.push(`/searchresults?categoryTag=${encodeURIComponent(searchTerm)}`);
+    // Navigate to search results with appropriate parameter
+    if (isSuggestion) {
+      // Use productTag for suggestions
+      router.push(
+        `/searchresults?q=${encodeURIComponent(searchTerm)}`
+      );
+    } else {
+      // Use q for direct searches
+      router.push(
+        `/searchresults?q=${encodeURIComponent(searchTerm)}`
+      );
+    }
   };
 
   const handleSuggestionClick = (suggestion) => {
-    setQuerySearch(suggestion.name);
-    handleSearch(suggestion.name);
+    handleSearch(suggestion.name, true);
   };
 
   const clearRecentSearches = () => {
     localStorage.removeItem("recentSearches");
     setRecentSearches([]);
+    setHighlightedIndex(-1);
+    setActiveSection("");
   };
 
   const handleBack = () => {
     router.back();
   };
 
+  // Handle keyboard navigation
+  const handleKeyDown = (e) => {
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault();
+        if (suggestions.length > 0 && showSuggestions) {
+          setHighlightedIndex((prev) =>
+            prev < suggestions.length - 1 ? prev + 1 : 0
+          );
+          setActiveSection("suggestions");
+        } else if (recentSearches.length > 0 && !querySearch) {
+          setHighlightedIndex((prev) =>
+            prev < recentSearches.length - 1 ? prev + 1 : 0
+          );
+          setActiveSection("recent");
+        }
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        if (suggestions.length > 0 && showSuggestions) {
+          setHighlightedIndex((prev) =>
+            prev > 0 ? prev - 1 : suggestions.length - 1
+          );
+          setActiveSection("suggestions");
+        } else if (recentSearches.length > 0 && !querySearch) {
+          setHighlightedIndex((prev) =>
+            prev > 0 ? prev - 1 : recentSearches.length - 1
+          );
+          setActiveSection("recent");
+        }
+        break;
+      case "Enter":
+        e.preventDefault();
+        if (highlightedIndex >= 0) {
+          if (
+            activeSection === "suggestions" &&
+            suggestions[highlightedIndex]
+          ) {
+            handleSuggestionClick(suggestions[highlightedIndex]);
+          } else if (
+            activeSection === "recent" &&
+            recentSearches[highlightedIndex]
+          ) {
+            handleSearch(recentSearches[highlightedIndex], false);
+          }
+        } else if (querySearch.trim()) {
+          // Check if the query matches any suggestion
+          const matchedSuggestion = suggestions.find(
+            (s) => s.name.toLowerCase() === querySearch.toLowerCase()
+          );
+
+          if (matchedSuggestion) {
+            handleSearch(matchedSuggestion.name, true);
+          } else {
+            handleSearch(querySearch, false);
+          }
+        }
+        break;
+      case "Escape":
+        setShowSuggestions(false);
+        setHighlightedIndex(-1);
+        break;
+    }
+  };
+
+  // Handle clicking outside the search to close suggestions
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (!e.target.closest(".search-container")) {
+        setShowSuggestions(false);
+        setHighlightedIndex(-1);
+        setActiveSection("");
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 search-container">
+      <div className="flex flex-row items-center px-4 py-3 gap-3">
+        {/* Back Button */}
+        <button
+          onClick={() => window.history.back()}
+          className="p-2 rounded-full hover:bg-gray-200"
+          aria-label="Go back"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-4 w-4 text-gray-800"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M15 19l-7-7 7-7"
+            />
+          </svg>
+        </button>
+
+        {/* Page Title */}
+        <h1 className="text-lg font-semibold text-gray-800">Search Page</h1>
+      </div>
       <SearchHeader
         querySearch={querySearch}
         setQuerySearch={handleInputChange}
         onBack={handleBack}
+        onKeyDown={handleKeyDown}
       />
 
-      <div className="p-4">
-        {querySearch ? (
+      <div className="px-4 py-1">
+        {querySearch && showSuggestions ? (
           // Show suggestions when query exists
           <div className="bg-white rounded-lg shadow-sm overflow-hidden">
             {isLoading ? (
@@ -286,16 +445,40 @@ const SearchPage = () => {
               </div>
             ) : suggestions.length > 0 ? (
               <div>
-                {suggestions.map((suggestion) => (
+                {suggestions.map((suggestion, index) => (
                   <SuggestionItem
-                    key={suggestion.id || suggestion._id}
+                    key={suggestion.id || index}
                     suggestion={suggestion}
                     onClick={handleSuggestionClick}
+                    isHighlighted={
+                      index === highlightedIndex &&
+                      activeSection === "suggestions"
+                    }
                   />
                 ))}
                 <div
-                  className="p-3 text-center text-blue-600 font-medium cursor-pointer border-t border-gray-100"
-                  onClick={() => handleSearch(querySearch)}
+                  className={`p-3 text-center text-blue-600 font-medium cursor-pointer border-t border-gray-100 ${
+                    highlightedIndex === suggestions.length &&
+                    activeSection === "suggestions"
+                      ? "bg-blue-50"
+                      : ""
+                  }`}
+                  onClick={() => {
+                    // Check if the query matches any suggestion
+                    const matchedSuggestion = suggestions.find(
+                      (s) => s.name.toLowerCase() === querySearch.toLowerCase()
+                    );
+
+                    if (matchedSuggestion) {
+                      handleSearch(matchedSuggestion.name, true);
+                    } else {
+                      handleSearch(querySearch, false);
+                    }
+                  }}
+                  onMouseEnter={() => {
+                    setHighlightedIndex(suggestions.length);
+                    setActiveSection("suggestions");
+                  }}
                 >
                   View all results for "{querySearch}"
                 </div>
@@ -311,8 +494,18 @@ const SearchPage = () => {
           <>
             <RecentSearches
               searches={recentSearches}
-              onSelect={handleSearch}
+              onSelect={(searchTerm) => handleSearch(searchTerm, false)}
               onClear={clearRecentSearches}
+              highlightedIndex={
+                activeSection === "recent" ? highlightedIndex : -1
+              }
+            />
+            <TrendingSearches
+              trending={trendingSearches}
+              onSelect={(searchTerm) => handleSearch(searchTerm, false)}
+              highlightedIndex={
+                activeSection === "trending" ? highlightedIndex : -1
+              }
             />
           </>
         )}

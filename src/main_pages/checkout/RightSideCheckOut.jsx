@@ -1,146 +1,202 @@
-
-import React, { useEffect } from "react";
-import { LiaInfoCircleSolid } from "react-icons/lia";
+"use client";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
-import { AiFillSafetyCertificate } from "react-icons/ai";
+import { FaAngleDown, FaAngleUp } from "react-icons/fa";
 import { getCartData } from "@/redux/cart/CartSlice";
 
 const RightSideCheckOut = () => {
-    const { isAuth } = useSelector((store) => store.Athentication);
-    const {
-        CartItems,
-        TotalMrp,
-        TotalPrice,
-        SmallCartFee,
-        HandlingFee,
-        RainFee,
-        DeliveryCharge,
-        Netpayable,
-    } = useSelector((store) => store.cart);
+  const [priceDetails, setPriceDetails] = useState(true);
+  const router = useRouter();
+  const dispatch = useDispatch();
 
-    const dispatch = useDispatch()
-    useEffect(() => {
-        dispatch(getCartData());
-    }, [dispatch]);
-    const totalSavings = TotalMrp - TotalPrice;
+  const {
+    CartItems,
+    DeliveryCharge,
+    SmallCartFee,
+    RainFee,
+    HandlingFee,
+    wallet,
+    coupon,
+    amountToGetfeeDelivery,
+  } = useSelector((state) => state.cart);
 
-    return (
-        <>
-            {isAuth ? (
-                <div className="bg-white rounded-lg shadow-sm">
-                    {/* Price Details Title */}
-                    <div className="p-4 border-b border-gray-100">
-                        <h2 className="text-base font-semibold text-gray-500">
-                            PRICE DETAILS
-                        </h2>
-                    </div>
+  useEffect(() => {
+    dispatch(getCartData());
+  }, [dispatch]);
 
-                    {/* Items Price */}
-                    <div className="p-4 text-sm space-y-4 border-b border-gray-100 border-dashed">
-                        <div className="flex justify-between">
-                            <div className="flex items-center gap-1">
-                                <span>Price ({CartItems.length} items)</span>
-                                <LiaInfoCircleSolid className="text-gray-400" />
-                            </div>
-                            <span className="text-gray-800">₹{TotalMrp}</span>
-                        </div>
+  const TotalMrp = CartItems.reduce(
+    (total, item) => total + (item.Product_total_Mrp || 0),
+    0
+  );
+  const TotalPrice = CartItems.reduce(
+    (total, item) => total + (item.Product_total_Price || 0),
+    0
+  );
+  const discountAmount = Math.max(TotalMrp - TotalPrice, 0);
+  const couponDiscount = coupon || 0;
+  const totalSavings = discountAmount + couponDiscount;
 
-                        {/* Delivery Charge */}
-                        {DeliveryCharge > 0 && (
-                            <div className="flex justify-between">
-                                <div className="flex items-center gap-1">
-                                    <span>Delivery Charges</span>
-                                    <LiaInfoCircleSolid className="text-gray-400" />
-                                </div>
-                                <span className="text-gray-800">₹{DeliveryCharge}</span>
-                            </div>
-                        )}
+  const calculatedTotalAmount =
+    TotalPrice +
+    (DeliveryCharge || 0) +
+    (SmallCartFee || 0) +
+    (RainFee || 0) +
+    (HandlingFee || 0) -
+    couponDiscount -
+    (wallet || 0);
 
-                        {/* Small Cart Fee */}
-                        {SmallCartFee > 0 && (
-                            <div className="flex justify-between">
-                                <div className="flex items-center gap-1">
-                                    <span>Small Cart Fee</span>
-                                    <LiaInfoCircleSolid className="text-gray-400" />
-                                </div>
-                                <span className="text-gray-800">₹{SmallCartFee}</span>
-                            </div>
-                        )}
+  const calculatedNetPayable = Math.max(calculatedTotalAmount, 0);
 
-                        {/* Handling Fee */}
-                        {HandlingFee > 0 && (
-                            <div className="flex justify-between">
-                                <div className="flex items-center gap-1">
-                                    <span>Handling Fee</span>
-                                    <LiaInfoCircleSolid className="text-gray-400" />
-                                </div>
-                                <span className="text-gray-800">₹{HandlingFee}</span>
-                            </div>
-                        )}
+  return (
+    <div className="bg-white w-full px-3 py-3 rounded-sm">
+      {/* Price Details Header */}
+      <div
+        className="flex justify-between items-center cursor-pointer"
+        onClick={() => setPriceDetails(!priceDetails)}
+      >
+        <span className="text-gray-700 sm:text-xl text-md font-semibold">
+          Price Details
+        </span>
+        {priceDetails ? <FaAngleUp /> : <FaAngleDown />}
+      </div>
 
-                        {/* Rain Fee */}
-                        {RainFee > 0 && (
-                            <div className="flex justify-between">
-                                <div className="flex items-center gap-1">
-                                    <span>Rain Fee</span>
-                                    <LiaInfoCircleSolid className="text-gray-400" />
-                                </div>
-                                <span className="text-gray-800">₹{RainFee}</span>
-                            </div>
-                        )}
-                    </div>
+      {priceDetails && (
+        <div className="border-b py-3 border-gray-200 space-y-2">
+          <div className="grid grid-cols-2">
+            <span>Total MRP</span>
+            <span className="flex justify-end">
+              ₹{TotalMrp.toLocaleString()}
+            </span>
+          </div>
 
-                    {/* Total Payable */}
-                    <div className="p-4 flex justify-between font-semibold text-lg text-gray-900 border-b border-gray-100 border-dashed">
-                        <span>Total Payable</span>
-                        <span>₹{Netpayable}</span>
-                    </div>  
-                    {/* Savings */}
-                    {totalSavings > 0 && (
-                        <div className="p-4">
-                            <p className="text-green-600 font-medium text-sm">
-                                Your Total Savings on this order ₹{totalSavings}
-                            </p>
-                        </div>
-                    )}
+          <div className="grid grid-cols-2">
+            <span>Total Price</span>
+            <span className="flex justify-end">
+              ₹{TotalPrice.toLocaleString()}
+            </span>
+          </div>
 
-                    {/* Security Message */}
-                    <div className="p-4 flex items-center gap-3 border-t border-gray-100">
-                        <AiFillSafetyCertificate className="text-2xl text-gray-400" />
-                        <span className="text-sm text-gray-500">
-                            Safe and Secure Payments. Easy returns. 100% Authentic products.
-                        </span>
-                    </div>
+          <div className="grid grid-cols-2">
+            <span>Discount</span>
+            <span className="flex justify-end text-green-600">
+              -₹{discountAmount.toLocaleString()}
+            </span>
+          </div>
 
-                    {/* Terms */}
-                    <div className="p-4 text-xs text-gray-500">
-                        <p>
-                            By continuing with the order, you confirm that you are above 18
-                            years of age, and you agree to Flipkart's{" "}
-                            <a className="text-pink-500 hover:underline">Terms of Use</a> and{" "}
-                            <a className="text-pink-500 hover:underline" href="#">
-                                Privacy Policy
-                            </a>
-                        </p>
-                    </div>
-                </div>
-            ) : (
-                <>
-                    <div className="flex items-center p-4">
-                        <AiFillSafetyCertificate className="text-gray-600 text-3xl mr-3" />
-                        <div>
-                            <p className="text-gray-700 font-medium">
-                                Safe and Secure Payments. Easy returns.
-                            </p>
-                            <p className="text-gray-700 font-medium">
-                                100% Authentic products.
-                            </p>
-                        </div>
-                    </div>
-                </>
-            )}
-        </>
-    );
+          <div className="grid grid-cols-2">
+            <span>Coupon</span>
+            <span
+              className={`flex justify-end ${
+                couponDiscount > 0 ? "text-green-600" : "text-gray-400"
+              }`}
+            >
+              {couponDiscount > 0
+                ? `-₹${couponDiscount.toLocaleString()}`
+                : "Not Available"}
+            </span>
+          </div>
+
+          {wallet > 0 && (
+            <div className="grid grid-cols-2">
+              <span>Wallet Balance</span>
+              <span className="flex justify-end text-green-600">
+                -₹{wallet.toLocaleString()}
+              </span>
+            </div>
+          )}
+
+          {DeliveryCharge > 0 && (
+            <div className="grid grid-cols-2">
+              <span>Shipping</span>
+              <span className="flex justify-end">
+                ₹{DeliveryCharge.toLocaleString()}
+              </span>
+            </div>
+          )}
+          {SmallCartFee > 0 && (
+            <div className="grid grid-cols-2">
+              <span>Small Cart Fee</span>
+              <span className="flex justify-end">
+                ₹{SmallCartFee.toLocaleString()}
+              </span>
+            </div>
+          )}
+          {RainFee > 0 && (
+            <div className="grid grid-cols-2">
+              <span>Rain Protection Fee</span>
+              <span className="flex justify-end">
+                ₹{RainFee.toLocaleString()}
+              </span>
+            </div>
+          )}
+          {HandlingFee > 0 && (
+            <div className="grid grid-cols-2">
+              <span>Handling Fee</span>
+              <span className="flex justify-end">
+                ₹{HandlingFee.toLocaleString()}
+              </span>
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 text-green-600">
+            <span>You Saved</span>
+            <span className="flex justify-end">
+              ₹{totalSavings.toLocaleString()}
+            </span>
+          </div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 my-4 py-2 border-b border-gray-200">
+        <span className="text-sm sm:text-lg font-semibold">Total Amount</span>
+        <span className="flex justify-end font-semibold text-lg">
+          ₹{calculatedTotalAmount.toLocaleString()}
+        </span>
+      </div>
+
+      {calculatedNetPayable !== calculatedTotalAmount && (
+        <div className="grid grid-cols-2 my-2">
+          <span className="font-semibold">Net Payable</span>
+          <span className="flex justify-end font-semibold">
+            ₹{calculatedNetPayable.toLocaleString()}
+          </span>
+        </div>
+      )}
+
+      {DeliveryCharge > 0 && amountToGetfeeDelivery > 0 && (
+        <div className="text-center mb-4 text-sm text-gray-600">
+          Add ₹{amountToGetfeeDelivery.toLocaleString()} more for free shipping
+        </div>
+      )}
+
+      {/* <div className="hidden lg:block mt-4">
+        <button
+          onClick={() => router.push("/checkout")}
+          className="w-full py-3 bg-[#143741] hover:bg-[#0e2a33] text-white rounded-sm transition-colors"
+        >
+          Proceed To Checkout
+        </button>
+      </div> */}
+
+      <div className="lg:hidden fixed bottom-0 left-0 z-[100] px-4 right-0 bg-white border-t border-gray-200 p-2">
+        <div className="flex justify-between items-center px-7 py-2">
+            <div className="text-xs">Total Amount</div>
+          <div>
+            <div className="font-semibold text-sm">
+              ₹{calculatedNetPayable.toLocaleString()}
+            </div>
+          </div>
+          {/* <buttonk
+            onClick={() => router.push("/checkout")}
+            className="px-7 py-2 bg-[#143741] hover:bg-[#0e2a33] text-white text-sm transition-colors"
+          >
+            Place Order
+          </buttonk> */}
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default RightSideCheckOut;
