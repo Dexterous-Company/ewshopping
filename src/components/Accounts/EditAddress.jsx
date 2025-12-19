@@ -208,7 +208,6 @@ const EditAddress = ({ onclose, addressData }) => {
           return false;
         }
       } catch (error) {
-        console.log("Error fetching city/state:", error);
         setLocationData(null);
         setErrors((prev) => ({ ...prev, Pincode: "Error fetching data" }));
         return false;
@@ -287,7 +286,7 @@ const EditAddress = ({ onclose, addressData }) => {
   };
   return (
     <div className="fixed inset-0 bg-black/20 flex h-[100vh] items-center justify-center z-50 p-2 sm:p-4">
-      <div className="w-full max-w-4xl max-h-[90vh] sm:max-h-[80vh] bg-white rounded-lg shadow-xl flex flex-col">
+      <div className="w-full max-w-4xl max-h-[90vh] sm:max-h-[70vh] bg-white rounded-lg shadow-xl flex flex-col">
         {/* Header */}
         <div className="flex justify-between items-center p-4 border-b border-gray-200 bg-white rounded-t-xl">
           <h2 className="text-lg font-bold text-gray-900">Edit Address</h2>

@@ -226,7 +226,7 @@ const Header = () => {
   const navigateToSearch = () => {
     if (searchQuery.trim()) {
       router.push(
-        `/searchresults?categoryTag=${encodeURIComponent(searchQuery.trim())}`
+        `/search?categoryTag=${encodeURIComponent(searchQuery.trim())}`
       );
       closeAllModals();
       setShowSuggestions(false);
@@ -271,7 +271,7 @@ const Header = () => {
     setSearchQuery(suggestion.name);
     setShowSuggestions(false);
     router.push(
-      `/searchresults?categoryTag=${encodeURIComponent(suggestion.name)}`
+      `/search?categoryTag=${encodeURIComponent(suggestion.name)}`
     );
   };
 

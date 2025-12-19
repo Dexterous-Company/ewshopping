@@ -267,7 +267,7 @@ const RegisterPageNew = () => {
         {/* Gradient Overlay */}
 
         {/* Welcome Text Overlay */}
-        <div className="absolute inset-0 flex flex-col justify-center items-start p-16 text-white">
+        <div className="absolute inset-0 flex flex-col justify-center items-start p-16 text-white bg-black/60">
           <div className="max-w-md">
             <h1 className="text-5xl font-bold mb-6 leading-tight">
               Welcome to
@@ -518,7 +518,7 @@ const RegisterPageNew = () => {
                 <p className="text-xs text-gray-600 leading-relaxed">
                   By registering, you agree to our{" "}
                   <a
-                    href="/termsAndCondition"
+                    href="/termsandcondition"
                     target="/_blank"
                     className="text-[#2f415d] hover:text-[#1e2a3a] underline font-medium transition-colors"
                   >
@@ -526,7 +526,7 @@ const RegisterPageNew = () => {
                   </a>{" "}
                   and{" "}
                   <a
-                    href="/privacyPolicy"
+                    href="/privacypolicy"
                     target="_blank"
                     className="text-[#2f415d] hover:text-[#1e2a3a] underline font-medium transition-colors"
                   >

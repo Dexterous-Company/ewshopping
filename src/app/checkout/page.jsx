@@ -1,12 +1,5 @@
-import MainCheckoutPage from '@/main_pages/checkout/MainCheckoutPage '
-import React from 'react'
+import MainCheckoutPage from "@/main_pages/checkout/MainCheckoutPage ";
 
-const page = () => {
-  return (
-    <div>
-      <MainCheckoutPage />
-    </div>
-  )
+export default function Page() {
+  return <MainCheckoutPage />;
 }
-
-export default page

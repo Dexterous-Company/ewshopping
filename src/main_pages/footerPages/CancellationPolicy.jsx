@@ -1,302 +1,594 @@
 "use client";
-import React, { useState } from "react";
-import {
-  FiFileText,
-  FiChevronDown,
-  FiChevronUp,
-  FiCalendar,
-  FiMail,
-  FiPhone,
-  FiClock,
-} from "react-icons/fi";
+import Link from "next/link";
+import React, { useState, useRef, useEffect } from "react";
+import { FiFileText } from "react-icons/fi";
 
 const CancellationPolicy = () => {
-  const [openSection, setOpenSection] = useState(null);
+  const [activeSection, setActiveSection] = useState(0);
+  const sectionRefs = useRef([]);
 
-  const toggleSection = (index) => {
-    setOpenSection(openSection === index ? null : index);
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const index = entry.target.getAttribute("data-index");
+            setActiveSection(parseInt(index));
+          }
+        });
+      },
+      { threshold: 0.5 }
+    );
+
+    sectionRefs.current.forEach((ref) => {
+      if (ref) observer.observe(ref);
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  const scrollToSection = (index) => {
+    const element = document.getElementById(`section-${index}`);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
   };
 
-  const policySections = [
-    {
-      title: "Eligibility for Cancellation",
-      content: `You can cancel your order if:
-
-• The order has not yet been shipped from our warehouse
-• You raise the cancellation request within 24 hours of placing the order or before shipment
-• Cancellation request is made directly through your EW Shopping account or via customer support
-
-Once your order is shipped, it cannot be cancelled. However, you can still refuse the delivery or apply for a return/refund after receiving the product, as per our Return & Refund Policy.`,
-    },
-    {
-      title: "How to Cancel Your Order",
-      content: `To cancel an order, simply follow these steps:
-
-Step 1. Log in to your EW Shopping account.
-
-Step 2. Go to "My Orders" and select the order you wish to cancel.
-
-Step 3. Click on the "Cancel Order" button and provide a brief reason.
-
-Step 4. You will receive a confirmation email/SMS once your cancellation is processed.
-
-If the online cancellation option is not available, you can also reach our support team directly for help.`,
-    },
-    {
-      title: "Refund for Cancelled Orders",
-      content: `If you've made a prepaid payment (via Credit/Debit Card, UPI, Wallet, or Net Banking), the refund will be processed to your source account within Max. 15 days after confirmation.`,
-    },
-    {
-      title: "Exceptions to Order Cancellation",
-      content: `Orders cannot be cancelled under the following circumstances:
-
-• The order has already been shipped or handed over to the courier partner
-• Items that are customised, made-to-order, or fall under non-returnable categories such as innerwear, hygiene products, or personal care items
-• The order is under a flash sale, clearance sale, or any limited-time promotional offer where cancellation is not applicable`,
-    },
-    {
-      title: "Partial Cancellation",
-      content: `If you ordered more than one product, you can partially cancel one or more of them as long as they haven't shipped.
-
-Once confirmed, you'll receive a revised invoice and an updated order summary.`,
-    },
-    {
-      title: "Important Notes",
-      content: `• EW Shopping reserves the right to cancel orders due to unforeseen circumstances such as stock unavailability, payment failure, or technical errors
-
-• In such cases, the entire amount will be refunded automatically to your original payment method
-
-• Customers will be notified promptly via Email/WhatsApp SMS in case of any unexpected cancellation`,
-    },
-  ];
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white sm:mb-0 mb-20">
-      {/* Hero Banner */}
-      <div
-        className="w-full h-32 sm:h-40 md:h-64 bg-no-repeat bg-center flex items-center justify-center"
-        style={{
-          backgroundImage: "url('/Cancelation policy.png')",
-          backgroundSize: "cover",
-          backgroundPosition: "center center",
-        }}
-      ></div>
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 sm:mb-0  to-white ">
+      {/* Hero Section */}
+      <div className="md:block hidden">
+        <div
+          className="w-full h-40 sm:h-64 bg-no-repeat bg-center flex items-center justify-center"
+          style={{
+            backgroundImage:
+              "url('https://ewshoppingsellerapinew.dexterous.in/uploads/1765946171388.webp')",
+            backgroundSize: "cover",
+            backgroundPosition: "center center",
+          }}
+        ></div>
+      </div>
+      <div className="md:hidden block">
+        <div
+          className="w-full h-40 sm:h-64 bg-no-repeat bg-center flex items-center justify-center"
+          style={{
+            backgroundImage:
+              "url('https://ewshoppingsellerapinew.dexterous.in/uploads/1765946131503.webp')",
+            backgroundSize: "100% 100%",
+            backgroundPosition: "center center",
+          }}
+        ></div>
+      </div>
 
       {/* Main Content */}
-      <div className="container mx-auto px-2 sm:px-6 py-4 sm:py-12 flex flex-col lg:flex-row gap-6">
+      <div className=" flex flex-col lg:flex-row gap-4 sm:gap-6">
         {/* Sidebar Navigation */}
-        <aside className="lg:w-1/4 sm:block hidden bg-white rounded-xl shadow-md p-4 sm:p-6 sticky top-8 h-fit">
-          <h2 className="text-sm sm:text-lg font-semibold mb-4 text-[#2f415d]">
+        <aside
+          aria-label="Cancellation policy navigation"
+          className="lg:w-1/4 p-2 sm:p-2 lg:sticky lg:top-8 h-fit"
+        >
+          <h2 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-[#000]">
             Quick Navigation
           </h2>
           <ul className="space-y-2">
             <li>
-              <a
-                href="#introduction"
-                className="flex items-center hover:bg-gray-100 px-3 py-2 rounded-lg transition-colors"
+              <button
+                onClick={() => scrollToSection(0)}
+                aria-current={activeSection === 0 ? "true" : undefined}
+                className={`w-full flex items-center text-left px-3 py-2 sm:px-4 sm:py-2 rounded-lg transition-all duration-200 ${
+                  activeSection === 0
+                    ? "bg-blue-100 text-[#000] border-l-4 border-[#000]"
+                    : "hover:bg-gray-100 hover:border-l-4 hover:border-gray-300"
+                }`}
               >
-                <FiFileText className="mr-2 text-[#2f415d] text-sm" />
-                <span className="text-xs sm:text-sm">Introduction</span>
-              </a>
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-2 sm:mr-3 text-[#000]"
+                />
+                <span className="text-xs sm:text-sm font-medium">
+                  Introduction
+                </span>
+              </button>
             </li>
-            {policySections.map((section, i) => (
-              <li key={i}>
-                <button
-                  onClick={() => toggleSection(i)}
-                  className={`w-full flex justify-between items-center text-left px-3 py-2 rounded-lg transition-all duration-200 ${
-                    openSection === i
-                      ? "bg-blue-100 text-[#2f415d] border-l-4 border-[#2f415d]"
-                      : "hover:bg-gray-100 hover:border-l-4 hover:border-gray-300"
-                  }`}
-                >
-                  <div className="flex items-center">
-                    <FiFileText className="mr-2 text-[#2f415d] text-sm" />
-                    <span className="text-xs sm:text-sm font-medium">
-                      {section.title}
-                    </span>
-                  </div>
-                  {openSection === i ? (
-                    <FiChevronUp size={14} className="text-[#2f415d]" />
-                  ) : (
-                    <FiChevronDown size={14} className="text-[#2f415d]" />
-                  )}
-                </button>
-              </li>
-            ))}
             <li>
-              <a
-                href="#assistance"
-                className="flex items-center hover:bg-gray-100 px-3 py-2 rounded-lg transition-colors"
+              <button
+                onClick={() => scrollToSection(1)}
+                aria-current={activeSection === 1 ? "true" : undefined}
+                className={`w-full flex items-center text-left px-3 py-2 sm:px-4 sm:py-2 rounded-lg transition-all duration-200 ${
+                  activeSection === 1
+                    ? "bg-blue-100 text-[#000] border-l-4 border-[#000]"
+                    : "hover:bg-gray-100 hover:border-l-4 hover:border-gray-300"
+                }`}
               >
-                <FiFileText className="mr-2 text-[#2f415d] text-sm" />
-                <span className="text-xs sm:text-sm">Need Assistance?</span>
-              </a>
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-2 sm:mr-3 text-[#000]"
+                />
+                <span className="text-xs sm:text-sm font-medium">
+                  Eligibility for Cancellation
+                </span>
+              </button>
+            </li>
+            <li>
+              <button
+                onClick={() => scrollToSection(2)}
+                aria-current={activeSection === 2 ? "true" : undefined}
+                className={`w-full flex items-center text-left px-3 py-2 sm:px-4 sm:py-2 rounded-lg transition-all duration-200 ${
+                  activeSection === 2
+                    ? "bg-blue-100 text-[#000] border-l-4 border-[#000]"
+                    : "hover:bg-gray-100 hover:border-l-4 hover:border-gray-300"
+                }`}
+              >
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-2 sm:mr-3 text-[#000]"
+                />
+                <span className="text-xs sm:text-sm font-medium">
+                  How to Cancel Your Order
+                </span>
+              </button>
+            </li>
+            <li>
+              <button
+                onClick={() => scrollToSection(3)}
+                aria-current={activeSection === 3 ? "true" : undefined}
+                className={`w-full flex items-center text-left px-3 py-2 sm:px-4 sm:py-2 rounded-lg transition-all duration-200 ${
+                  activeSection === 3
+                    ? "bg-blue-100 text-[#000] border-l-4 border-[#000]"
+                    : "hover:bg-gray-100 hover:border-l-4 hover:border-gray-300"
+                }`}
+              >
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-2 sm:mr-3 text-[#000]"
+                />
+                <span className="text-xs sm:text-sm font-medium">
+                  Refund for Cancelled Orders
+                </span>
+              </button>
+            </li>
+            <li>
+              <button
+                onClick={() => scrollToSection(4)}
+                aria-current={activeSection === 4 ? "true" : undefined}
+                className={`w-full flex items-center text-left px-3 py-2 sm:px-4 sm:py-2 rounded-lg transition-all duration-200 ${
+                  activeSection === 4
+                    ? "bg-blue-100 text-[#000] border-l-4 border-[#000]"
+                    : "hover:bg-gray-100 hover:border-l-4 hover:border-gray-300"
+                }`}
+              >
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-2 sm:mr-3 text-[#000]"
+                />
+                <span className="text-xs sm:text-sm font-medium">
+                  Exceptions to Cancellation
+                </span>
+              </button>
+            </li>
+            <li>
+              <button
+                onClick={() => scrollToSection(5)}
+                aria-current={activeSection === 5 ? "true" : undefined}
+                className={`w-full flex items-center text-left px-3 py-2 sm:px-4 sm:py-2 rounded-lg transition-all duration-200 ${
+                  activeSection === 5
+                    ? "bg-blue-100 text-[#000] border-l-4 border-[#000]"
+                    : "hover:bg-gray-100 hover:border-l-4 hover:border-gray-300"
+                }`}
+              >
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-2 sm:mr-3 text-[#000]"
+                />
+                <span className="text-xs sm:text-sm font-medium">
+                  Partial Cancellation
+                </span>
+              </button>
+            </li>
+            <li>
+              <button
+                onClick={() => scrollToSection(6)}
+                aria-current={activeSection === 6 ? "true" : undefined}
+                className={`w-full flex items-center text-left px-3 py-2 sm:px-4 sm:py-2 rounded-lg transition-all duration-200 ${
+                  activeSection === 6
+                    ? "bg-blue-100 text-[#000] border-l-4 border-[#000]"
+                    : "hover:bg-gray-100 hover:border-l-4 hover:border-gray-300"
+                }`}
+              >
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-2 sm:mr-3 text-[#000]"
+                />
+                <span className="text-xs sm:text-sm font-medium">
+                  Important Notes
+                </span>
+              </button>
+            </li>
+            <li>
+              <button
+                onClick={() => scrollToSection(7)}
+                aria-current={activeSection === 7 ? "true" : undefined}
+                className={`w-full flex items-center text-left px-3 py-2 sm:px-4 sm:py-2 rounded-lg transition-all duration-200 ${
+                  activeSection === 7
+                    ? "bg-blue-100 text-[#000] border-l-4 border-[#000]"
+                    : "hover:bg-gray-100 hover:border-l-4 hover:border-gray-300"
+                }`}
+              >
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-2 sm:mr-3 text-[#000]"
+                />
+                <span className="text-xs sm:text-sm font-medium">
+                  Need Assistance?
+                </span>
+              </button>
             </li>
           </ul>
         </aside>
 
-        {/* Policy Content */}
-        <main className="lg:w-3/4 bg-white rounded-xl shadow-md p-4 sm:p-8">
-          {/* Introduction Section */}
-          <section
-            id="introduction"
-            className="mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-gray-200"
-          >
-            <h2 className="text-lg sm:text-2xl font-bold text-[#2f415d] mb-3 sm:mb-4">
+        {/* Policy Content - Full Document */}
+        <main className="lg:w-3/4 p-4 sm:p-2">
+          {/* H1 - Main Document Title */}
+          <header className="mb-2 sm:mb-4 pb-4 000">
+            <h1 className="text-2xl sm:text-3xl font-bold text-[#000] mb-2">
               EW Shopping Cancellation Policy
-            </h2>
-            <p className="text-xs sm:text-base text-gray-700 leading-relaxed">
+            </h1>
+            <p className="text-base sm:text-lg mb-1">
+              <span className="font-semibold">Last Update:</span>
+              <span> Oct, 2025</span>
+            </p>
+            <p className="text-gray-600 text-sm sm:text-base leading-relaxed">
               At EW Shopping, Our Order Cancellation Policy ensures complete
               flexibility while maintaining quick and efficient service for all
               our customers.
             </p>
-          </section>
+          </header>
 
-          {/* Policy Sections */}
-          <div className="space-y-4 sm:space-y-6">
-            {policySections.map((section, i) => (
-              <section
-                key={i}
-                id={section.title.toLowerCase().replace(/\s+/g, "-")}
-                className="border border-gray-200 rounded-lg hover:shadow-md transition-shadow duration-200"
-              >
-                <button
-                  onClick={() => toggleSection(i)}
-                  className="w-full flex justify-between items-center text-left p-3 sm:p-6 hover:bg-gray-50 rounded-lg"
-                >
-                  <h3 className="text-sm sm:text-lg font-semibold text-[#2f415d] flex items-center">
-                    <FiFileText className="mr-2 sm:mr-3 text-[#2f415d] text-sm" />
-                    {section.title}
-                  </h3>
-                  {openSection === i ? (
-                    <FiChevronUp size={16} className="text-[#2f415d]" />
-                  ) : (
-                    <FiChevronDown size={16} className="text-[#2f415d]" />
-                  )}
-                </button>
-                {openSection === i && (
-                  <div className="px-3 sm:px-6 pb-3 sm:pb-6 animate-fade-in">
-                    <div className="text-gray-700 whitespace-pre-line text-xs sm:text-sm leading-relaxed">
-                      {section.content.split("\n").map((line, index) => {
-                        if (
-                          line.trim().startsWith("•") ||
-                          line.trim().startsWith("-")
-                        ) {
-                          return (
-                            <div key={index} className="flex items-start mb-2">
-                              <span className="mr-2 text-[#2f415d] text-xs">
-                                •
-                              </span>
-                              <span className="text-xs sm:text-sm">
-                                {line.substring(1).trim()}
-                              </span>
-                            </div>
-                          );
-                        } else if (line.trim().startsWith("Step")) {
-                          return (
-                            <div key={index} className="flex items-start mb-2">
-                              <span className="font-semibold text-[#2f415d] min-w-12 sm:min-w-16 text-xs sm:text-sm">
-                                {line.split(".")[0]}.
-                              </span>
-                              <span className="text-xs sm:text-sm">
-                                {line.split(".").slice(1).join(".").trim()}
-                              </span>
-                            </div>
-                          );
-                        } else if (line.trim() === "") {
-                          return <br key={index} />;
-                        } else {
-                          return (
-                            <p key={index} className="mb-3 text-xs sm:text-sm">
-                              {line}
-                            </p>
-                          );
-                        }
-                      })}
-                    </div>
+          {/* Full Document Content - All Sections Visible */}
+          <div className="space-y-4 sm:space-y-2">
+            {/* Introduction */}
+            <section
+              id="section-0"
+              data-index="0"
+              ref={(el) => (sectionRefs.current[0] = el)}
+              className="scroll-mt-20 000 pb-3 sm:pb-4"
+            >
+              <h2 className="text-xl sm:text-xl font-bold text-[#000] mb-4 sm:mb-6 flex items-center">
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-3 text-[#000] flex-shrink-0"
+                />
+                Introduction
+              </h2>
+              <div className="text-black whitespace-pre-line text-sm sm:text-base leading-relaxed">
+                <p className="mb-4">
+                  At EW Shopping, we understand that sometimes plans change. Our
+                  Order Cancellation Policy ensures complete flexibility while
+                  maintaining quick and efficient service for all our customers.
+                </p>
+              </div>
+            </section>
+
+            {/* Eligibility for Cancellation */}
+            <section
+              id="section-1"
+              data-index="1"
+              ref={(el) => (sectionRefs.current[1] = el)}
+              className="scroll-mt-20 000 pb-2 sm:pb-4"
+            >
+              <h2 className="text-xl sm:text-xl font-bold text-[#000] mb-4 sm:mb-6 flex items-center">
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-3 text-[#000] flex-shrink-0"
+                />
+                1. Eligibility for Cancellation
+              </h2>
+              <div className="text-black whitespace-pre-line text-sm sm:text-base leading-relaxed">
+                <p className="mb-4">You can cancel your order if:</p>
+
+                <div className="flex items-start mb-2 ml-4">
+                  <span className="mr-2">●</span>
+                  <span>
+                    The order has <b>not yet been shipped</b> from our warehouse
+                  </span>
+                </div>
+                <div className="flex items-start mb-2 ml-4">
+                  <span className="mr-2">●</span>
+                  <span>
+                    You raise the cancellation request <b>within 24 hours</b> of
+                    placing the order or before shipment
+                  </span>
+                </div>
+                <div className="flex items-start mb-4 ml-4">
+                  <span className="mr-2">●</span>
+                  <span>
+                    Cancellation request is made directly through your{" "}
+                    <b>EW Shopping account</b> or via customer support
+                  </span>
+                </div>
+
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                  <span className="font-semibold text-black mb-2">Note:</span>
+                  <span className="text-black">
+                    Once your order is shipped, it cannot be cancelled. However,
+                    you can still refuse the delivery or apply for a
+                    return/refund after receiving the product, as per our Return
+                    & Refund Policy.
+                  </span>
+                </div>
+              </div>
+            </section>
+
+            {/* How to Cancel Your Order */}
+            <section
+              id="section-2"
+              data-index="2"
+              ref={(el) => (sectionRefs.current[2] = el)}
+              className="scroll-mt-20 000 pb-2 sm:pb-4"
+            >
+              <h2 className="text-xl sm:text-xl font-bold text-[#000] mb-2 sm:mb-4 flex items-center">
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-3 text-[#000] flex-shrink-0"
+                />
+                2. How to Cancel Your Order
+              </h2>
+              <div className="text-black whitespace-pre-line text-sm sm:text-base leading-relaxed">
+                <p className="mb-4">
+                  To cancel an order, simply follow these steps:
+                </p>
+
+                <div className="bg-gray-50 p-4 rounded-lg mb-4">
+                  <div className="flex items-start mb-3">
+                    <span className="font-bold text-black mr-2">Step 1 .</span>
+                    <span className="">
+                      Log in to your <b>EW Shopping account</b>
+                    </span>
                   </div>
-                )}
-              </section>
-            ))}
+                  <div className="flex items-start mb-3">
+                    <span className="font-bold text-black mr-2">Step 2 .</span>
+                    <span className="">
+                      Go to <b>"My Orders"</b> and select the order you wish to
+                      cancel
+                    </span>
+                  </div>
+                  <div className="flex items-start mb-3">
+                    <span className="font-bold text-black mr-2">Step 3 .</span>
+                    <span className="">
+                      Click on the <b>"Cancel Order"</b> button and provide a
+                      brief reason
+                    </span>
+                  </div>
+                  <div className="flex items-start">
+                    <span className="font-bold text-black mr-2">Step 4 .</span>
+                    <span className="">
+                      You will receive a <b>confirmation email/SMS</b> once your
+                      cancellation is processed
+                    </span>
+                  </div>
+                </div>
+
+                <p className="mb-2">
+                  If the online cancellation option is not available, you can
+                  also reach our support team directly for help.
+                </p>
+              </div>
+            </section>
+
+            {/* Refund for Cancelled Orders */}
+            <section
+              id="section-3"
+              data-index="3"
+              ref={(el) => (sectionRefs.current[3] = el)}
+              className="scroll-mt-20 000 pb-3 sm:pb-5"
+            >
+              <h2 className="text-xl sm:text-xl font-bold text-[#000] mb-2 sm:mb-4 flex items-center">
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-3 text-[#000] flex-shrink-0"
+                />
+                3. Refund for Cancelled Orders
+              </h2>
+              <div className="text-black whitespace-pre-line text-sm sm:text-base leading-relaxed">
+                <p className="mb-4">
+                  If you've made a prepaid payment (via Credit/Debit Card, UPI,
+                  Wallet, or Net Banking), the refund will be processed to your
+                  source account within <b>Max. 15 days</b> after confirmation.
+                </p>
+
+                <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                  <span className="font-semibold text-black mb-2">
+                    Refund Processing:
+                  </span>
+                  <div className="flex items-start mb-1 ml-4">
+                    <span className="mr-2">●</span>
+                    <span>Credit/Debit Cards: 7-10 business days</span>
+                  </div>
+                  <div className="flex items-start mb-1 ml-4">
+                    <span className="mr-2">●</span>
+                    <span>UPI/Wallet: 24-48 hours</span>
+                  </div>
+                  <div className="flex items-start ml-4">
+                    <span className="mr-2">●</span>
+                    <span>Net Banking: 3-5 business days</span>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* Exceptions to Cancellation */}
+            <section
+              id="section-4"
+              data-index="4"
+              ref={(el) => (sectionRefs.current[4] = el)}
+              className="scroll-mt-20 000 pb-3 sm:pb-5"
+            >
+              <h2 className="text-xl sm:text-xl font-bold text-[#000] mb-2 sm:mb-4 flex items-center">
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-3 text-[#000] flex-shrink-0"
+                />
+                4. Exceptions to Order Cancellation
+              </h2>
+              <div className="text-black whitespace-pre-line text-sm sm:text-base leading-relaxed">
+                <p className="mb-4">
+                  Orders cannot be cancelled under the following circumstances:
+                </p>
+
+                <div className="flex items-start mb-2 ml-4">
+                  <span className="mr-2">●</span>
+                  <span>
+                    The order has already been <b>shipped or handed over</b> to
+                    the courier partner
+                  </span>
+                </div>
+                <div className="flex items-start mb-2 ml-4">
+                  <span className="mr-2">●</span>
+                  <span>
+                    Items that are <b>customised, made-to-order</b>,{" "}
+                    <b>or fall under non-returnable categories</b> such as{" "}
+                    <b>innerwear, hygiene products, or personal care items</b>
+                  </span>
+                </div>
+                <div className="flex items-start mb-2 ml-4">
+                  <span className="mr-2">●</span>
+                  <span>
+                    The order is under a <b>flash sale, clearance sale</b>,{" "}
+                    <b>
+                      or any limited-time promotional offer where cancellation
+                      is not applicable
+                    </b>
+                  </span>
+                </div>
+              </div>
+            </section>
+
+            {/* Partial Cancellation */}
+            <section
+              id="section-5"
+              data-index="5"
+              ref={(el) => (sectionRefs.current[5] = el)}
+              className="scroll-mt-20 000 pb-2 sm:pb-4"
+            >
+              <h2 className="text-xl sm:text-xl font-bold text-[#000] mb-2 sm:mb-4 flex items-center">
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-3 text-[#000] flex-shrink-0"
+                />
+                5. Partial Cancellation
+              </h2>
+              <div className="text-black whitespace-pre-line text-sm sm:text-base leading-relaxed">
+                <p className="mb-4">
+                  If you ordered more than one product, you can{" "}
+                  <b>partially cancel</b> one or more of them as long as they
+                  haven't shipped.
+                </p>
+                <p className="mb-2">
+                  Once confirmed, you'll receive a <b>revised invoice</b> and an{" "}
+                  <b>updated order summary</b>.
+                </p>
+              </div>
+            </section>
+
+            {/* Important Notes */}
+            <section
+              id="section-6"
+              data-index="6"
+              ref={(el) => (sectionRefs.current[6] = el)}
+              className="scroll-mt-20 000 pb-2 sm:pb-4"
+            >
+              <h2 className="text-xl sm:text-xl font-bold text-[#000] mb-2 sm:mb-4 flex items-center">
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-3 text-[#000] flex-shrink-0"
+                />
+                6. Important Notes
+              </h2>
+              <div className="text-black whitespace-pre-line text-sm sm:text-base leading-relaxed">
+                <div className="flex items-start mb-2 ml-4">
+                  <span className="mr-2">●</span>
+                  <span>
+                    EW Shopping reserves the right to cancel orders due to
+                    unforeseen circumstances such as{" "}
+                    <b>
+                      stock unavailability, payment failure, or technical errors
+                    </b>
+                  </span>
+                </div>
+                <div className="flex items-start mb-2 ml-4">
+                  <span className="mr-2">●</span>
+                  <span>
+                    In such cases, the{" "}
+                    <b>entire amount will be refunded automatically</b> to your
+                    original payment method
+                  </span>
+                </div>
+                <div className="flex items-start mb-2 ml-4">
+                  <span className="mr-2">●</span>
+                  <span>
+                    Customers will be notified promptly via{" "}
+                    <b>Email/WhatsApp SMS</b> in case of any unexpected
+                    cancellation
+                  </span>
+                </div>
+              </div>
+            </section>
+
+            {/* Need Assistance? */}
+            <section
+              id="section-7"
+              data-index="7"
+              ref={(el) => (sectionRefs.current[7] = el)}
+              className="scroll-mt-20 000 pb-2 sm:pb-4 last:border-b-0"
+            >
+              <h2 className="text-xl sm:text-xl font-bold text-[#000] mb-2 sm:mb-4 flex items-center">
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-3 text-[#000] flex-shrink-0"
+                />
+                7. Need Assistance?
+              </h2>
+              <div className="text-black whitespace-pre-line text-sm sm:text-base leading-relaxed">
+                <p className="mb-4">
+                  If you face any issues while cancelling your order, contact
+                  our customer support team at:
+                </p>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <p className="mb-2 text-sm sm:text-base">
+                    <span className="font-semibold">Email:</span>
+                    <a
+                      href="mailto:support@ewshopping.com"
+                      className="text-blue-600 underline ml-2"
+                    >
+                      support@ewshopping.com
+                    </a>
+                  </p>
+                  <p className="mb-2 text-sm sm:text-base">
+                    <span className="font-semibold">Phone:</span> +91 8447282606
+                  </p>
+                  <p className="mb-2 text-sm sm:text-base">
+                    <span className="font-semibold">Hours:</span> 24x7 available
+                  </p>
+                </div>
+              </div>
+            </section>
           </div>
 
-          {/* Assistance Section */}
-          <section
-            id="assistance"
-            className="mt-6 sm:mt-10 p-4 sm:p-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-200"
-          >
-            <h3 className="text-base sm:text-xl font-bold mb-3 sm:mb-4 text-[#2f415d] flex items-center">
-              <FiFileText className="mr-2 text-sm" />
-              Need Assistance?
-            </h3>
-            <p className="text-gray-700 mb-4 text-xs sm:text-sm">
-              If you face any issues while cancelling your order, contact our
-              customer support team:
+          {/* Footer Note */}
+          <footer className="mt-8 sm:mt-12 p-4 sm:p-6 bg-blue-50 rounded-lg border border-blue-200">
+            <p className="text-sm sm:text-base text-black text-center">
+              If you have any questions about this Cancellation Policy, please
+              contact us at{" "}
+              <a
+                href="mailto:support@ewshopping.com"
+                className="text-blue-600 underline font-semibold hover:underline"
+              >
+                support@ewshopping.com
+              </a>
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-              <div className="flex items-center p-3 bg-white rounded-lg">
-                <FiMail className="text-[#2f415d] mr-3 text-sm" />
-                <div>
-                  <p className="font-semibold text-xs sm:text-sm">Email</p>
-                  <a
-                    href="mailto:support@ewshopping.com"
-                    className="text-blue-600 hover:underline text-xs sm:text-sm"
-                  >
-                    support@ewshopping.com
-                  </a>
-                </div>
-              </div>
-              <div className="flex items-center p-3 bg-white rounded-lg">
-                <FiPhone className="text-[#2f415d] mr-3 text-sm" />
-                <div>
-                  <p className="font-semibold text-xs sm:text-sm">Phone</p>
-                  <a
-                    href="tel:+918447282606"
-                    className="text-blue-600 hover:underline text-xs sm:text-sm"
-                  >
-                    +91 8447282606
-                  </a>
-                </div>
-              </div>
-            </div>
-            <div className="mt-4 flex items-center justify-center p-3 bg-white rounded-lg">
-              <FiClock className="text-[#2f415d] mr-3 text-sm" />
-              <p className="font-semibold text-xs sm:text-sm">
-                Hours: 24x7 available
-              </p>
-            </div>
-          </section>
-
-          {/* Quick Summary */}
-          <div className="mt-6 sm:mt-8 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-            <h4 className="font-semibold text-yellow-800 mb-2 text-sm sm:text-base">
-              Quick Summary
-            </h4>
-            <ul className="text-xs sm:text-sm text-yellow-700 list-disc list-inside space-y-1">
-              <li>Cancel within 24 hours or before shipment</li>
-              <li>Refunds processed within 15 days</li>
-              <li>Partial cancellation available for multi-item orders</li>
-              <li>24/7 customer support available</li>
-            </ul>
-          </div>
+          </footer>
         </main>
       </div>
-
-      <style jsx global>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        .animate-fade-in {
-          animation: fadeIn 0.3s ease-out;
-        }
-      `}</style>
     </div>
   );
 };

@@ -16,6 +16,7 @@ const OtpPage = () => {
   const { loginData, otp, mob, isAuth } = useSelector(
     (store) => store.Athentication
   );
+  
   const [otpValues, setOtpValues] = useState(["", "", "", "", "", ""]);
   const [otpValuesErrors, setOtpValuesErrors] = useState([]);
   const [timer, setTimer] = useState(30);
@@ -100,7 +101,7 @@ const OtpPage = () => {
       setIsVerifying(true);
       const concatenatedString = otpValues.join("");
 
-      const  newotp = CryptoJS.AES.decrypt(otp, SECRET_KEY).toString(CryptoJS.enc.Utf8);
+      const  newotp = CryptoJS.AES.decrypt(otp, SECRET_KEY).toString(CryptoJS.enc.Utf8);      
       if (concatenatedString === newotp) {
         // ✅ Correct OTP
         const formData = { Mobile: mob };
@@ -205,7 +206,7 @@ const OtpPage = () => {
       ></div>
       <div className="absolute inset-0 bg-gradient-to-r from-[#2f415d]/80 to-transparent"></div>
 
-      <div className="absolute inset-0 flex flex-col justify-center items-start p-16 text-white">
+      <div className="absolute inset-0 flex flex-col justify-center items-start p-16 text-white bg-black/60">
         <div className="max-w-md">
           <h1 className="text-5xl font-bold mb-6 leading-tight">
             Verify Your
@@ -327,7 +328,7 @@ const OtpPage = () => {
                 <p className="text-xs text-gray-600 leading-relaxed">
                   By continuing, you agree to our{" "}
                   <a
-                    href="/termsAndCondition"
+                    href="/termsandcondition"
                     target="/_blank"
                     className="text-[#2f415d] hover:text-[#1e2a3a] underline font-medium transition-colors"
                   >
@@ -335,7 +336,7 @@ const OtpPage = () => {
                   </a>{" "}
                   and{" "}
                   <a
-                    href="/privacyPolicy"
+                    href="/privacypolicy"
                     target="_blank"
                     className="text-[#2f415d] hover:text-[#1e2a3a] underline font-medium transition-colors"
                   >

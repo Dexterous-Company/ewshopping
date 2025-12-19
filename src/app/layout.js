@@ -1,49 +1,49 @@
+// app/layout.js
 import MainLayout from "@/components/MainLayout";
 import "./globals.css";
+import "../main_pages/HomeScreen/InfiniteScroll.css"
+import "../main_pages/HomeScreen/HoverCss.css"
+import "swiper/css";
+import "swiper/css/pagination";
+import "swiper/css/navigation";
 import ReduxLayout from "@/components/layout/ReduxLayout";
 import { ReduxProvider } from "@/components/layout/redux-provider";
 import { Toaster } from "react-hot-toast";
 import Script from "next/script";
 import CartHydrationProvider from "@/components/layout/CartHydrationProvider";
+import ScrollToTopEffect from "@/components/ScrollToTopEffect";
+import { Poppins, Manrope } from 'next/font/google';
+
+const poppins = Poppins({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-poppins',
+});
+
+const manrope = Manrope({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-manrope',
+});
 
 export const metadata = {
   title: "EwShopping",
+  description:
+    "Welcome to EwShopping, your destination for stylish fashion and cutting-edge electronics. Discover quality clothing for all, plus the latest gadgets and tech accessories.",
   icons: {
     icon: "/favicon.png",
+    apple: "/favicon.png",
   },
-  description:
-    "Welcome to EwShopping, your destination for stylish fashion and cutting-edge electronics. Discover quality clothing for all, plus the latest gadgets and tech accessories. Enjoy a seamless, personalized shopping experience and elevate your lifestyle. Shop now!",
+  
+  manifest: "/manifest.json",
+};
+export const viewport = {
+  themeColor: "#cfebfe",
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <head>
-        <meta
-          name="theme-color"
-          content="#cfebfe"
-          media="(prefers-color-scheme: light)"
-        />
-        <meta
-          name="theme-color"
-          content="#cfebfe"
-          media="(prefers-color-scheme: dark)"
-        />
-        <meta name="msapplication-navbutton-color" content="#cfebfe" />
-        {/* Windows Phone */}
-        {/* iOS Safari Status Bar */}
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta
-          name="apple-mobile-web-app-status-bar-style"
-          content="black-translucent"
-        />
-        {/* Viewport for mobile optimization */}
-        <meta
-          name="viewport"
-          content="width=device-width, initial-scale=1, maximum-scale=1"
-        />
-      </head>
-
+    <html lang="en"  className={`${poppins.variable} ${manrope.variable}`}>
       <body cz-shortcut-listen="true">
         {/* Google Tag Manager */}
         <Script
@@ -98,7 +98,7 @@ export default function RootLayout({ children }) {
           }}
         />
 
-        {/* NoScript fallbacks */}
+        {/* NoScript Fallbacks */}
         <noscript>
           <iframe
             src="https://www.googletagmanager.com/ns.html?id=GTM-XXXXXX"
@@ -120,6 +120,7 @@ export default function RootLayout({ children }) {
         <ReduxProvider>
           <ReduxLayout>
             <MainLayout>
+              <ScrollToTopEffect />
               <CartHydrationProvider>{children}</CartHydrationProvider>
             </MainLayout>
           </ReduxLayout>

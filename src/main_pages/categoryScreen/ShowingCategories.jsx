@@ -27,7 +27,7 @@ const ShowingCategories = ({ prodType }) => {
     e.preventDefault();
     if (category) {
       router.push(
-        `/searchresults?categoryTag=${encodeURIComponent(category.name)}`
+        `/search?categoryTag=${encodeURIComponent(category.name)}`
       );
     }
   };

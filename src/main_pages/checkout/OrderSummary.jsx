@@ -49,7 +49,7 @@
 //             </p>
 //           </div>
 //           <button
-//             className="text-[#2874f0] font-medium text-sm border border-gray-300 px-4 py-1 rounded-md hover:bg-blue-50 transition"
+//             className="text-[#2874f0] font-medium text-sm border border-gray-300 px-4 py-1 rounded-md hover:bg-[#2f415d]-50 transition"
 //             onClick={handleCancel}
 //           >
 //             CHANGE
@@ -230,7 +230,7 @@ const OrderSummary = ({
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-[#212121] rounded-full flex items-center justify-center">
+              <div className="w-10 h-10 bg-[#2f415d] rounded-full flex items-center justify-center">
                 <FaCheck className="text-[#ffff] text-lg" />
               </div>
               <div>
@@ -244,7 +244,7 @@ const OrderSummary = ({
                 </div>
                 <p className="text-gray-900 font-medium">
                   Order Summary:{" "}
-                  <span className="text-gray-700">{totalItems} items</span>
+                  <span className="text-blue-700">{totalItems} items</span>
                 </p>
                 <p className="text-sm text-gray-600 mt-1">
                   Total: ₹{totalPrice.toLocaleString()}
@@ -438,7 +438,7 @@ const OrderSummary = ({
                     handleContinue();
                     dispatch(setCheckoutStep(4));
                   }}
-                  className="bg-gray-900 text-white font-medium py-3 px-8 rounded-lg hover:bg-gray-800 transition-colors whitespace-nowrap"
+                  className="bg-[#2f415d] text-white font-medium py-3 px-8 rounded-lg hover:bg-[#2f415d]-800 transition-colors whitespace-nowrap"
                 >
                   Continue to Payment
                 </motion.button>

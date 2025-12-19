@@ -1,8 +1,6 @@
 "use client";
 
 import React from "react";
-import "./HoverCss.css";
-
 const BannerGridSkeleton = () => {
   // Create 3 skeleton items (or however many you typically display)
   const skeletonItems = Array.from({ length: 3 }, (_, index) => index);

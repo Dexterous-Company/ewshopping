@@ -9,42 +9,92 @@ import { clearCart, getCartTotal } from "@/redux/cart/CartSlice";
 const OrderSucess = () => {
   const [modelState, setModelState] = useState({ type: null });
   const router = useRouter();
-  const { loginData, otp, mob, current_address, isAuth } = useSelector((store) => store.Athentication);
+  const { loginData, otp, mob, current_address, isAuth } = useSelector(
+    (store) => store.Athentication
+  );
 
-  const [isMount, setIsMount] = useState(false)
+  const [isMount, setIsMount] = useState(false);
   useEffect(() => {
     setIsMount(true);
   }, []);
+
+  // ✅ Dynamically calculate 7–10 day delivery window
   const today = new Date();
-  const after3Days = new Date(today);
-  after3Days.setDate(today.getDate() + 7);
+  const startDate = new Date();
+  startDate.setDate(today.getDate() + 10);
+  const endDate = new Date();
+  endDate.setDate(today.getDate() + 10);
 
-  const options = { weekday: 'short', month: 'short', day: 'numeric', year: '2-digit' };
-  const formattedDate = after3Days.toLocaleDateString('en-US', options)
-    .replace(',', '') // remove first comma
-    .replace(/(\d{1,2}),/, "$1th"); // add 'th' after day
+  // const formatDate = (dateString) => {
+  //   if (!dateString) return "";
+  //   try {
+  //     const date = new Date(dateString);
+  //     return date.toLocaleDateString("en-US", {
+  //       year: "numeric",
+  //       month: "short",
+  //       day: "numeric",
+  //     });
+  //   } catch (error) {
+  //     return "Invalid Date";
+  //   }
+  // };
 
-  const dispatch = useDispatch()
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+    try {
+      const date = new Date(dateString);
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const year = date.getFullYear();
+      return `${day}-${month}-${year}`;
+    } catch (error) {
+      return "Invalid Date";
+    }
+  };
+
+  const formatDateTime = (dateString) => {
+    if (!dateString) return "";
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleString("en-US", {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      });
+    } catch (error) {
+      return "Invalid Date";
+    }
+  };
+
+  const formattedRange = `${formatDate(startDate)} to ${formatDate(endDate)}`;
+
+  const dispatch = useDispatch();
   useEffect(() => {
     dispatch(clearCart());
     dispatch(getCartTotal());
-  }, [dispatch])
+  }, [dispatch]);
+
   return (
     <div className="bg-gray-50 sm:p-6 p-3 sm:mb-0 mb-20">
       <div className="max-w-7xl mx-auto flex flex-col sm:flex-row gap-8">
         {/* Left Section */}
         <div className="flex-1 bg-white rounded-lg shadow-lg p-6">
-          <div className="flex sm:flex-row flex-col-reverse  sm:items-start justify-between  border-b border-b-gray-200 pb-4">
+          <div className="flex sm:flex-row flex-col-reverse sm:items-start justify-between border-b border-b-gray-200 pb-4">
             <div className="flex flex-col gap-2">
               <h2 className="text-2xl font-bold text-gray-800">
                 Thanks for shopping with us!
               </h2>
               <p className="text-sm text-gray-500">
-                Delivery by <span className="font-medium">{formattedDate}</span>
+                Delivery between{" "}
+                <span className="font-medium">{formattedRange}</span>
               </p>
               <button
                 onClick={() => router.push("/accounts/orders")}
-                className="text-xs font-semibold text-[#e96f84] hover:underline  text-start"
+                className="text-xs font-semibold text-[#e96f84] hover:underline text-start"
               >
                 Track & Manage Orders
               </button>
@@ -60,18 +110,25 @@ const OrderSucess = () => {
           {/* Desktop delivery date */}
           <div className="hidden sm:block border-b border-b-gray-200 py-3">
             <span className="text-lg font-semibold text-gray-800">
-              Delivery by {formattedDate}
+              Delivery between {formattedRange}
             </span>
           </div>
 
           {/* Continue Shopping */}
-          <button className="w-full mt-4 bg-[#2f415d] hover:bg-[#24334a] text-white font-semibold py-2 rounded-md transition" onClick={() => router.push('/')}>
+          <button
+            className="w-full mt-4 bg-[#2f415d] hover:bg-[#24334a] text-white font-semibold py-2 rounded-md transition"
+            onClick={() => router.push("/")}
+          >
             Continue Shopping
           </button>
 
           {/* Tracking Info */}
           <p className="text-sm text-gray-600 mt-3">
-            We have shared the order tracking with <span className="font-medium underline text-[#e96f84]">{isMount && loginData?.Mobile}</span> used in the address. Tracking link is shared via SMS.
+            We have shared the order tracking with{" "}
+            <span className="font-medium underline text-[#e96f84]">
+              {isMount && loginData?.Mobile}
+            </span>{" "}
+            used in the address. Tracking link is shared via SMS.
           </p>
         </div>
 
@@ -86,7 +143,7 @@ const OrderSucess = () => {
               <button
                 className="bg-[#2f425d] hover:bg-[#24334a] text-white text-xs px-3 py-1 mt-1 rounded transition"
                 type="submit"
-                onClick={() => router.push('/accounts/orders')}
+                onClick={() => router.push("/accounts/orders")}
               >
                 Go to my Orders
               </button>
@@ -96,26 +153,21 @@ const OrderSucess = () => {
           {/* Customer Info */}
           <div className="mt-6 space-y-3">
             <div className="flex justify-between items-center text-sm">
-              <span className="font-semibold">Customer Name</span>
-              {/* <button className="text-xs font-medium text-[#2f415d] hover:underline">
-                Change
-              </button> */}
+              <span className="font-semibold">Customer Address</span>
             </div>
             <p className="text-sm w-[14vw] text-gray-700">
-              {
-                isMount && (<>
-                  {current_address.HNo}, {current_address.locality}, {current_address.City},
-                  {current_address.State} - {current_address.Pincode}
-                </>)
-              }
+              {isMount && (
+                <>
+                  {current_address.HNo}, {current_address.locality},{" "}
+                  {current_address.City}, {current_address.State} -{" "}
+                  {current_address.Pincode}
+                </>
+              )}
             </p>
             <div className="flex items-center gap-2 text-xs text-gray-700">
               <span className="font-semibold">Phone Number</span>
               <span>{isMount && loginData?.Mobile}</span>
             </div>
-            {/* <button className="text-xs font-semibold text-[#e96f84] hover:underline">
-              Change or add Number
-            </button> */}
           </div>
         </div>
       </div>
@@ -130,7 +182,9 @@ const OrderSucess = () => {
             className="bg-white rounded-lg shadow-lg w-80 p-5"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="font-bold text-lg text-gray-800">Send Order Details to</h3>
+            <h3 className="font-bold text-lg text-gray-800">
+              Send Order Details to
+            </h3>
             <p className="text-sm text-gray-500 mt-1">
               The recipient will be able to track the items in this order.
             </p>

@@ -84,16 +84,13 @@ const LoginPage = () => {
       for (let i = 0; i < 6; i++) {
         OTP += digits[Math.floor(Math.random() * 10)];
       }
-
       if (number === "9028121976") {
         OTP = "111444";
       }
-
+      console.log("---->", OTP);
       // 🔐 Encrypt OTP before sending
       const encryptedOTP = CryptoJS.AES.encrypt(OTP, SECRET_KEY).toString();
-
       const formdata = { mobile: number, OTP: encryptedOTP };
-
       try {
         await dispatch(LoginOtp({ number, OTP: encryptedOTP }));
         await dispatch(send_sms_through_backend(formdata));
@@ -120,7 +117,7 @@ const LoginPage = () => {
               "url('https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1200&q=80')",
           }}
         ></div>
-        <div className="absolute inset-0 flex flex-col justify-center items-start p-16 text-white">
+        <div className="absolute inset-0 flex flex-col justify-center items-start p-16 text-white bg-black/60">
           <div className="max-w-md">
             <h1 className="text-5xl font-bold mb-6 leading-tight">
               Welcome to
@@ -165,12 +162,12 @@ const LoginPage = () => {
         {mobileBackground}
 
         <div className="relative z-10 max-w-xs sm:max-w-lg">
-          <div className="hidden sm:block text-center mb-8">
+        {/* <div className="hidden sm:block text-center mb-8">
             <h1 className="text-3xl font-bold text-[#2f415d] mb-2">
               EwShopping
             </h1>
             <p className="text-gray-600">Your favorite shopping destination</p>
-          </div>
+          </div>*/}
 
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-2xl p-8 border border-gray-100">
             <div className="text-center mb-8">
@@ -235,7 +232,7 @@ const LoginPage = () => {
                 <p className="text-xs text-gray-600 leading-relaxed">
                   By continuing, you agree to our{" "}
                   <a
-                    href="/termsAndCondition"
+                    href="/termsandcondition"
                     target="/_blank"
                     className="text-[#2f415d] hover:text-[#1e2a3a] underline font-medium transition-colors"
                   >
@@ -243,7 +240,7 @@ const LoginPage = () => {
                   </a>{" "}
                   and{" "}
                   <a
-                    href="/privacyPolicy"
+                    href="/privacypolicy"
                     target="_blank"
                     className="text-[#2f415d] hover:text-[#1e2a3a] underline font-medium transition-colors"
                   >

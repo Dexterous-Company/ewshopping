@@ -1,184 +1,246 @@
-
 "use client";
 import { IoIosArrowRoundBack } from "react-icons/io";
 import React, { useEffect, useState } from "react";
 import { IoSearchSharp, IoCart } from "react-icons/io5";
 import { useRouter } from "next/navigation";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import {
+  getFillteredCategory,
+  getAllCategoryTagsAllCategories,
+} from "@/redux/category/categorySlice";
+
+// ✅ Detect ALL mobile devices (any size)
+const isMobileDevice = () => {
+  if (typeof navigator === "undefined") return false;
+  return /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile/i.test(
+    navigator.userAgent
+  );
+};
 
 const Leftcategory = ({ select, setSelect, categories, isLoading }) => {
-    if (isLoading) {
-        return (
-            <div className="flex flex-col">
-                {[...Array(8)].map((_, i) => (
-                    // border-b rounded-3 border-b-gray-200
-                    //  py-2
-                    <div key={i} className="cursor-pointer relative  flex flex-col items-center justify-between">
-                        <div className="h-15 w-15 rounded-full mb-1 bg-gray-200 animate-pulse"></div>
-                        <div className="h-4 w-16 bg-gray-200 animate-pulse rounded"></div>
-                    </div>
-                ))}
-            </div>
-        );
-    }
-
+  if (isLoading) {
     return (
-        <div className="flex flex-col">
-            {categories?.map((category, i) => (
-                <div
-                    key={category._id}
-                    onClick={() => setSelect(category._id)}
-                    //  border-b rounded-3 border-b-gray-200 
-                    className={`cursor-pointer relative py-2 flex flex-col items-center border-l-5 border-l-transparent border-r-transparent justify-between ${select === category._id ? "border-l-5" : ""}`}
-                >
-                    {select === category._id && (
-                        <div className="absolute left-0 rounded-r-2xl top-0 h-full w-1 bg-[#e96f84] z-10"></div>
-                    )}
-                    <div className="h-15 w-15 rounded-full mb-1">
-                        <img
-                            src={category.mobileImage || "https://via.placeholder.com/60"}
-                            alt={category.name}
-                            className="h-full w-full object-cover rounded-full"
-                        />
-                    </div>
-                    <span className={`text-xs ${select === category._id ? "text-[#e96f84] font-medium" : "text-gray-600"} text-center`}>
-                        {category?.name.length > 20 ? `${category?.name?.slice(0, 20)}...` : category?.name}
-                    </span>
-                </div>
-            ))}
-        </div>
+      <div className="flex flex-col">
+        {[...Array(8)].map((_, i) => (
+          <div
+            key={i}
+            className="cursor-pointer relative flex flex-col items-center justify-between py-3"
+          >
+            <div className="h-12 w-12 sm:h-15 sm:w-15 rounded-full mb-1 bg-gray-200 animate-pulse"></div>
+            <div className="h-3 w-12 sm:h-4 sm:w-16 bg-gray-200 animate-pulse rounded"></div>
+          </div>
+        ))}
+      </div>
     );
+  }
+
+  return (
+    <div className="flex flex-col">
+      {categories?.map((category, i) => (
+        <div
+          key={category._id}
+          onClick={() => setSelect(category._id)}
+          className={`cursor-pointer relative py-3 flex flex-col items-center border-l-4 border-transparent justify-between transition-all duration-200 ${
+            select === category._id
+              ? "bg-blue-50 border-l-blue-500"
+              : "hover:bg-gray-50"
+          }`}
+        >
+          <div className="h-12 w-12 sm:h-15 sm:w-15 rounded-full mb-1 overflow-hidden">
+            <img
+              src={category.mobileImage || "/placeholder-category.png"}
+              alt={category.name}
+              className="h-full w-full object-cover rounded-full border border-gray-200"
+            />
+          </div>
+          <span
+            className={`text-xs px-1 text-center leading-tight ${
+              select === category._id
+                ? "text-blue-600 font-semibold"
+                : "text-gray-700"
+            }`}
+          >
+            {category?.name.length > 12
+              ? `${category?.name?.slice(0, 12)}...`
+              : category?.name}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
 };
 
 const RightCategory = ({ subcategories, selectedCategory, isLoading }) => {
-    const router = useRouter();
-    const handleClick = (e, subcat) => {
-        e.preventDefault();
-        if (subcat) {
-            router.push(`/searchresults?subCategory=${subcat.name}`);
-        }
-    };
+  const router = useRouter();
 
-    if (isLoading) {
-        return (
-            <div className="flex flex-col gap-6 p-2">
-                <div className="h-6 w-32 bg-gray-200 animate-pulse rounded mb-4"></div>
-                <div className="grid sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 grid-cols-3 gap-2">
-                    {[...Array(12)].map((_, i) => (
-                        <div key={i} className="flex flex-col items-center">
-                            <div className="sm:h-20 h-15 w-15 sm:w-20 rounded-full bg-gray-200 animate-pulse"></div>
-                            <div className="h-4 w-16 bg-gray-200 animate-pulse rounded mt-2"></div>
-                        </div>
-                    ))}
-                </div>
-            </div>
-        );
+  const handleClick = (e, subcat) => {
+    e.preventDefault();
+    if (subcat) {
+      router.push(`/search?subCategory=${subcat.name}`);
     }
+  };
 
-    if (!subcategories || subcategories.length === 0) {
-        return (
-            <div className="flex flex-col items-center justify-center gap-6 p-2">
-                <div className="text-center py-10 text-gray-500">
-                    No subcategories found for this category
-                </div>
-            </div>
-        );
-    }
-
+  if (isLoading) {
     return (
-        <div className="flex flex-col gap-6 p-2">
-            <div>
-                <div className="gap-1">
-                    <div className="mb-4">
-                        <span className="font-semibold text-[1.1rem] mb-2 block">
-                            {selectedCategory?.name || "Subcategories"}
-                        </span>
-                        <div className="grid sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 grid-cols-3 gap-2">
-                            {subcategories.map((subcat, j) => (
-                                <div
-                                    key={`${subcat._id}-${j}`}
-                                    className="flex flex-col items-center"
-                                    onClick={(e) => handleClick(e, subcat)}
-                                >
-                                    <img
-                                        src={subcat.mobileImage || "https://via.placeholder.com/80"}
-                                        className="sm:h-20 h-15 w-15 sm:w-20 object-fill rounded-full bg-[#f5f6fb]"
-                                        alt={subcat.name}
-                                    />
-                                    <span className="text-xs text-center py-2">
-                                        {subcat.name}
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
+      <div className="flex flex-col gap-4 p-3 sm:p-4">
+        <div className="h-5 w-40 bg-gray-200 animate-pulse rounded mb-2"></div>
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4">
+          {[...Array(12)].map((_, i) => (
+            <div key={i} className="flex flex-col items-center">
+              <div className="h-14 w-14 sm:h-16 sm:w-16 md:h-18 md:w-18 rounded-full bg-gray-200 animate-pulse"></div>
+              <div className="h-3 w-12 sm:h-4 sm:w-14 bg-gray-200 animate-pulse rounded mt-2"></div>
             </div>
+          ))}
         </div>
+      </div>
     );
+  }
+
+  if (!subcategories || subcategories.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-4 p-4 text-center">
+        <div className="text-gray-500 text-sm sm:text-base">
+          No subcategories found for this category
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-4 p-3 sm:p-4">
+      <div className="mb-2">
+        <span className="font-semibold text-lg sm:text-xl text-gray-800 block">
+          {selectedCategory?.name || "Subcategories"}
+        </span>
+        {selectedCategory?.description && (
+          <p className="text-gray-600 text-xs sm:text-sm mt-1">
+            {selectedCategory.description}
+          </p>
+        )}
+      </div>
+
+      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4">
+        {subcategories.map((subcat, j) => (
+          <div
+            key={`${subcat._id}-${j}`}
+            className="flex flex-col items-center cursor-pointer group"
+            onClick={(e) => handleClick(e, subcat)}
+          >
+            <div className="h-14 w-14 sm:h-16 sm:w-16 md:h-18 md:w-18 rounded-full overflow-hidden border border-gray-200 group-hover:border-blue-300 transition-colors duration-200 bg-white p-1">
+              <img
+                src={subcat.mobileImage || "/placeholder-subcategory.png"}
+                className="h-full w-full object-cover rounded-full"
+                alt={subcat.name}
+              />
+            </div>
+            <span className="text-xs text-center py-2 text-gray-700 group-hover:text-blue-600 transition-colors duration-200 leading-tight">
+              {subcat.name.length > 12
+                ? `${subcat.name.slice(0, 12)}...`
+                : subcat.name}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 };
 
 const CategoryPage = () => {
-    const { fillteredCategory, status: categoryStatus } = useSelector((store) => store.category);
-    const { fillteredSubCategory, status: subcategoryStatus } = useSelector((store) => store.subcategory);
-    const { CartItems } = useSelector((store) => store.cart);
+  const dispatch = useDispatch();
 
-    const [select, setSelect] = useState('');
-    const router = useRouter();
-    const [isMounted, setIsMounted] = useState(false);
+  const { fillteredCategory, status: categoryStatus } = useSelector(
+    (store) => store.category
+  );
+  const { fillteredSubCategory, status: subcategoryStatus } = useSelector(
+    (store) => store.subcategory
+  );
+  const { CartItems } = useSelector((store) => store.cart);
 
-    useEffect(() => {
-        setIsMounted(true);
-        if (fillteredCategory?.length > 0 && !select) {
-            setSelect(fillteredCategory[0]._id);
+  const [select, setSelect] = useState("");
+  const router = useRouter();
+  const [isMounted, setIsMounted] = useState(false);
+
+  // ✅ MOBILE ONLY → Fetch categories
+  useEffect(() => {
+    if (isMobileDevice()) {
+      dispatch(getFillteredCategory());
+    }
+  }, [dispatch]);
+
+  // ✅ MOBILE ONLY → Fetch tags of each category
+  useEffect(() => {
+    if (isMobileDevice() && fillteredCategory?.length > 0) {
+      fillteredCategory.forEach((cat) => {
+        if (cat.categoryUrl) {
+          dispatch(getAllCategoryTagsAllCategories(cat.categoryUrl));
         }
-    }, [fillteredCategory, select]);
+      });
+    }
+  }, [fillteredCategory, dispatch]);
 
-    const selectedCategory = fillteredCategory?.find(cat => cat._id === select);
+  useEffect(() => {
+    setIsMounted(true);
+    if (fillteredCategory?.length > 0 && !select) {
+      setSelect(fillteredCategory[0]._id);
+    }
+  }, [fillteredCategory, select]);
 
-    const filteredSubcategoriesNew = fillteredSubCategory?.filter(subcat => subcat?.categoryId === selectedCategory?._id);
-    const isCategoryLoading = categoryStatus === 'loading';
-    const isSubcategoryLoading = subcategoryStatus === 'loading';
-    const isLoading = isCategoryLoading || isSubcategoryLoading;
+  const selectedCategory = fillteredCategory?.find(
+    (cat) => cat._id === select
+  );
 
-    return (
-        <div className="mt-0">
-            <div className="h-13 flex justify-between items-center fixed top-0 z-10 w-full bg-white shadow-sm p-3 mb-2">
-                <div className="flex items-center flex-row gap-2">
-                    <IoIosArrowRoundBack size={25} onClick={() => router.back()} />
-                    <span>All Categories</span>
-                </div>
-                <div className="flex items-center gap-2 mr-3">
-                    <IoSearchSharp size={20} onClick={() => router.push("/searchmobile")} />
-                    <div className="relative" onClick={() => router.push('/cart')}>
-                        <IoCart size={20} />
-                        {isMounted && (
-                            <span className="absolute text-white text-xs h-4 w-4 flex justify-center items-center -top-2 -right-2 bg-[#e96f84] rounded-full">
-                                {CartItems?.length || 0}
-                            </span>
-                        )}
-                    </div>
-                </div>
-            </div>
-            <div className="grid grid-cols-12 mt-1 h-screen">
-                <div className="sm:col-span-1 col-span-3 border-r border-r-gray-200 h-full overflow-y-auto no-scrollbar">
-                    <Leftcategory
-                        select={select}
-                        setSelect={setSelect}
-                        categories={fillteredCategory}
-                        isLoading={isCategoryLoading}
-                    />
-                </div>
-                <div className="sm:col-span-11 col-span-9 h-full overflow-y-auto no-scrollbar">
-                    <RightCategory
-                        subcategories={filteredSubcategoriesNew}
-                        selectedCategory={selectedCategory}
-                        isLoading={isLoading}
-                    />
-                </div>
-            </div>
+  const filteredSubcategoriesNew = fillteredSubCategory?.filter(
+    (subcat) => subcat?.categoryId === selectedCategory?._id
+  );
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="h-14 flex justify-between items-center fixed top-0 z-10 w-full bg-white shadow-sm px-4 border-b border-gray-200">
+        <div className="flex items-center flex-row gap-3">
+          <button onClick={() => router.back()} className="flex items-center justify-center">
+            <IoIosArrowRoundBack size={24} className="text-gray-700" />
+          </button>
+          <span className="font-medium text-gray-800 text-lg">Categories</span>
         </div>
-    );
+
+        <div className="flex items-center gap-4">
+          <button onClick={() => router.push("/searchmobile")}>
+            <IoSearchSharp size={20} className="text-gray-700" />
+          </button>
+
+          <div className="relative" onClick={() => router.push("/cart")}>
+            <IoCart size={20} className="text-gray-700" />
+            {isMounted && CartItems?.length > 0 && (
+              <span className="absolute text-white text-xs h-5 w-5 flex justify-center items-center -top-2 -right-2 bg-red-500 rounded-full font-medium">
+                {CartItems?.length > 99 ? "99+" : CartItems?.length}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Layout */}
+      <div className="pt-2 grid grid-cols-12 h-[calc(100vh-56px)] pb-1">
+        <div className="col-span-3 sm:col-span-2 border-r border-gray-200 h-full overflow-y-auto bg-white">
+          <Leftcategory
+            select={select}
+            setSelect={setSelect}
+            categories={fillteredCategory}
+            isLoading={categoryStatus === "loading"}
+          />
+        </div>
+
+        <div className="col-span-9 sm:col-span-10 h-full overflow-y-auto bg-white">
+          <RightCategory
+            subcategories={filteredSubcategoriesNew}
+            selectedCategory={selectedCategory}
+            isLoading={subcategoryStatus === "loading"}
+          />
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default CategoryPage;

@@ -19,7 +19,7 @@ const SearchBarHeader = ({ isSearchOpen, toggleSearch }) => {
       if (selectedCategory !== "0") {
         searchParams.set('category', selectedCategory);
       }
-      router.push(`/searchresults?${searchParams.toString()}`);
+      router.push(`/search?${searchParams.toString()}`);
       toggleSearch(); // Close the search modal
     }
   };
@@ -97,7 +97,7 @@ const SearchBarHeader = ({ isSearchOpen, toggleSearch }) => {
                     type="button"
                     onClick={() => {
                       setSearchQuery("T-Shirt");
-                      router.push("/searchresults?q=T-Shirt");
+                      router.push("/search?q=T-Shirt");
                       toggleSearch();
                     }}
                     className="text-gray-600 hover:text-[#2f415d] mx-1 transition-colors cursor-pointer"
@@ -108,7 +108,7 @@ const SearchBarHeader = ({ isSearchOpen, toggleSearch }) => {
                     type="button"
                     onClick={() => {
                       setSearchQuery("Shoes");
-                      router.push("/searchresults?q=Shoes");
+                      router.push("/search?q=Shoes");
                       toggleSearch();
                     }}
                     className="text-gray-600 hover:text-[#2f415d] mx-1 transition-colors cursor-pointer"
@@ -119,7 +119,7 @@ const SearchBarHeader = ({ isSearchOpen, toggleSearch }) => {
                     type="button"
                     onClick={() => {
                       setSearchQuery("Bags");
-                      router.push("/searchresults?q=Bags");
+                      router.push("/search?q=Bags");
                       toggleSearch();
                     }}
                     className="text-gray-600 hover:text-[#2f415d] mx-1 transition-colors cursor-pointer"

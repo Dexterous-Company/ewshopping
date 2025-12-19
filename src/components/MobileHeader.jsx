@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { IoSearch } from "react-icons/io5";
-import { MdOutlineShoppingCart } from "react-icons/md";
+import { MdHome, MdOutlineShoppingCart } from "react-icons/md";
 import { useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -9,22 +9,32 @@ const MobileHeader = () => {
   const { CartItems = [] } = useSelector((state) => state.cart) || {};
   const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
+
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
   return (
-    <div className="py-2 px-4 bg-[#cfebfe] sticky top-0 z-[9999] w-full">
-      <div className="flex flex-row items-center w-full gap-2">
-        <div className="flex p-3 rounded-xl bg-[#f5f6fb] w-full  flex-row justify-between items-center">
+    <div className="py-3 px-4 bg-gradient-to-r from-[#E30047] to-[#a30034] border-b border-white/20 sticky top-0 z-[9999] w-full shadow-lg">
+      <div className="flex flex-row items-center w-full gap-3">
+        {/* Home Button */}
+        <Link
+          href={"/"}
+          className="flex flex-row items-center text-center p-3 rounded-xl bg-white/20 hover:bg-white/30 transition-all duration-200 border border-white/30 backdrop-blur-sm"
+        >
+          <MdHome className="text-xl text-white" />
+        </Link>
+
+        {/* Search Bar */}
+        <div className="flex p-1 rounded-xl bg-white w-full flex-row justify-between items-center border border-white/30 backdrop-blur-sm">
           <button
             onClick={() => window.history.back()}
-            className=" rounded-full hover:bg-gray-200 w-10"
+            className="rounded-lg hover:bg-white/30 w-8 h-8 flex items-center justify-center transition-colors"
             aria-label="Go back"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6 text-gray-800"
+              className="h-5 w-5 text-white"
               fill="none"
               viewBox="0 0 26 26"
               stroke="currentColor"
@@ -37,34 +47,38 @@ const MobileHeader = () => {
               />
             </svg>
           </button>
+
           <Link
             href={"/searchmobile"}
-            className="flex flex-row justify-between items-center w-full"
+            className="flex flex-row justify-between items-center w-full ml-2"
           >
             <input
               type="search"
-              placeholder="Search for product tag, brand, and more..."
-              className="w-full outline-0 text-[0.8rem] sm:text-base bg-transparent"
+              placeholder="Search products and more..."
+              className="w-full outline-0 text-sm bg-transparent text-white placeholder-gray-500 font-medium"
               readOnly
             />
-            {/* <div className="flex flex-row items-center">
-              <IoSearch size={20} className="text-gray-500" />
-            </div> */}
+            <IoSearch className="text-xl text-white mr-2" />
           </Link>
         </div>
 
+        {/* Cart Button */}
         <Link
           href={"/cart"}
-          className="flex flex-row items-center relative text-center p-3 rounded-lg bg-[#f5f6fb]"
+          className="flex flex-row items-center relative text-center p-3 rounded-xl bg-white/20 hover:bg-white/30 transition-all duration-200 border border-white/30 backdrop-blur-sm"
         >
-          <MdOutlineShoppingCart className="text-xl" />
-          <span
-            className={`absolute top-0 -right-1 bg-blue-950 text-white text-xs  rounded-full h-4 w-4 flex items-center justify-center  ${
-              CartItems.length > 0 ? "bg-blue-950" : null
-            }`}
-          >
-            {isMounted ? (CartItems.length > 0 ? CartItems.length : 0) : 0}
-          </span>
+          <div className="relative">
+            <MdOutlineShoppingCart className="text-xl text-white" />
+            <span
+              className={`absolute -top-2 -right-2 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center border border-white/50 ${
+                isMounted && CartItems.length > 0
+                  ? "bg-white/30 shadow-md backdrop-blur-sm"
+                  : "bg-white/20"
+              }`}
+            >
+              {isMounted ? (CartItems.length > 0 ? CartItems.length : 0) : 0}
+            </span>
+          </div>
         </Link>
       </div>
     </div>

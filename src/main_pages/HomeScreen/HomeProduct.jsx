@@ -1,65 +1,206 @@
-// HomeProduct.js
-import { useRef } from "react";
-import { useSelector } from "react-redux";
+// HomeProduct.js - Updated with vibrant colors, arrow buttons & skeleton loader
+import { useRef, useEffect, useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import CategoryCard from "./CategoryCard";
-import CategoryCardNew from "./CategoryCardNew";
+import { getAllCategoryTagsAllCategories } from "@/redux/category/categorySlice";
 
-const HomeProduct = ({ title, smallTitle, border }) => {
+
+const iconsByCategory = {
+  "Gardening": "🌿",
+  "Men's Fashion": "👕",
+  "Kitchen": "🍽️",
+  "Cookware & Serveware": "🍳",
+  "Staples & Cooking Essentials": "🫙",
+  "Home Decor": "🛋️",
+  "Women's Fashion": "👗",
+  "Makeup & Cosmetics": "💄",
+  "Bath & Body Care": "🛁",
+  "Default": "⭐"
+};
+
+
+const HomeProduct = ({
+  title,
+  smallTitle,
+  border,
+  categoryUrl = "home-decor",
+}) => {
   const scrollContainerRef = useRef(null);
+  const dispatch = useDispatch();
+  const [showLeftArrow, setShowLeftArrow] = useState(false);
+  const [showRightArrow, setShowRightArrow] = useState(true);
 
-  // Get all category data from Redux
-  const { CategoryPromotionOne, CategoryPromotionTwo, CategoryPromotionThree } =
-    useSelector((state) => state.categoryTag);
+  const { allCategoryTags, tagsStatus, tagsError } = useSelector(
+    (state) => state.category
+  );
 
-  // Get the category data based on title
-  const getCategoryData = () => {
-    if (title === "one") return CategoryPromotionOne[0] || {};
-    if (title === "two") return CategoryPromotionTwo[0] || {};
-    if (title === "three") return CategoryPromotionThree[0] || {};
-    return {};
+  const categoryData = allCategoryTags[categoryUrl];
+  const categoryStatus = tagsStatus[categoryUrl] || "idle";
+  const categoryError = tagsError[categoryUrl];
+
+    // Get category name and icon
+  const categoryName = categoryData?.categoryName || "Featured Collection";
+  const categoryIcon = iconsByCategory[categoryName] || iconsByCategory.Default;
+
+  const problematicImages = [
+    "https://res.cloudinary.com/dexterous-technology/image/upload/v1721580241/th_76_igkjus.jpg",
+    "https://res.cloudinary.com/dexterous-technology/image/upload/v1721330640/download_21_aosmpw.jpg",
+  ];
+
+  const validTags =
+    categoryData?.tags?.filter((tag) => {
+      const hasProblematicImage = problematicImages.includes(tag.mobileImage);
+      if (hasProblematicImage) return false;
+      return true;
+    }) || [];
+
+  const checkScrollPosition = () => {
+    const container = scrollContainerRef.current;
+    if (container) {
+      const { scrollLeft, scrollWidth, clientWidth } = container;
+      setShowLeftArrow(scrollLeft > 0);
+      setShowRightArrow(scrollLeft + clientWidth < scrollWidth - 10);
+    }
   };
 
-  const categoryData = getCategoryData();
+  const scrollLeft = () => {
+    scrollContainerRef.current?.scrollBy({ left: -300, behavior: "smooth" });
+    setTimeout(checkScrollPosition, 300);
+  };
 
-  // Choose which card component to render
-  const CardComponent = title === "three" ? CategoryCardNew : CategoryCard;
+  const scrollRight = () => {
+    scrollContainerRef.current?.scrollBy({ left: 300, behavior: "smooth" });
+    setTimeout(checkScrollPosition, 300);
+  };
+
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (container) {
+      container.addEventListener("scroll", checkScrollPosition);
+      setTimeout(checkScrollPosition, 100);
+
+      return () => {
+        container.removeEventListener("scroll", checkScrollPosition);
+      };
+    }
+  }, [validTags.length]);
+
+  useEffect(() => {
+    if (categoryUrl && categoryUrl !== "undefined") {
+      if (!allCategoryTags[categoryUrl] && categoryStatus !== "loading") {
+        dispatch(getAllCategoryTagsAllCategories(categoryUrl));
+      }
+    }
+  }, [dispatch, categoryUrl, allCategoryTags, categoryStatus]);
+
+  // ✅ NEW — SKELETON LOADING UI (ONLY THIS BLOCK CHANGED)
+  if (categoryStatus === "loading") {
+    return (
+      <section className="w-full bg-white py-3">
+        <div className="px-4 mb-3">
+          <div className="flex items-center space-x-2">
+            <div className="w-3 h-6 bg-gray-300 animate-pulse rounded-md"></div>
+            <div className="h-5 w-40 bg-gray-300 animate-pulse rounded"></div>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto scrollbar-hide px-2 pb-2">
+          <div className="flex space-x-4">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div
+                key={i}
+                className="w-32 h-40 bg-gray-200 animate-pulse rounded-xl shadow-sm"
+              >
+                <div className="w-full h-24 bg-gray-300 animate-pulse rounded-t-xl"></div>
+                <div className="p-2 space-y-2">
+                  <div className="w-3/4 h-3 bg-gray-300 animate-pulse rounded"></div>
+                  <div className="w-1/2 h-3 bg-gray-300 animate-pulse rounded"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // ERROR UI (unchanged)
+  if (categoryStatus === "failed") {
+    return (
+      <section className="w-full bg-gradient-to-b from-rose-50/40 to-orange-50/40">
+        <div className="mb-2 text-left sm:px-4 px-2 sm:pb-1 pd-3">
+          <h2 className="text-left normal-case bg-gradient-to-r from-rose-800 via-red-800 to-orange-900 bg-clip-text text-transparent text-[0.8rem] sm:text-base md:text-xl font-bold">
+            ⚠️ Oops! Something went wrong
+          </h2>
+        </div>
+        <div className="mx-2 p-6 bg-gradient-to-br from-rose-100/80 via-white to-orange-100/80 rounded-xl border-2 border-rose-200/80 shadow-lg">
+          <p className="text-sm text-rose-700/90 mt-1">{categoryError}</p>
+        </div>
+      </section>
+    );
+  }
+
+  const hasValidData = validTags.length > 0;
+  if (!hasValidData) return null;
 
   return (
-    <section className="-mt-5 sm:py-5 w-full">
-      {/* Header */}
-      <div className="mb-2 text-left sm:px-4 px-2 pt-2 sm:pb-1 pd-3">
-        <h2 className="text-left normal-case text-blue-950 text-[0.8rem] sm:text-base md:text-xl font-semibold">
-          {categoryData?.SubCategory}
-        </h2>
-        {smallTitle && (
-          <p className="sm:text-sm text-[9px] -mt-1 italic text-cyan-500">
-            {smallTitle}
-          </p>
-        )}
-      </div>
+    <section className="w-full bg-gradient-to-r from-orange-500/15 via-pink-500/15 to-rose-500/15 overflow-hidden shadow-lg border-y border-pink-100/60 relative">
+      <div className="relative md:mb-3 text-left sm:px-6 px-4 pt-2">
+        <div className="flex items-center mb-1 space-x-2">
+          <div className="w-2 h-6 bg-gradient-to-b from-indigo-600 to-purple-600 rounded-full"></div>
+<h2 className="flex items-center gap-2 text-left bg-gradient-to-r from-indigo-800 via-purple-800 to-pink-900 bg-clip-text text-transparent text-xl font-extrabold">
+  
+  <span>
+    {categoryData?.categoryName || "Featured Collection"}
+  </span>
+  <span className="text-xl">
+    {categoryIcon}
+  </span>
+</h2>
 
-      {/* Scrollable Cards */}
-      <div
-        className="overflow-x-auto pb-2 w-full scrollbar-hide"
-        ref={scrollContainerRef}
-      >
-        <div
-          className={`flex md:gap-0 px-1 ${
-            border ? `rounded-${border}` : ""
-          } w-full gap-3`}
-        >
-          {categoryData?.selectedProductTypes?.map((cat, index) => (
-            <CardComponent
-              key={`${cat._id}-${index}`}
-              name={cat.name}
-              image={cat.desktopImage || cat.mobileImage}
-              offer={cat.offerTags || []}
-              price={cat.price || ""}
-              textAlign="center"
-            />
-          ))}
         </div>
       </div>
+
+        {showLeftArrow && (
+    <button
+      onClick={scrollLeft}
+      className="absolute left-2 top-1/2 -translate-y-1/2 hidden sm:flex
+                 w-10 h-10 items-center justify-center
+                 bg-white/90 rounded-full shadow-md z-10"
+    >
+      ◀
+    </button>
+  )}
+
+  {showRightArrow && (
+    <button
+      onClick={scrollRight}
+      className="absolute right-2 top-1/2 -translate-y-1/2 hidden sm:flex
+                 w-10 h-10 items-center justify-center
+                 bg-white/90 rounded-full shadow-md z-10"
+    >
+      ▶
+    </button>
+  )}
+
+  <div
+    className="overflow-x-auto w-full scrollbar-hide md:pb-2 px-2"
+    ref={scrollContainerRef}
+  >
+    <div className="flex space-x-4 w-full py-2">
+      {validTags.map((tag, index) => (
+        <CategoryCard
+          key={`${tag.slugUrl}-${index}`}
+          name={tag.name}
+          categoryTagData={tag}
+          productCount={tag.productCount}
+          offer={tag.offerTags || []}
+          price={tag.price || ""}
+        />
+      ))}
+    </div>
+  </div>
+
     </section>
   );
 };

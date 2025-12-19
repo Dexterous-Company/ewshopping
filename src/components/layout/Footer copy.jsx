@@ -93,8 +93,8 @@ const Footer = () => {
           ? [["My Account", "/accounts/profile"]]
           : [["Login", "/login"]]),
         ["About Us", "/aboutus"],
-        ["Privacy Policy", "/privacyPolicy"],
-        ["Terms & Conditions", "/termsAndCondition"],
+        ["Privacy Policy", "/privacypolicy"],
+        ["Terms & Conditions", "/termsandcondition"],
       ],
     },
     {
@@ -110,9 +110,9 @@ const Footer = () => {
       links: [
         ["Affiliate", "/affilliate"],
         ["FAQ", "/faq"],
-        ["Contact Us", "/contactUs"],
-        ["Cancellation Policy", "/cancellationPolicy"],
-        ["Refund Policy", "/refundPolicy"],
+        ["Contact Us", "/contactus"],
+        ["Cancellation Policy", "/cancellationpolicy"],
+        ["Refund Policy", "/refundpolicy"],
         ["Career", "/carrer"],
       ],
     },

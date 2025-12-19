@@ -252,7 +252,7 @@ export default function wwProductLayout() {
 
       {mobileImageHigh && (
         <div
-          className="fixed inset-0 z-[999] bg-white transition-opacity duration-300 ease-in-out opacity-100"
+          className="fixed inset-0 z-[999999] bg-white transition-opacity duration-300 ease-in-out opacity-100"
           style={{ animation: "fadeIn 0.3s" }}
         >
           {/* Cross button */}

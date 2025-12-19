@@ -1,12 +1,5 @@
-import LoginPage from '@/main_pages/authentication/Login/LoginPage'
-import React from 'react'
+import LoginPage from "@/main_pages/authentication/Login/LoginPage";
 
-const Login = () => {
-  return (
-    <div>
-      <LoginPage />
-    </div>
-  )
+export default function Login() {
+  return <LoginPage />;
 }
-
-export default Login

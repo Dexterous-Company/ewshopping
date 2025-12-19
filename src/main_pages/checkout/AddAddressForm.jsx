@@ -38,10 +38,10 @@ const InputField = ({
       </label>
       <div
         className={`relative flex items-center rounded-lg border ${
-          error ? "border-red-500 bg-red-50" : "border-gray-300 bg-gray-50"
+          error ? "border-red-500 bg-red-50" : "border-gray-300 bg-blue-50"
         }`}
       >
-        <div className="flex items-center justify-center w-12 h-12 bg-gray-800 rounded-l-lg">
+        <div className="flex items-center justify-center w-12 h-12 bg-[#2f415d] rounded-l-lg">
           {icon}
         </div>
         <input
@@ -323,7 +323,6 @@ const AddAddressForm = ({ setShowAddress }) => {
           return false;
         }
       } catch (error) {
-        console.log("Error fetching city/state:", error);
         setCity("");
         setState("");
         setLocationData(null);
@@ -395,8 +394,8 @@ const AddAddressForm = ({ setShowAddress }) => {
                     type="button"
                     className={`flex-1 py-3 px-4 flex items-center justify-center gap-2 font-medium transition-colors ${
                       searchMode
-                        ? "bg-blue-600 text-white"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        ? "bg-[#2f415d] text-white"
+                        : "bg-blue-100 text-gray-700 hover:bg-blue-200"
                     }`}
                     onClick={() => setSearchMode(true)}
                   >
@@ -408,7 +407,7 @@ const AddAddressForm = ({ setShowAddress }) => {
                     className={`flex-1 py-3 px-4 flex items-center justify-center gap-2 font-medium transition-colors ${
                       !searchMode
                         ? "bg-green-600 text-white"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        : "bg-blue-100 text-gray-700 hover:bg-blue-200"
                     }`}
                     onClick={() => setSearchMode(false)}
                   >
@@ -631,8 +630,8 @@ const AddAddressForm = ({ setShowAddress }) => {
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Town/Village/Area
                       </label>
-                      <div className="relative flex items-center rounded-lg border border-gray-300 bg-gray-50">
-                        <div className="flex items-center justify-center w-12 h-12 bg-gray-800 rounded-l-lg">
+                      <div className="relative flex items-center rounded-lg border border-gray-300 bg-blue-50">
+                        <div className="flex items-center justify-center w-12 h-12 bg-[#2f415d] rounded-l-lg">
                           <FaMapMarkerAlt className="text-white text-lg" />
                         </div>
                         <select
@@ -734,7 +733,7 @@ const AddAddressForm = ({ setShowAddress }) => {
           <button
             onClick={add_address}
             disabled={buttonPress}
-            className="w-full py-3 bg-[#2f415d] text-white rounded-lg font-bold text-lg hover:bg-[#1e2e45] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-3 bg-[#2f415d] text-white rounded-lg font-bold text-lg hover:bg-[#2f415d] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {buttonPress ? "Adding Address..." : "Add Address"}
           </button>

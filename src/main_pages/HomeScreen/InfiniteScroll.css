@@ -1,0 +1,36 @@
+/* InfiniteScroll.css */
+
+/* Keyframes for the infinite scroll animation */
+@keyframes scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    /* Translate by -50% to move the original content out and bring the duplicate in */
+    transform: translateX(-50%);
+  }
+}
+
+/* Class for the inner container that holds the duplicated content */
+.scroller-inner {
+  /* Ensures the container is wide enough for all items (original + duplicate) */
+  width: max-content;
+  /* Apply the animation */
+  animation: scroll 30s linear infinite; /* Adjust duration for speed */
+}
+
+/* Pause the animation on hover */
+.scroller-inner:hover {
+  animation-play-state: paused;
+}
+
+/* The user's original component already uses 'scrollbar-hide', 
+   but we include the raw CSS here for completeness in case it's not a global utility. */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
+}

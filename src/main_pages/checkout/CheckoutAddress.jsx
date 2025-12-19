@@ -108,7 +108,7 @@ const CheckOutAddress = ({ setShowSummary }) => {
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 bg-[#212121] rounded-full flex items-center justify-center">
+                  <div className="w-10 h-10 bg-[#2f415d] rounded-full flex items-center justify-center">
                     <FaCheck className="text-[#ffff] text-lg" />
                   </div>
                   <div>
@@ -122,7 +122,7 @@ const CheckOutAddress = ({ setShowSummary }) => {
                     </div>
                     <p className="text-gray-900 font-medium">
                       Deliver to:{" "}
-                      <span className="text-gray-700">{loginData?.Name}</span>
+                      <span className="text-blue-700">{loginData?.Name}</span>
                     </p>
                     <div className="text-sm text-gray-600 mt-1 sm:max-w-none w-48">
                       {current_address?.HNo}, {current_address?.locality},{" "}
@@ -147,7 +147,7 @@ const CheckOutAddress = ({ setShowSummary }) => {
               {/* Professional Header */}
               <div className="bg-white border-b border-gray-200 px-6 py-5">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-gray-900 rounded-full flex items-center justify-center">
+                  <div className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center">
                     <span className="text-white text-sm font-medium">2</span>
                   </div>
                   <div>
@@ -245,7 +245,7 @@ const CheckOutAddress = ({ setShowSummary }) => {
                                       <motion.button
                                         whileHover={{ scale: 1.02 }}
                                         whileTap={{ scale: 0.98 }}
-                                        className="bg-gray-900 text-white text-sm font-medium py-2 px-6 rounded-lg flex-1 text-center"
+                                        className="bg-[#2f415d] text-white text-sm font-medium py-2 px-6 rounded-lg flex-1 text-center"
                                         onClick={handleDeliverHere}
                                       >
                                         Deliver to this Address
@@ -281,7 +281,7 @@ const CheckOutAddress = ({ setShowSummary }) => {
                                   <motion.button
                                     whileHover={{ scale: 1.02 }}
                                     whileTap={{ scale: 0.98 }}
-                                    className="bg-gray-900 text-white text-sm font-medium py-2 px-6 rounded-lg hover:bg-gray-800 transition-colors"
+                                    className="bg-[#2f415d] text-white text-sm font-medium py-2 px-6 rounded-lg hover:bg-[#2f415d] transition-colors"
                                     onClick={handleDeliverHere}
                                   >
                                     Deliver Here

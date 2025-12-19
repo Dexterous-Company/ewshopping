@@ -63,7 +63,7 @@ const Header = () => {
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      router.push(`/searchresults?q=${encodeURIComponent(searchQuery.trim())}`);
+      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
       closeAllModals();
     }
   };
@@ -71,7 +71,7 @@ const Header = () => {
   // Handle trending search click
   const handleTrendingSearchClick = (searchTerm) => {
     setSearchQuery(searchTerm);
-    router.push(`/searchresults?q=${encodeURIComponent(searchTerm)}`);
+    router.push(`/search?q=${encodeURIComponent(searchTerm)}`);
     closeAllModals();
   };
 

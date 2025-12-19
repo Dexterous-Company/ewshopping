@@ -268,11 +268,11 @@ const Faq = () => {
       )}
 
       {/* Main Content */}
-      <div className="container mx-auto px-2 sm:px-6 py-4 sm:mb-0 mb-20 sm:py-16">
-        <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 lg:gap-8">
+      <div className=" ">
+        <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
           {/* Sidebar */}
-          <div className="lg:w-1/4 sm:block hidden">
-            <div className="bg-white rounded-xl shadow-md p-3 sm:p-4 md:p-6 sticky top-8">
+          <div className="lg:w-1/4 ">
+            <div className=" p-2 sm:p-2 md:p-6  lg:sticky lg:top-8 h-fit">
               <h2 className="text-base sm:text-lg md:text-xl font-bold mb-3 sm:mb-4 md:mb-6 text-gray-800 border-b pb-2">
                 Quick Links
               </h2>
@@ -354,7 +354,7 @@ const Faq = () => {
 
           {/* FAQ Content */}
           <div className="lg:w-3/4">
-            <div className="bg-white rounded-xl shadow-md overflow-hidden">
+            <div className=" overflow-hidden p-4 sm:p-2 py-3">
               {/* Section Header */}
               <div className="bg-gradient-to-r from-[#2d414d] to-[#2d414d] p-3 sm:p-4 md:p-6 text-white">
                 <h2 className="text-lg sm:text-xl md:text-2xl font-bold">

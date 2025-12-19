@@ -108,7 +108,7 @@ const RightSideCheckOut = () => {
 
           {DeliveryCharge > 0 && (
             <div className="grid grid-cols-2">
-              <span>Shipping</span>
+              <span>Delivery Charge</span>
               <span className="flex justify-end">
                 ₹{DeliveryCharge.toLocaleString()}
               </span>

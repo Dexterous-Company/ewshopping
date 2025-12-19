@@ -7,7 +7,11 @@ const getInitialCartItems = () => {
   if (typeof window !== "undefined") {
     try {
       const items = localStorage.getItem("CartItems");
-      return items ? JSON.parse(items) : [];
+      // Add proper validation
+      if (items && items.trim() !== "" && items !== "null" && items !== "undefined") {
+        return JSON.parse(items);
+      }
+      return [];
     } catch (error) {
       console.error("Error loading cart from localStorage:", error);
       return [];
@@ -16,12 +20,36 @@ const getInitialCartItems = () => {
   return [];
 };
 
+// Helper function to cleanup localStorage
+const cleanupLocalStorage = () => {
+  if (typeof window !== "undefined") {
+    try {
+      const cartItems = localStorage.getItem("CartItems");
+      if (cartItems === "undefined" || cartItems === "null" || cartItems === "") {
+        localStorage.removeItem("CartItems");
+      }
+      
+      const amountData = localStorage.getItem("all_amount_data");
+      if (amountData === "undefined" || amountData === "null" || amountData === "") {
+        localStorage.removeItem("all_amount_data");
+      }
+    } catch (error) {
+      console.error("Error cleaning up localStorage:", error);
+    }
+  }
+};
+
+// Cleanup localStorage on initialization
+if (typeof window !== "undefined") {
+  cleanupLocalStorage();
+}
+
 const initialState = {
   CartItems: [],
   TotalMrp: 0,
   TotalPrice: 0,
   SmallCartFee: 0,
-  HandlingFee: 10,
+  HandlingFee: 0,
   RainFee: 0,
   DeliveryCharge: 0,
   rainStatus: false,
@@ -52,7 +80,8 @@ const calculateTotals = (state) => {
   }
 
   // Calculate fees
-  state.SmallCartFee = state.TotalPrice >= 100 ? 0 : 30;
+  state.SmallCartFee = state.TotalPrice >= 100 ? 0 : 0;
+  // state.SmallCartFee = state.TotalPrice >= 100 ? 0 : 30;
 
   // Delivery charge logic
   if (state.TotalPrice >= 500) {
@@ -60,7 +89,7 @@ const calculateTotals = (state) => {
     state.amountToGetfeeDelivery = 0;
     state.amountToGetfeeDeliveryPercentage = 100;
   } else {
-    state.DeliveryCharge = 40;
+    state.DeliveryCharge = 40;// 40
     state.amountToGetfeeDelivery = Math.max(0, 500 - state.TotalPrice);
     state.amountToGetfeeDeliveryPercentage = Math.min(
       (state.TotalPrice / 500) * 100,
@@ -127,7 +156,11 @@ const cartSlice = createSlice({
       }
       calculateTotals(state);
       if (typeof window !== "undefined") {
-        localStorage.setItem("CartItems", JSON.stringify(state.CartItems));
+        try {
+          localStorage.setItem("CartItems", JSON.stringify(state.CartItems));
+        } catch (error) {
+          console.error("Error saving cart to localStorage:", error);
+        }
       }
       state.Cartloading = !state.Cartloading;
     },
@@ -158,7 +191,11 @@ const cartSlice = createSlice({
 
         calculateTotals(state);
         if (typeof window !== "undefined") {
-          localStorage.setItem("CartItems", JSON.stringify(state.CartItems));
+          try {
+            localStorage.setItem("CartItems", JSON.stringify(state.CartItems));
+          } catch (error) {
+            console.error("Error saving cart to localStorage:", error);
+          }
         }
         state.Cartloading = !state.Cartloading;
       }
@@ -169,7 +206,11 @@ const cartSlice = createSlice({
       );
       calculateTotals(state);
       if (typeof window !== "undefined") {
-        localStorage.setItem("CartItems", JSON.stringify(state.CartItems));
+        try {
+          localStorage.setItem("CartItems", JSON.stringify(state.CartItems));
+        } catch (error) {
+          console.error("Error saving cart to localStorage:", error);
+        }
       }
       state.Cartloading = !state.Cartloading;
     },
@@ -184,17 +225,30 @@ const cartSlice = createSlice({
       state.CartItems = [];
       calculateTotals(state);
       if (typeof window !== "undefined") {
-        localStorage.setItem("CartItems", JSON.stringify(state.CartItems));
+        try {
+          localStorage.setItem("CartItems", JSON.stringify(state.CartItems));
+        } catch (error) {
+          console.error("Error saving cart to localStorage:", error);
+        }
       }
       state.Cartloading = !state.Cartloading;
     },
     setAllAmountData: (state, action) => {
       state.all_amount_data = action.payload;
       if (typeof window !== "undefined") {
-        localStorage.setItem(
-          "all_amount_data",
-          JSON.stringify(state.all_amount_data)
-        );
+        try {
+          // Ensure we're storing valid JSON
+          if (action.payload) {
+            localStorage.setItem(
+              "all_amount_data",
+              JSON.stringify(state.all_amount_data)
+            );
+          } else {
+            localStorage.removeItem("all_amount_data");
+          }
+        } catch (error) {
+          console.error("Error saving all_amount_data to localStorage:", error);
+        }
       }
     },
     applyCoupon: (state, action) => {
@@ -238,7 +292,11 @@ const cartSlice = createSlice({
 
       calculateTotals(state);
       if (typeof window !== "undefined") {
-        localStorage.setItem("CartItems", JSON.stringify(state.CartItems));
+        try {
+          localStorage.setItem("CartItems", JSON.stringify(state.CartItems));
+        } catch (error) {
+          console.error("Error saving cart to localStorage:", error);
+        }
       }
     },
     // Hydrate cart from storage (for SSR/SSG)
@@ -248,10 +306,40 @@ const cartSlice = createSlice({
         state.CartItems = storedItems;
         state.isHydrated = true;
         calculateTotals(state);
-        console.log("Cart hydrated with items:", storedItems.length);
       } catch (error) {
         console.error("Error hydrating cart:", error);
         state.CartItems = [];
+        state.isHydrated = true;
+      }
+    },
+    // New: Hydrate all data including all_amount_data
+    hydrateAllData: (state) => {
+      try {
+        // Load cart items
+        const storedItems = getInitialCartItems();
+        state.CartItems = storedItems;
+        
+        // Safely load all_amount_data
+        if (typeof window !== "undefined") {
+          const storedAmountData = localStorage.getItem("all_amount_data");
+          if (storedAmountData && storedAmountData.trim() !== "" && 
+              storedAmountData !== "null" && storedAmountData !== "undefined") {
+            try {
+              state.all_amount_data = JSON.parse(storedAmountData);
+            } catch (parseError) {
+              console.error("Error parsing all_amount_data:", parseError);
+              state.all_amount_data = "";
+              localStorage.removeItem("all_amount_data");
+            }
+          }
+        }
+        
+        state.isHydrated = true;
+        calculateTotals(state);
+      } catch (error) {
+        console.error("Error hydrating cart:", error);
+        state.CartItems = [];
+        state.all_amount_data = "";
         state.isHydrated = true;
       }
     },
@@ -271,6 +359,7 @@ export const {
   refreshCartPrices, // Export the new action
   hydrateCart,
   getCartData,
+  hydrateAllData, // Export the new action
 } = cartSlice.actions;
 
 export default cartSlice.reducer;

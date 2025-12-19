@@ -16,7 +16,7 @@ export const getCategoryPromotionOne = createAsyncThunk(
     try {
       const url = `${Baseurl}/api/v1/categorytag/getCategoryPromotion/1`;
       const resp = await axios(url);
-      return resp.data.ctegoryTags;
+      return resp.data.categoryTags;
     } catch (error) {
       return thunkAPI.rejectWithValue(error.message);
     }
@@ -28,7 +28,7 @@ export const getCategoryPromotionTwo = createAsyncThunk(
     try {
       const url = `${Baseurl}/api/v1/categorytag/getCategoryPromotion/2`;
       const resp = await axios(url);      
-      return resp.data.ctegoryTags;
+      return resp.data.categoryTags;
     } catch (error) {
       return thunkAPI.rejectWithValue(error.message);
     }
@@ -40,7 +40,20 @@ export const getCategoryPromotionThree = createAsyncThunk(
     try {
       const url = `${Baseurl}/api/v1/categorytag/getCategoryPromotion/3`;
       const resp = await axios(url);
-      return resp.data.ctegoryTags;
+      return resp.data.categoryTags;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(error.message);
+    }
+  }
+);
+export const getCategoryTagBySlugUrl = createAsyncThunk(
+  "categoryTag/getCategoryTagBySlugUrl",
+  async ({slugUrl}, thunkAPI) => {
+    try {
+      const url = `${Baseurl}/api/v1/categorytag/getCategoryTag/${slugUrl}`
+      
+      const resp = await axios(url);
+      return resp.data.categoryTag;
     } catch (error) {
       return thunkAPI.rejectWithValue(error.message);
     }

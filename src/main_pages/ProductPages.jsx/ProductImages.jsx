@@ -14,13 +14,41 @@ import {
 } from "@/redux/wishlist/wishlistSlice";
 import { useRouter } from "next/navigation";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Pagination } from "swiper/modules";
-import "swiper/css";
-import "swiper/css/pagination";
+import { Pagination, Navigation } from "swiper/modules";
+
 import toast from "react-hot-toast";
 
 const ProductImagesSkeleton = () => {
-  // ... (keep the same skeleton code)
+  return (
+    <div className="w-full animate-pulse">
+      <div className="bg-gray-100 rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="flex flex-col lg:flex-row gap-4 relative">
+          {/* Thumbnail Skeleton */}
+          <div className="hidden lg:flex flex-col gap-3 overflow-y-auto h-[500px] py-6 px-2">
+            {[...Array(5)].map((_, index) => (
+              <div
+                key={index}
+                className="min-w-[80px] h-[80px] bg-gray-300 rounded-lg"
+              ></div>
+            ))}
+          </div>
+          
+          {/* Main Image Skeleton */}
+          <div className="flex-1">
+            <div className="aspect-square w-full bg-gray-300 rounded-xl"></div>
+          </div>
+        </div>
+        
+        {/* Button Skeleton */}
+        <div className="p-4 bg-gray-100 border-t border-gray-200">
+          <div className="flex gap-3">
+            <div className="flex-1 h-12 bg-gray-300 rounded-lg"></div>
+            <div className="flex-1 h-12 bg-gray-300 rounded-lg"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 const ProductImages = ({
@@ -68,11 +96,13 @@ const ProductImages = ({
     ? currentVariant.slider
     : [];
 
+  const allImages = [
+    currentVariant?.thumbnail || productData?.thumbnail?.[0],
+    ...selectedVariantImages,
+  ].filter((src, index, array) => src && array.indexOf(src) === index);
+
   const mainImage =
-    selectedVariantImages[selectedImageIndex] ||
-    currentVariant?.thumbnail ||
-    productData?.thumbnail?.[0] ||
-    "https://via.placeholder.com/300";
+    allImages[selectedImageIndex] || "https://via.placeholder.com/300";
 
   const handleBuyNow = async () => {
     const cartItem = CartItems.find(
@@ -208,6 +238,14 @@ const ProductImages = ({
     setselectedImage(newImage);
   };
 
+  const handleThumbnailClick = (index, src) => {
+    setSelectedImageIndex(index);
+    setselectedImage(src);
+    if (swiperRef.current && swiperRef.current.swiper) {
+      swiperRef.current.swiper.slideTo(index);
+    }
+  };
+
   const handleMouseMove = (e) => {
     if (!imageRef.current) return;
     const image = imageRef.current;
@@ -231,23 +269,24 @@ const ProductImages = ({
   }
 
   return (
-    <div className="w-full ">
-      <div className="bg-white sm:rounded-xl shadow-sm overflow-hidden ">
-        <div className="flex flex-col lg:flex-row gap-1 relative ">
+    <div className="w-full">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="flex flex-col lg:flex-row gap-4 relative">
           {!isMobile && (
             <div className="relative lg:w-24">
               <div
                 ref={thumbnailContainerRef}
-                className="hidden lg:flex flex-col gap-2 overflow-y-auto scroll-smooth snap-y snap-mandatory h-[400px] lg:h-[500px] py-6 px-1 no-scrollbar"
+                className="hidden lg:flex flex-col gap-3 overflow-y-auto scroll-smooth snap-y snap-mandatory h-[500px] py-6 px-2 no-scrollbar"
               >
-                {selectedVariantImages.map((src, index) => (
+                {/* Combine main image with slider images */}
+                {allImages.map((src, index) => (
                   <button
                     key={index}
-                    onClick={() => setSelectedImageIndex(index)}
+                    onClick={() => handleThumbnailClick(index, src)}
                     className={`min-w-[80px] h-[80px] border-2 rounded-lg overflow-hidden transition-all duration-200 flex-shrink-0 snap-start ${
                       selectedImageIndex === index
-                        ? "border-rose-500 shadow-md"
-                        : "border-gray-200 hover:border-gray-400"
+                        ? "border-blue-500 shadow-md scale-105"
+                        : "border-gray-200 hover:border-blue-300"
                     }`}
                   >
                     <Image
@@ -265,25 +304,27 @@ const ProductImages = ({
 
           <div className="relative flex-1 group">
             {isMobile ? (
-              <div
-                className="relative h-auto w-full bg-gray-100"
-                onClick={() => setMobileImageHigh(true)}
-              >
+              <div className="relative w-full bg-gray-50">
                 <Swiper
                   ref={swiperRef}
                   initialSlide={selectedImageIndex}
                   onSlideChange={handleSlideChange}
-                  pagination={{ dynamicBullets: true }}
-                  modules={[Pagination]}
+                  pagination={{
+                    dynamicBullets: true,
+                    clickable: true,
+                  }}
+                  modules={[Pagination, Navigation]}
                   className="h-full w-full"
+                  spaceBetween={10}
                 >
-                  {selectedVariantImages.map((src, index) => (
+                  {allImages.map((src, index) => (
                     <SwiperSlide key={index}>
-                      <div className="relative h-full w-full">
+                      <div className="relative h-full w-full aspect-square">
                         <img
                           src={getValidImageSrc(src)}
                           alt={`Product image ${index + 1}`}
-                          className="object-contain max-h-full w-full"
+                          className="object-contain w-full h-full"
+                          onClick={() => setMobileImageHigh(true)}
                         />
                       </div>
                     </SwiperSlide>
@@ -292,7 +333,7 @@ const ProductImages = ({
               </div>
             ) : (
               <div
-                className="relative aspect-square w-full overflow-hidden rounded-lg bg-white"
+                className="relative aspect-square w-full overflow-hidden rounded-lg bg-gray-50"
                 onMouseEnter={() => setShowMagnifier(true)}
                 onMouseLeave={() => setShowMagnifier(false)}
                 onMouseMove={handleMouseMove}
@@ -302,8 +343,9 @@ const ProductImages = ({
                     src={getValidImageSrc(mainImage)}
                     alt="Main product image"
                     fill
-                    className="object-cover sm:object-contain transition-opacity duration-300"
+                    className="object-cover sm:object-cover transition-opacity duration-300"
                     priority
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   />
                   {showMagnifier && (
                     <div
@@ -320,19 +362,17 @@ const ProductImages = ({
                       }}
                     />
                   )}
-                  <button className="absolute top-4 right-4 bg-white/90 p-2 rounded-full shadow-md hover:bg-white transition-all opacity-0 group-hover:opacity-100">
+                  <button className="absolute top-4 right-4 bg-white/90 p-2 rounded-full shadow-md hover:bg-white transition-all opacity-0 group-hover:opacity-100 border border-gray-200">
                     <FiZoomIn className="text-gray-700 text-xl" />
                   </button>
                 </div>
               </div>
             )}
 
-            <div className="hidden absolute top-4 left-4 md:flex gap-2 z-10">
-              <span className="bg-cyan-500 text-white text-xs font-semibold px-3 py-1 uppercase rounded-full shadow-md animate-pulse">
-                New Arrival
-              </span>
+            {/* Discount Badge */}
+            <div className="absolute top-4 left-4 flex gap-2 z-10">
               {currentVariant.price && currentVariant.mrp && (
-                <span className="hidden sm:block bg-rose-600 text-white text-xs font-semibold px-3 py-1 uppercase rounded-full shadow-md">
+                <span className="bg-gradient-to-r from-emerald-500 to-green-500 text-white text-xs font-semibold px-3 py-1 uppercase rounded-full shadow-md">
                   {Math.round(
                     (1 - currentVariant.price / currentVariant.mrp) * 100
                   )}
@@ -341,13 +381,15 @@ const ProductImages = ({
               )}
             </div>
 
+            {/* Wishlist Button - Keep as is */}
             <button
               onClick={() => handleWishlistToggle()}
-              className={`absolute z-10 top-4 right-4 p-3 rounded-full shadow-md transition-all ${
+              className={`absolute z-10 top-4 right-4 p-3 rounded-full shadow-md transition-all border ${
                 isWishlisted
-                  ? "bg-rose-500 text-white"
-                  : "bg-white/90 hover:bg-white text-gray-700"
+                  ? "bg-gradient-to-r from-red-500 to-pink-500 text-white border-red-400"
+                  : "bg-white/90 hover:bg-white text-gray-700 border-gray-200 hover:border-red-300 hover:text-red-500"
               }`}
+              aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
             >
               <FaHeart className={isWishlisted ? "fill-current" : ""} />
             </button>
@@ -355,205 +397,10 @@ const ProductImages = ({
         </div>
 
         {/* Action Buttons */}
-        {/* <div
-          className={`sm:p-3 bg-gray-50 border-t border-gray-200 
-            ${
-              isMobile
-                ? "fixed bottom-0 left-0 right-0 z-[100] px-10"
-                : "sticky bottom-0"
-            }
-          `}
-        >
-          <div className="flex flex-row gap-3">
-            {(() => {
-              const cartItem = CartItems.find(
-                (item) => item.AttributeId === currentVariant._id
-              );
-              const quantity = cartItem?.cart_Quentity || 0;
-              if (quantity === 0) {
-                return (
-                  <button
-                    className="flex-1 bg-rose-500 hover:bg-rose-600 text-white font-medium py-2 my-3 sm:my-0 sm:py-4 sm:px-6 rounded-lg shadow-md transition-all duration-300 flex items-center justify-center gap-2"
-                    onClick={() => handleAddToCart()}
-                  >
-                    ADD TO CART
-                  </button>
-                );
-              } else {
-                return (
-                  <div className="flex-1 bg-rose-500 hover:bg-rose-600 text-white font-medium py-3 my-3 sm:my-0 sm:py-4 sm:px-6 rounded-lg shadow-md transition-all duration-300 flex items-center justify-between gap-2">
-                    <button
-                      onClick={() => handleDecrementToCart()}
-                      className="bg-rose-600 px-3 py-1 rounded-lg"
-                    >
-                      -
-                    </button>
-                    <span className="text-lg">{quantity}</span>
-                    <button
-                      onClick={() => handleAddToCart()}
-                      className="bg-rose-600 px-3 py-1 rounded-lg"
-                    >
-                      +
-                    </button>
-                  </div>
-                );
-              }
-            })()}
-
-            <button
-              className="flex-1 bg-[#2f415d] my-3 sm:my-0 hover:bg-[#2f415d] text-white font-medium py-4 px-6 rounded-lg shadow-md transition-all duration-300 flex items-center justify-center gap-2"
-              onClick={handleBuyNow}
-            >
-              BUY NOW
-            </button>
-          </div>
-        </div> */}
-        {/* <div
-          className={`sm:p-3 bg-gray-50 border-t border-gray-200 
-    ${
-      isMobile
-        ? "fixed bottom-0 left-0 right-0 z-[100] px-10"
-        : "sticky bottom-0"
-    }
-  `}
-        >
-          <div className="flex flex-row gap-3">
-            {(() => {
-              const cartItem = CartItems.find(
-                (item) => item.AttributeId === currentVariant._id
-              );
-              const quantity = cartItem?.cart_Quentity || 0;
-              const isOutOfStock = currentVariant?.availablestock <= 0;
-
-              if (quantity === 0) {
-                return (
-                  <button
-                    className={`flex-1 font-medium py-2 my-3 sm:my-0 sm:py-4 sm:px-6 rounded-lg shadow-md transition-all duration-300 flex items-center justify-center gap-2 ${
-                      isOutOfStock
-                        ? "bg-gray-300 cursor-not-allowed"
-                        : "bg-rose-500 hover:bg-rose-600 text-white"
-                    }`}
-                    onClick={() => handleAddToCart()}
-                    disabled={isOutOfStock}
-                  >
-                    {isOutOfStock ? "Out of Stock" : "ADD TO CART"}
-                  </button>
-                );
-              } else {
-                return (
-                  <div
-                    className={`flex-1 font-medium py-3 my-3 sm:my-0 sm:py-4 sm:px-6 rounded-lg shadow-md transition-all duration-300 flex items-center justify-between gap-2 ${
-                      isOutOfStock
-                        ? "bg-gray-300 cursor-not-allowed"
-                        : "bg-rose-500 hover:bg-rose-600 text-white"
-                    }`}
-                  >
-                    <button
-                      onClick={() => handleDecrementToCart()}
-                      className="bg-rose-600 px-3 py-1 rounded-lg"
-                      disabled={isOutOfStock}
-                    >
-                      -
-                    </button>
-                    <span className="text-lg">{quantity}</span>
-                    <button
-                      onClick={() => handleAddToCart()}
-                      className="bg-rose-600 px-3 py-1 rounded-lg"
-                      disabled={isOutOfStock}
-                    >
-                      +
-                    </button>
-                  </div>
-                );
-              }
-            })()}
-
-            <button
-              className={`flex-1 font-medium py-4 px-6 rounded-lg shadow-md transition-all duration-300 flex items-center justify-center gap-2 ${
-                currentVariant?.availablestock <= 0
-                  ? "bg-gray-300 cursor-not-allowed"
-                  : "bg-[#2f415d] hover:bg-[#2f415d] text-white"
-              }`}
-              onClick={handleBuyNow}
-              disabled={currentVariant?.availablestock <= 0}
-            >
-              BUY NOW
-            </button>
-          </div>
-        </div> */}
-
-        {/* <div
-          className={`sm:p-3 bg-gray-50 border-t border-gray-200 ${
-            isMobile
-              ? "fixed bottom-0 left-0 right-0 z-[100] px-10"
-              : "sticky bottom-0"
-          }`}
-        >
-          <div className="flex flex-row gap-3">
-            {(() => {
-              const cartItem = CartItems.find(
-                (item) => item.AttributeId === currentVariant._id
-              );
-              const quantity = cartItem?.cart_Quentity || 0;
-              const isOutOfStock = currentVariant?.availablestock >= 0;
-
-              return quantity === 0 ? (
-                <button
-                  className={`flex-1 font-medium py-4 px-6 rounded-lg shadow-md transition-all duration-300 flex items-center justify-center gap-2 ${
-                    isOutOfStock
-                      ? "bg-gray-300 cursor-not-allowed text-gray-700"
-                      : "bg-rose-500 hover:bg-rose-600 text-white"
-                  }`}
-                  onClick={handleAddToCart}
-                  disabled={isOutOfStock}
-                >
-                  {isOutOfStock ? "Out of Stock" : "ADD TO CART"}
-                </button>
-              ) : (
-                <div
-                  className={`flex-1 font-medium py-4 px-6 rounded-lg shadow-md transition-all duration-300 flex items-center justify-between gap-2 ${
-                    isOutOfStock
-                      ? "bg-gray-300 cursor-not-allowed text-gray-700"
-                      : "bg-rose-500 hover:bg-rose-600 text-white"
-                  }`}
-                >
-                  <button
-                    onClick={handleDecrementToCart}
-                    className="bg-rose-600 px-3 py-1 rounded-lg"
-                    disabled={isOutOfStock}
-                  >
-                    -
-                  </button>
-                  <span className="text-lg">{quantity}</span>
-                  <button
-                    onClick={handleAddToCart}
-                    className="bg-rose-600 px-3 py-1 rounded-lg"
-                    disabled={isOutOfStock}
-                  >
-                    +
-                  </button>
-                </div>
-              );
-            })()}
-
-            <button
-              className={`flex-1 font-medium py-4 px-6 rounded-lg shadow-md transition-all duration-300 flex items-center justify-center gap-2 ${
-                currentVariant?.availablestock >= 0
-                  ? "bg-gray-300 cursor-not-allowed text-gray-700"
-                  : "bg-[#2f415d] hover:bg-[#2f415d] text-white"
-              }`}
-              onClick={handleBuyNow}
-              disabled={currentVariant?.availablestock >= 0}
-            >
-              BUY NOW
-            </button>
-          </div>
-        </div> */}
-
         <div
-          className={`p-3 bg-gray-50 border-t border-gray-200 ${
+          className={`p-4 bg-gray-50 border-t border-gray-200 ${
             isMobile
-              ? "fixed bottom-0 left-0 right-0 z-[100] "
+              ? "sticky bottom-0 left-0 right-0 z-[100] mt-4 hidden sm:block lg:hidden"
               : "sticky bottom-0"
           }`}
         >
@@ -566,35 +413,36 @@ const ProductImages = ({
               const isOutOfStock = currentVariant?.availablestock <= 0;
               return quantity === 0 ? (
                 <button
-                  className={`flex-1 font-medium sm:text-base text-[0.7rem] py-4 px-6 rounded-sm shadow-sm transition-all duration-300 flex items-center justify-center gap-2 ${
+                  className={`flex-1 font-medium sm:text-base text-sm py-3 md:py-4 px-4 md:px-6 rounded-lg shadow-sm transition-all duration-300 flex items-center justify-center gap-2 ${
                     isOutOfStock
-                      ? "bg-rose-500  text-white cursor-not-allowed opacity-60"
-                      : "bg-rose-500 hover:bg-rose-600 text-white"
+                      ? "bg-gray-400 text-white cursor-not-allowed opacity-60"
+                      : "bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow-md"
                   }`}
                   onClick={handleAddToCart}
                   disabled={isOutOfStock}
                 >
-                  {isOutOfStock ? "Out of Stock" : "ADD TO CART"}
+                  {isOutOfStock ? "🛒 Out of Stock" : "🛒 ADD TO CART"}
                 </button>
               ) : (
                 <div
-                  className={`flex-1 font-medium py-2 px-6 rounded-lg shadow-md transition-all duration-300 flex items-center justify-between gap-2 ${
+                  className={`flex-1 font-medium py-2 px-4 md:px-6 rounded-lg shadow-sm transition-all duration-300 flex items-center justify-between gap-2 
+ ${
                     isOutOfStock
-                      ? "bg-rose-500 text-white cursor-not-allowed opacity-60"
-                      : "bg-rose-500 hover:bg-rose-600 text-white"
+                      ? "bg-gray-400 text-white cursor-not-allowed opacity-60"
+                      : "bg-blue-600 hover:bg-blue-700 text-white"
                   }`}
                 >
                   <button
                     onClick={handleDecrementToCart}
-                    className="bg-rose-600 px-3 py-1 rounded-lg"
+                    className="bg-blue-700 px-3 py-1 rounded-md hover:bg-blue-800 transition-colors"
                     disabled={isOutOfStock}
                   >
                     -
                   </button>
-                  <span className="text-lg">{quantity}</span>
+                  <span className="text-lg font-semibold">{quantity}</span>
                   <button
                     onClick={handleAddToCart}
-                    className="bg-rose-600 px-3 py-1 rounded-lg"
+                    className="bg-blue-700 px-3 py-1 rounded-md hover:bg-blue-800 transition-colors"
                     disabled={isOutOfStock}
                   >
                     +
@@ -604,15 +452,15 @@ const ProductImages = ({
             })()}
 
             <button
-              className={`flex-1 font-medium py-4 px-6 sm:text-base text-[0.7rem] rounded-sm shadow-sm transition-all duration-300 flex items-center justify-center gap-2 ${
+              className={`flex-1 font-medium py-3 md:py-4 px-4 md:px-6 sm:text-base text-sm rounded-lg shadow-sm transition-all duration-300 flex items-center justify-center gap-2 ${
                 currentVariant?.availablestock <= 0
-                  ? "bg-[#2f415d] text-white cursor-not-allowed opacity-60"
-                  : "bg-[#2f415d] hover:bg-[#2f415d] text-white"
+                  ? "bg-gray-400 text-white cursor-not-allowed opacity-60"
+                  : "bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm hover:shadow-md"
               }`}
               onClick={handleBuyNow}
               disabled={currentVariant?.availablestock <= 0}
             >
-              BUY NOW
+              ⚡ BUY NOW
             </button>
           </div>
         </div>

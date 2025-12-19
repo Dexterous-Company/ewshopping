@@ -1,214 +1,377 @@
+"use client";
+
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { useDispatch, useSelector } from "react-redux";
-import { getSubCategoryPromotions } from "@/redux/header/SubCategoryPromotionSlice";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
+import {
+  fetchBrandsByPromotion,
+  clearPromotionData,
+} from "@/redux/header/NewBrandSlice";
 
-const BoxCategories = ({ selectedIndexes = [] }) => {
+const BoxCategories = ({
+  promotionType = "promotionone",
+  showAllPromotions = false,
+  categories = [
+    "HeadPhones",
+    "Mobile",
+    "LED",
+    "Refrigerators",
+    "Home Theater",
+    "Washing Machine",
+  ],
+  singleCategory = false,
+  brandsPerCategory = 6,
+}) => {
   const dispatch = useDispatch();
   const router = useRouter();
-  const { subCategoryPromotions, status, error } = useSelector(
-    (store) => store.subCategoryPromotion
-  );
+
+  const [allPromotionData, setAllPromotionData] = useState({
+    promotionone: [],
+    promotiontwo: [],
+    promotionthree: [],
+  });
+
+  const [loadingStates, setLoadingStates] = useState({
+    promotionone: false,
+    promotiontwo: false,
+    promotionthree: false,
+  });
+
+  const diwaliColors = {
+    HeadPhones: {
+      bg: "bg-gradient-to-br from-yellow-400 to-orange-500",
+      text: "text-white",
+      accent: "border-yellow-300",
+      shadow: "shadow-lg shadow-yellow-500/30",
+    },
+    Mobile: {
+      bg: "bg-gradient-to-br from-red-500 to-orange-600",
+      text: "text-white",
+      accent: "border-red-300",
+      shadow: "shadow-lg shadow-red-500/30",
+    },
+    LED: {
+      bg: "bg-gradient-to-br from-yellow-500 to-red-500",
+      text: "text-white",
+      accent: "border-yellow-300",
+      shadow: "shadow-lg shadow-orange-500/30",
+    },
+    Refrigerators: {
+      bg: "bg-gradient-to-br from-orange-500 to-red-600",
+      text: "text-white",
+      accent: "border-orange-300",
+      shadow: "shadow-lg shadow-red-500/30",
+    },
+    "Home Theater": {
+      bg: "bg-gradient-to-br from-yellow-500 to-orange-600",
+      text: "text-white",
+      accent: "border-yellow-300",
+      shadow: "shadow-lg shadow-amber-500/30",
+    },
+    "Washing Machine": {
+      bg: "bg-gradient-to-br from-red-500 to-yellow-500",
+      text: "text-white",
+      accent: "border-red-300",
+      shadow: "shadow-lg shadow-yellow-500/30",
+    },
+  };
+
+  const displayCategories = singleCategory ? [singleCategory] : categories;
 
   useEffect(() => {
-    dispatch(getSubCategoryPromotions());
-  }, [dispatch]);
+    if (showAllPromotions) {
+      const promotionTypes = ["promotionone", "promotiontwo", "promotionthree"];
 
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
+      promotionTypes.forEach(async (type) => {
+        try {
+          setLoadingStates((prev) => ({ ...prev, [type]: true }));
+          const result = await dispatch(fetchBrandsByPromotion(type)).unwrap();
+
+          setAllPromotionData((prev) => ({
+            ...prev,
+            [type]: result.brands || [],
+          }));
+        } catch (error) {
+          console.error(`Error fetching ${type}:`, error);
+        } finally {
+          setLoadingStates((prev) => ({ ...prev, [type]: false }));
+        }
+      });
+    } else {
+      dispatch(fetchBrandsByPromotion(promotionType));
+    }
+
+    return () => {
+      if (!showAllPromotions) {
+        dispatch(clearPromotionData());
+      }
     };
+  }, [dispatch, promotionType, showAllPromotions]);
 
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  const singlePromotionState = useSelector((store) => store.newBrands);
 
-  if (status === "loading") {
-    return <div className="text-center py-8">Loading...</div>;
-  }
-
-  if (status === "failed") {
-    return <div className="text-center py-8 text-red-500">Error: {error}</div>;
-  }
-
-  if (!subCategoryPromotions || subCategoryPromotions.length === 0) {
-    return <div className="text-center py-8">No promotions available</div>;
-  }
-
-  const handleClickCategory = (e, category) => {
-    e.preventDefault();
-    if (category) {
-      router.push(`/searchresults?category=${category?.category}`);
+  const getAllBrands = () => {
+    if (showAllPromotions) {
+      return [
+        ...allPromotionData.promotionone,
+        ...allPromotionData.promotiontwo,
+        ...allPromotionData.promotionthree,
+      ];
+    } else {
+      return singlePromotionState.brands || [];
     }
   };
 
-  const handleClick = (e, subCategory) => {
-    e.preventDefault();
-    if (subCategory) {
-      router.push(
-        `/searchresults?subCategory=${encodeURIComponent(subCategory.name)}`
-      );
-    }
+  const brandsToUse = getAllBrands();
+  const isLoading = showAllPromotions
+    ? Object.values(loadingStates).some((state) => state)
+    : singlePromotionState.loading;
+
+  const getBrandsByCategory = () => {
+    const grouped = {};
+
+    displayCategories.forEach((category) => {
+      const categoryBrands = brandsToUse
+        .filter(
+          (brand) =>
+            brand.category === category ||
+            brand.categoryUrl === category.toLowerCase()
+        )
+        .slice(0, brandsPerCategory);
+      grouped[category] = categoryBrands;
+    });
+
+    return grouped;
   };
 
-  const filteredCategories = subCategoryPromotions.filter((_, i) =>
-    selectedIndexes.includes(i)
-  );
+  const brandsByCategory = getBrandsByCategory();
 
-  // Mobile version with new design
-  const MobileCategoryCard = ({ category }) => (
-    <div className="bg-gradient-to-br from-purple-600 to-purple-800 rounded-2xl p-4 shadow-lg mb-4 mx-2 relative overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-10 bg-gradient-to-r from-white to-gray-200 rounded-2xl"></div>
+  const handleClick = (e, brand) => {
+    e.preventDefault();
+    router.push(`/sb/${brand.SubCategoryUrl}/${brand.name}`);
+  };
 
-      {/* Header Section */}
-      <div className="relative z-10 mb-4">
-        <div className="flex justify-between items-start">
-          <div>
-            <h3 className="text-white text-lg font-bold mb-1">
-              Spotlight's on
-            </h3>
-            <p className="text-white/80 text-sm">{category.category}</p>
-          </div>
-          {/* Discount Badge */}
-          <div className="bg-yellow-400 text-purple-800 text-xs font-bold px-2 py-1 rounded-full">
-            Upto 70% Off
-          </div>
+  const getBrandLogo = (brand) => {
+    return (
+      brand.logo ||
+      brand.iconImage ||
+      brand.banner ||
+      brand.image ||
+      brand.icon ||
+      brand.brandLogo ||
+      brand.thumbnail ||
+      brand.profileImage
+    );
+  };
+
+  const getBrandName = (brand) => {
+    return (
+      brand.name || brand.brandName || brand.title || brand.brand || `Brand`
+    );
+  };
+
+  const CategoryBox = ({ category, brands, index }) => {
+    const colors = diwaliColors[category];
+
+    return (
+      <div
+        className={`${colors.bg} ${colors.shadow} rounded-xl border-2 ${colors.accent} overflow-hidden`}
+      >
+        <div className="py-2 px-3 border-b border-white/20">
+          <h3
+            className={`text-sm font-bold ${colors.text} text-center truncate`}
+          >
+            {category}
+          </h3>
         </div>
-      </div>
 
-      {/* Subcategories Grid */}
-      <div className="relative z-10">
-        <div className="grid grid-cols-3 gap-3 mb-4">
-          {(category.selectedSubCategories || [])
-            .slice(0, 6)
-            .map((subCategory, index) => (
-              <div
-                key={subCategory._id}
-                onClick={(e) => handleClick(e, subCategory)}
-                className="text-center cursor-pointer group"
-              >
-                {/* Image Container */}
-                <div className="bg-white/20 backdrop-blur-sm rounded-xl p-2 mb-2 group-hover:scale-105 transition-transform duration-300">
-                  <div className="relative aspect-square">
-                    <Image
-                      src={subCategory.mobileImage}
-                      alt={`${subCategory.name} category`}
-                      fill
-                      className="object-contain rounded-lg"
-                      sizes="(max-width: 768px) 33vw"
-                      loading="lazy"
-                      quality={80}
-                      decoding="async"
-                    />
+        <div className="p-3">
+          <div className="grid grid-cols-3 gap-2">
+            {brands.length > 0
+              ? brands.map((brand, brandIndex) => (
+                  <div key={brand._id?.$oid || brand._id || brandIndex}>
+                    <BrandCard brand={brand} colors={colors} />
                   </div>
-                </div>
-
-                {/* Subcategory Name */}
-                <p className="text-white text-xs font-semibold truncate px-1">
-                  {subCategory.name}
-                </p>
-
-                {/* Additional Info - Like in the image */}
-                {index === 0 && (
-                  <p className="text-yellow-300 text-[10px] mt-1 font-bold">
-                    Min 50% Off
-                  </p>
-                )}
-                {index === 1 && (
-                  <p className="text-white text-[10px] mt-1">Under ₹2999</p>
-                )}
-              </div>
-            ))}
-        </div>
-
-        {/* See All Button */}
-        <button
-          onClick={(e) => handleClickCategory(e, category)}
-          className="w-full bg-white text-purple-700 font-bold py-2 rounded-lg hover:bg-purple-100 transition-colors text-sm"
-        >
-          {category.button_text || "See all offers"}
-        </button>
-      </div>
-    </div>
-  );
-
-  // Desktop version remains unchanged
-  const DesktopCategoryCard = ({ category }) => (
-    <div className="w-full md:w-1/3 px-2 mb-4">
-      <div className="sm:bg-white rounded-lg shadow-md sm:shadow-md flex flex-col h-full">
-        <div className="p-4 flex flex-col flex-grow">
-          <div className="flex justify-between items-center mb-3">
-            <h5 className="font-edu font-bold text-[1rem] sm:text-xl cursor-pointer hover:text-primary transition-colors line-clamp-1 text-blue-950">
-              {category.category}
-            </h5>
-          </div>
-          <div className="flex-grow">
-            <div className="grid sm:grid-cols-2 grid-cols-3 gap-2">
-              {(category.selectedSubCategories || [])
-                .slice(0, 4)
-                .map((subCategory) => (
-                  <div
-                    key={subCategory._id}
-                    onClick={(e) => handleClick(e, subCategory)}
-                    className="text-center h-full rounded-md cursor-pointer shadow-sm bg-white hover:bg-white transition-all duration-200"
-                  >
-                    <div className="relative aspect-square mb-2 ">
-                      <Image
-                        src={subCategory.desktopImage}
-                        alt={`${subCategory.name} category`}
-                        fill
-                        className="sm:object-cover rounded-xs"
-                        sizes="25vw"
-                        loading="lazy"
-                        quality={80}
-                        decoding="async"
-                      />
-                    </div>
-                    <p className="lg:text-base md:text-xs text-[9px] font-normal truncate px-1 mb-2">
-                      {subCategory.name}
-                    </p>
+                ))
+              : Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i}>
+                    <BrandPlaceholder colors={colors} />
                   </div>
                 ))}
-            </div>
-          </div>
-          <div className="mt-2">
-            <button
-              onClick={(e) => handleClickCategory(e, category)}
-              className="text-white bg-[#e96f84] px-2 py-1 rounded-xs hover:bg-[#2f415d] text-xs transition-colors"
-              aria-label={`View all ${category.category} offers`}
-            >
-              {category.button_text || "See all offers"}
-            </button>
           </div>
         </div>
       </div>
+    );
+  };
+
+  const BrandCard = ({ brand, colors }) => {
+    const brandLogo = getBrandLogo(brand);
+    const brandName = getBrandName(brand);
+
+    return (
+      <div
+        className="group relative cursor-pointer"
+        onClick={(e) => handleClick(e, brand)}
+      >
+        <div className="relative w-full">
+          {/* Brand Logo/Image Container */}
+          <div className="relative w-full h-24 mb-1">
+            {brandLogo ? (
+              <div className="relative w-full h-full rounded-md overflow-hidden transition-all duration-300 group-hover:scale-105 group-hover:shadow-2xl group-hover:shadow-black/40">
+                <Image
+                  src={brandLogo}
+                  alt={brandName}
+                  fill
+                  className="object-cover transition-all duration-300 group-hover:scale-110"
+                  sizes="(max-width: 768px) 100px, 120px"
+                />
+
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+
+                <div className="absolute inset-0 border-2 border-transparent rounded-md transition-all duration-300 group-hover:border-white/50 group-hover:shadow-inset" />
+              </div>
+            ) : (
+              <div className="w-full h-full rounded-md bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center transition-all duration-300 group-hover:scale-105 group-hover:shadow-lg group-hover:shadow-yellow-500/50">
+                <span className="text-lg font-bold text-white">
+                  {brandName.charAt(0)}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Brand Name */}
+          <div className="text-center">
+            <p className={`text-xs font-semibold ${colors.text} truncate px-1`}>
+              {brandName}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const BrandPlaceholder = ({ colors }) => (
+    <div className="relative w-full h-24">
+      <div className="w-full h-full rounded-md bg-gradient-to-br from-white/20 to-transparent border-2 border-dashed border-white/30" />
     </div>
   );
 
+  if (isLoading) return <LoadingSkeleton singleCategory={singleCategory} />;
+
   return (
-    <div className="sm:m-4 mx-0.5 mt-2">
-      {isMobile ? (
-        // Mobile Layout - New Design
-        <div className="space-y-3">
-          {filteredCategories.map((category) => (
-            <MobileCategoryCard key={category._id} category={category} />
-          ))}
-        </div>
-      ) : (
-        // Desktop Layout - Original Design
-        <div className="flex flex-wrap -mx-2">
-          {filteredCategories.map((category) => (
-            <DesktopCategoryCard key={category._id} category={category} />
-          ))}
-        </div>
-      )}
+    <div className=" sm:w-1/3">
+      <div className="w-full mx-auto px-1">
+        {singleCategory ? (
+          <div className=" mx-auto">
+            <CategoryBox
+              category={singleCategory}
+              brands={brandsByCategory[singleCategory] || []}
+              index={0}
+            />
+          </div>
+        ) : (
+          <>
+            {/* First Row - 3 Categories */}
+            <div className="grid grid-cols-1 md:grid-cols-3">
+              {displayCategories.slice(0, 3).map((category, index) => (
+                <CategoryBox
+                  key={category}
+                  category={category}
+                  brands={brandsByCategory[category] || []}
+                  index={index}
+                />
+              ))}
+            </div>
+
+            {/* Second Row - 3 Categories */}
+            <div className="grid grid-cols-1 md:grid-cols-3">
+              {displayCategories.slice(3, 6).map((category, index) => (
+                <CategoryBox
+                  key={category}
+                  category={category}
+                  brands={brandsByCategory[category] || []}
+                  index={index + 3}
+                />
+              ))}
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 };
+
+const LoadingSkeleton = ({ singleCategory = false }) => (
+  <div className="py-6 px-3 bg-gradient-to-b from-orange-50 to-red-50">
+    {singleCategory ? (
+      <div className=" mx-auto">
+        <div className="bg-gradient-to-br from-yellow-100 to-orange-100 rounded-xl border-2 border-yellow-200 shadow-lg overflow-hidden">
+          <div className="py-2 px-3 border-b border-yellow-200">
+            <div className="h-5 bg-gradient-to-r from-yellow-200 to-orange-200 rounded w-28 mx-auto"></div>
+          </div>
+          <div className="p-3">
+            <div className="grid grid-cols-3 gap-2">
+              {[1, 2, 3, 4, 5, 6].map((j) => (
+                <div
+                  key={j}
+                  className="w-full h-24 rounded-md bg-gradient-to-br from-yellow-200 to-orange-200"
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    ) : (
+      <>
+        <div className="grid grid-cols-1 md:grid-cols-3 mb-3">
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="bg-gradient-to-br from-yellow-100 to-orange-100 rounded-xl border-2 border-yellow-200 shadow-lg overflow-hidden"
+            >
+              <div className="py-2 px-3 border-b border-yellow-200">
+                <div className="h-5 bg-gradient-to-r from-yellow-200 to-orange-200 rounded w-28 mx-auto"></div>
+              </div>
+              <div className="p-3">
+                <div className="grid grid-cols-3 gap-2">
+                  {[1, 2, 3, 4, 5, 6].map((j) => (
+                    <div
+                      key={j}
+                      className="w-full h-24 rounded-md bg-gradient-to-br from-yellow-200 to-orange-200"
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 ">
+          {[4, 5, 6].map((i) => (
+            <div
+              key={i}
+              className="bg-gradient-to-br from-yellow-100 to-orange-100 rounded-xl border-2 border-yellow-200 shadow-lg overflow-hidden"
+            >
+              <div className="py-2 px-3 border-b border-yellow-200">
+                <div className="h-5 bg-gradient-to-r from-yellow-200 to-orange-200 rounded w-28 mx-auto"></div>
+              </div>
+              <div className="p-3">
+                <div className="grid grid-cols-3 gap-2">
+                  {[1, 2, 3, 4, 5, 6].map((j) => (
+                    <div
+                      key={j}
+                      className="w-full h-24 rounded-md bg-gradient-to-br from-yellow-200 to-orange-200"
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </>
+    )}
+  </div>
+);
 
 export default React.memo(BoxCategories);

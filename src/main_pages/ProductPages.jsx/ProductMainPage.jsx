@@ -4,6 +4,7 @@ import ProductLayout from "./ProductLayout";
 import TabsListing from "./TabsListing";
 import { useDispatch } from "react-redux";
 import { getSingleApprovedProductDetails } from "@/redux/product/productSlice";
+import RelatedProducts from "./RelatedProducts";
 
 const ProductMainPage = ({ slug }) => {
   const dispatch = useDispatch();
@@ -22,6 +23,7 @@ const ProductMainPage = ({ slug }) => {
   return (
    <div className="bg-[#F1F2F4]  md:bg-transparent mb-10 px-0 sm:px-10">
       <ProductLayout />
+      <RelatedProducts />
     </div>
   );
 };

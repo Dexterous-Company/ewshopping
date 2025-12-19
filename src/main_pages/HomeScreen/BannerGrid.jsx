@@ -1,7 +1,6 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import Image from "next/image";
-import "./HoverCss.css";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import { fetchCardPromotions } from "@/redux/header/cardPromotionSlice";
@@ -13,17 +12,17 @@ const BannerGrid = () => {
     loading,
     error,
   } = useSelector((state) => state.cPromotion);
+
+  const allPromotions = [...cardPromotions, ...cardPromotions];
   const [isLoading, setIsLoading] = useState(true);
+  const containerRef = useRef(null);
   const router = useRouter();
   const dispatch = useDispatch();
 
   const handleClick = (e, promotion) => {
     e.preventDefault();
-    // superCategory
     if (promotion) {
-      router.push(
-        `/searchresults?category=${encodeURIComponent(promotion.category)}`
-      );
+      router.push(`/${promotion.categoryUrl}`);
     }
   };
 
@@ -32,29 +31,35 @@ const BannerGrid = () => {
   }, [dispatch]);
 
   useEffect(() => {
-    // Simulate loading delay or use actual loading state from Redux
     if (cardPromotions.length > 0) {
       setIsLoading(false);
     }
   }, [cardPromotions]);
 
-  // Show skeleton while loading
   if (isLoading) {
     return <BannerGridSkeleton />;
   }
 
   return (
-    <div className="py-2 px-2">
+    <div className="relative px-2 overflow-hidden" ref={containerRef}>
       <div className="block">
-        <div className="flex flex-row overflow-x-auto w-full space-x-4 scrollbar-hide">
-          {cardPromotions.map((promotion) => {
+        <div className="flex flex-row scroller-inner gap-3 sm:gap-4">
+          {allPromotions.map((promotion, index) => {
             const altText =
               promotion.mainTitle || promotion.title || "Promotional banner";
+
             return (
               <div
-                key={`banner-${promotion._id}`}
-                className="relative min-w-[150px] sm:min-w-[400px] cursor-pointer aspect-[2/1] group flex-shrink-0"
+                key={`banner-${promotion._id}-${index}`}
                 onClick={(e) => handleClick(e, promotion)}
+                className="
+                  relative cursor-pointer aspect-[2/1] group flex-shrink-0
+                  min-w-[calc(50vw-20px)]   /* Mobile: 2 items */
+                  sm:min-w-[180px]          /* Tablet */
+                  md:min-w-[230px]          /* Desktop (fixed width) */
+                  lg:min-w-[260px]          /* Large desktop */
+                  xl:min-w-[400px]          /* Extra large desktop */
+                "
               >
                 <a
                   href={`/${promotion.slugUrl}`}
@@ -67,20 +72,42 @@ const BannerGrid = () => {
                     className="object-cover rounded-md"
                     loading="lazy"
                     decoding="async"
-                    sizes="(max-width: 767px) 100vw, 33vw"
-                    quality={70}
+                    sizes="(max-width: 639px) 50vw, 33vw"
+                    quality={75}
+                    priority={false}
                   />
-                  <div className="absolute inset-0 flex flex-col items-start justify-center p-2 sm:p-6 text-left z-10 text-black">
-                    <h3 className="text-[0.7rem] sm:mt-0 mt-6 sm:text-lg md:text-2xl font-bold mb-1 sm:mb-2 transition-all duration-500 group-hover:translate-x-[-10px]">
-                      {promotion.mainTite}
+
+                  <div className="absolute inset-0 flex flex-col items-start justify-center p-1 sm:p-4 md:p-6 text-left z-10 text-black bg-gradient-to-r from-white/10 via-transparent to-transparent">
+                    <h3
+                      className="text-xs sm:text-sm md:text-lg lg:text-2xl font-bold mb-1 sm:mb-2 md:mb-3 
+                        transition-all duration-500 group-hover:translate-x-[-8px]
+                        line-clamp-2 sm:line-clamp-none"
+                    >
+                      {promotion.mainTitle ||
+                        promotion.mainTite ||
+                        "Special Offer"}
                     </h3>
-                    <p className="text-[0.5rem] sm:text-[0.7rem] sm:w-60 w-20  md:text-sm lg:text-base mb-2 sm:mb-4 transition-all duration-500 group-hover:translate-x-[-5px]">
-                      {promotion.title}
+
+                    <p
+                      className="text-[10px] xs:text-xs sm:text-sm md:text-base mb-2 sm:mb-3 md:mb-4 
+                        transition-all duration-500 group-hover:translate-x-[-5px]
+                        line-clamp-2 sm:line-clamp-3 w-full max-w-[90%] sm:max-w-[80%]"
+                    >
+                      {promotion.title || "Discover amazing deals"}
                     </p>
-                    <button className="text-xs sm:text-sm px-3 py-1.5 sm:px-4 sm:py-2 bg-black/60 text-white rounded-md font-medium transition-all duration-300 opacity-0 group-hover:opacity-100 transform group-hover:translate-x-0 translate-x-4">
-                      {promotion.buttonText}
+
+                    <button
+                      className="text-[10px] xs:text-xs sm:text-sm px-2.5 py-1.5 sm:px-4 sm:py-2 
+                        bg-black/70 hover:bg-black/80 text-white rounded-md font-medium 
+                        transition-all duration-300 opacity-0 group-hover:opacity-100 
+                        transform translate-x-4 group-hover:translate-x-0
+                        whitespace-nowrap shadow-lg"
+                    >
+                      {promotion.buttonText || "Shop Now"}
                     </button>
                   </div>
+
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent rounded-md" />
                 </a>
               </div>
             );

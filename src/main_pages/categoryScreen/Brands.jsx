@@ -67,7 +67,7 @@ const Brands = ({ brandData }) => {
     e.preventDefault();
     if (brand) {
       router.push(
-        `/searchresults?brand%5B%5D=${encodeURIComponent(brand.name)}`
+        `/search?brand%5B%5D=${encodeURIComponent(brand.name)}`
       );
     }
   };

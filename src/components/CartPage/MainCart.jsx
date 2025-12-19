@@ -28,7 +28,8 @@ const MainCart = () => {
                   <CartLeft />
                 </div>
                 <div className="lg:w-1/2 sm:px-0 px-3 flex flex-col lg:mx-0 mr-5 w-full lg:p-5  rounded-sm lg:mr-5">
-                  <div className="lg:sticky  lg:h-[calc(100vh-120px)] lg:overflow-y-auto no-scrollbar">
+                  {/* <div className="lg:sticky  lg:h-[calc(100vh-120px)] lg:overflow-y-auto no-scrollbar"> */}
+                  <div className="lg:sticky lg:top-6">
                     <CartRight />
                   </div>
                 </div>

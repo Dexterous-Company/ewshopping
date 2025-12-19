@@ -6,7 +6,7 @@ import {
   IoLogoGooglePlaystore,
   IoSearch,
 } from "react-icons/io5";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchUserWishlist } from "@/redux/wishlist/wishlistSlice";
 import { signout } from "@/redux/athentication/Athentication";
@@ -42,16 +42,7 @@ import Link from "next/link";
 import { BsCart3 } from "react-icons/bs";
 import { GiHamburgerMenu } from "react-icons/gi";
 import Cartheader from "../Home/Cartheader";
-
-import { HiOutlineMenu } from "react-icons/hi";
-import { FiSearch } from "react-icons/fi";
-import { FiUser } from "react-icons/fi";
-import { FiShoppingCart } from "react-icons/fi";
-import { FiPhone } from "react-icons/fi";
-import { MdLocationOn } from "react-icons/md";
 const Baseurl = process.env.NEXT_PUBLIC_API_URL;
-import { Home } from "lucide-react";
-import { IoIosArrowBack } from "react-icons/io";
 
 const Header = () => {
   const { current_address } = useSelector((state) => state.Athentication);
@@ -63,7 +54,7 @@ const Header = () => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [debounceTimeout, setDebounceTimeout] = useState(null);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
-  const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
+  const [isSearchPage, setIsSearchPage] = useState(false);
 
   const { CartItems = [] } = useSelector((state) => state.cart) || {};
   const { loginData, isAuth } =
@@ -72,6 +63,7 @@ const Header = () => {
     useSelector((state) => state.wishlist) || {};
   const dispatch = useDispatch();
   const router = useRouter();
+  const pathname = usePathname();
 
   // Refs
   const searchRef = useRef(null);
@@ -79,7 +71,90 @@ const Header = () => {
   const cartRef = useRef(null);
   const menuRef = useRef(null);
   const suggestionsRef = useRef(null);
-  const mobileMenuRef = useRef(null); // New ref for mobile menu
+  const mobileMenuRef = useRef(null);
+
+  // Utility function to truncate product names
+  const truncateProductName = (name, maxLength = 50) => {
+    if (name.length <= maxLength) return name;
+    return name.substring(0, maxLength) + "...";
+  };
+
+  // Function to extract keyword from URL
+  const extractKeywordFromURL = () => {
+    if (pathname.includes("/search/")) {
+      const pathSegments = pathname.split("/");
+      if (pathSegments.length >= 4) {
+        return decodeURIComponent(pathSegments[3]);
+      }
+    }
+    return "";
+  };
+
+  // Check if we're on a search page
+  const checkIfSearchPage = () => {
+    const isSearch = pathname.includes("/search/");
+    setIsSearchPage(isSearch);
+    return isSearch;
+  };
+
+  // Handle URL changes and update search state
+  useEffect(() => {
+    const isSearch = checkIfSearchPage();
+
+    if (isSearch) {
+      // We're on a search page - get keyword from URL
+      const keyword = extractKeywordFromURL();
+      if (keyword) {
+        setSearchQuery(keyword);
+      }
+    } else {
+      // We're NOT on a search page - clear search
+      setSearchQuery("");
+      setSuggestions([]);
+      setShowSuggestions(false);
+      setHighlightedIndex(-1);
+
+      // Clear any pending debounce timeout
+      if (debounceTimeout) {
+        clearTimeout(debounceTimeout);
+        setDebounceTimeout(null);
+      }
+    }
+  }, [pathname]);
+
+  // Handle initial mount and browser navigation
+  useEffect(() => {
+    const handlePopState = () => {
+      const isSearch = checkIfSearchPage();
+
+      if (isSearch) {
+        const keyword = extractKeywordFromURL();
+        if (keyword) {
+          setSearchQuery(keyword);
+        }
+      } else {
+        setSearchQuery("");
+        setSuggestions([]);
+        setShowSuggestions(false);
+        setHighlightedIndex(-1);
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+
+    // Initial setup
+    const isSearch = checkIfSearchPage();
+    if (isSearch) {
+      const keyword = extractKeywordFromURL();
+      if (keyword) {
+        setSearchQuery(keyword);
+      }
+    }
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [pathname]);
 
   const handleLogout = () => {
     dispatch(signout());
@@ -148,7 +223,7 @@ const Header = () => {
     {
       label: "Privacy Policy",
       icon: <AiOutlineFileProtect />,
-      path: "/privacyPolicy",
+      path: "/privacypolicy",
     },
     {
       label: "About Us",
@@ -158,12 +233,12 @@ const Header = () => {
     {
       label: "Terms & Conditions",
       icon: <AiOutlineFileText />,
-      path: "/termsAndCondition",
+      path: "/termsandcondition",
     },
     {
       label: "Refund Policy",
       icon: <AiOutlineReload />,
-      path: "/refundPolicy",
+      path: "/refundpolicy",
     },
     {
       label: "FAQ",
@@ -173,12 +248,12 @@ const Header = () => {
     {
       label: "Contact Us",
       icon: <AiOutlinePhone />,
-      path: "/contactUs",
+      path: "/contactus",
     },
     {
       label: "Cancellation Policy",
       icon: <AiOutlineStop />,
-      path: "/cancellationPolicy",
+      path: "/cancellationpolicy",
     },
     {
       label: "Exchange Policy",
@@ -200,6 +275,7 @@ const Header = () => {
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
   const handelLogin = () => {
     if (loginData) {
       router.push("/accounts/address");
@@ -210,29 +286,39 @@ const Header = () => {
 
   const renderLocationSection = () => {
     const addresses = loginData?.Addresses || [];
-    // const defaultAddress =
-    //   addresses.find((addr) => addr.prime === true) || current_address;
 
     return (
       <div className="flex items-center gap-2 w-full px-2 -mt-2">
-        <MdHome className="text-lg text-[#2874f0] shrink-0" />
         <div
           className="flex items-center justify-between flex-1 min-w-0 cursor-pointer select-none"
           onClick={handelLogin}
         >
           {isMounted && current_address ? (
             <div className="flex flex-row items-center gap-2 flex-1 min-w-0 select-none">
-              <span className="text-cyan-800 text-[14px]  flex flex-row items-center select-none">
+              <span className="text-blue-700 text-[14px] font-medium flex flex-row items-center select-none bg-blue-100 px-2 py-1 rounded-full">
                 {current_address.Type.toUpperCase()}
               </span>
-              <span className="text-blue-900 truncate text-[14px] flex flex-row items-center select-none">
+              <span className="text-slate-800 truncate text-[14px] flex flex-row items-center select-none">
                 {current_address.HNo}, {current_address.Area},{" "}
-                {current_address.City} <FaAngleRight />
+                {current_address.City}{" "}
+                <FaAngleRight className="ml-1 text-blue-600" />
               </span>
             </div>
+          ) : !isMounted ? (
+            // Loader with WHITE text color simulation
+            <div className="flex flex-row items-center gap-2 flex-1 min-w-0">
+              {/* Blue badge loader with WHITE text */}
+              <div className="animate-pulse bg-gray-300 h-6 w-16 rounded-full flex items-center">
+                <div className="bg-gray-400 h-3 w-10 mx-auto rounded"></div>
+              </div>
+              {/* Address text loader with WHITE text */}
+              <div className="animate-pulse bg-gray-300 h-6 w-40 rounded-lg flex items-center">
+                <div className="bg-gray-400 h-3 w-32 mx-2 rounded"></div>
+              </div>
+            </div>
           ) : (
-            <span className="text-gray-500 font-medium text-sm flex flex-row items-center select-none">
-              Set delivery location <FaAngleRight />
+            <span className="text-white font-medium text-sm flex flex-row items-center select-none bg-blue-600 px-3 py-1 rounded-lg border border-blue-700">
+              Set delivery location <FaAngleRight className="ml-1 text-white" />
             </span>
           )}
         </div>
@@ -286,7 +372,7 @@ const Header = () => {
 
       if (response.ok) {
         const data = await response.json();
-        const suggestionsData = data.data?.suggestions || [];
+        const suggestionsData = data.success ? data.suggestions || [] : [];
         setSuggestions(suggestionsData);
         setShowSuggestions(suggestionsData.length > 0);
         setHighlightedIndex(suggestionsData.length > 0 ? 0 : -1);
@@ -308,12 +394,10 @@ const Header = () => {
     setSearchQuery(value);
     setHighlightedIndex(-1);
 
-    // Clear previous timeout
     if (debounceTimeout) {
       clearTimeout(debounceTimeout);
     }
 
-    // Set new timeout for debounce
     if (value.trim().length >= 2) {
       const timeout = setTimeout(() => {
         fetchSuggestions(value.trim());
@@ -325,18 +409,35 @@ const Header = () => {
     }
   };
 
-  // Handle form submission
   const handleSearch = (e) => {
     e.preventDefault();
-    navigateToSearch();
+    if (searchQuery.trim()) {
+      navigateToSearch();
+    }
   };
 
+  // FIXED: Always use "all" as the category
   const navigateToSearch = () => {
     if (searchQuery.trim()) {
-      router.push(`/searchresults?q=${encodeURIComponent(searchQuery.trim())}`);
+      const encodedKeyword = encodeURIComponent(searchQuery.trim());
+      // Always use "all" as the category
+      router.push(`/search/all/${encodedKeyword}`);
       closeAllModals();
       setShowSuggestions(false);
     }
+  };
+
+  // FIXED: Always use "all" as the category for suggestions
+  const handleSuggestionClick = (suggestion) => {
+    setSearchQuery(suggestion.keyword);
+    setShowSuggestions(false);
+
+    // Always use "all" as the category to get URL format: /all/bag
+    const categoryTag = "all";
+
+    router.push(
+      `/search/${categoryTag}/${encodeURIComponent(suggestion.keyword)}`
+    );
   };
 
   const handleKeyDown = (e) => {
@@ -374,12 +475,6 @@ const Header = () => {
     }
   };
 
-  const handleSuggestionClick = (suggestion) => {
-    setSearchQuery(suggestion.name);
-    setShowSuggestions(false);
-    router.push(`/searchresults?q=${encodeURIComponent(suggestion.name)}`);
-  };
-
   const clearSearch = () => {
     setSearchQuery("");
     setSuggestions([]);
@@ -406,50 +501,96 @@ const Header = () => {
     toggleModal("Menu");
   };
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        searchRef.current &&
+        !searchRef.current.contains(event.target) &&
+        suggestionsRef.current &&
+        !suggestionsRef.current.contains(event.target)
+      ) {
+        setShowSuggestions(false);
+        setHighlightedIndex(-1);
+      }
+    };
+
+    if (showSuggestions) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showSuggestions]);
+
+  useEffect(() => {
+    const handleClickOutsideAccount = (event) => {
+      if (accountRef.current && !accountRef.current.contains(event.target)) {
+        setActiveModal(null);
+      }
+    };
+
+    if (activeModal === "Account") {
+      document.addEventListener("mousedown", handleClickOutsideAccount);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutsideAccount);
+    };
+  }, [activeModal]);
+
   return (
-    <header className="fixed top-0 shadow-md z-[999] w-full bg-[#fff]  py-2 sm:py-2 px-2 sm:px-20 ">
-      <div className="flex flex-row justify-between gap-3 sm:gap-7 items-center">
+    <header className="fixed top-0 shadow-md z-[999] w-full py-3 px-4 sm:px-6 bg-gradient-to-r from-[#E30047] via-[#E30047] to-[#E30047] border-b border-gray-200 text-white">
+      <div className="flex flex-row justify-between gap-4 sm:gap-6 items-center">
         {/* Logo */}
         <Link href="/" className="hidden sm:block md:w-[20vw] lg:w-[30vw]">
-          <div className="md:block lg:hidden h-10">
+          <div className="md:block lg:hidden h-8">
             <img
-              src="/largelogo.png"
+              src="https://ewshoppingsellerapinew.dexterous.in/uploads/1764821273983.webp"
               alt="Logo Small"
-              className="w-full h-10 object-contain"
+              className="w-full h-8 object-contain"
             />
           </div>
-          <div className="hidden lg:block h-10">
+          <div className="hidden lg:block">
             <img
-              src="/largelogo.png"
+              src="https://ewshoppingsellerapinew.dexterous.in/uploads/1764821273983.webp"
               alt="Logo Large"
-              className="w-full h-10 object-contain"
+              className="w-full h-full object-contain"
             />
           </div>
         </Link>
 
-        {/* Search */}
+        {/* Search - FIXED SECTION */}
         <div className="w-full relative z-[50]" ref={searchRef}>
           <div className="hidden md:block lg:block">
             <div className="relative search-container no-scrollbar">
               <form onSubmit={handleSearch} className="relative">
-                <div className="sm:py-2 py-3 flex flex-row gap-2 items-center no-scrollbar rounded-[8px] w-full bg-blue-100/40 px-4">
-                  <IoSearch size={20} className="text-gray-500" />
+                <div className="flex flex-row gap-3 items-center no-scrollbar rounded-lg w-full bg-gray-100 px-4 py-2.5 border border-gray-300 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-200 transition-all">
+                  <IoSearch size={18} className="text-gray-600" />
                   <input
                     type="search"
                     value={searchQuery}
                     onChange={handleInputChange}
                     onKeyDown={handleKeyDown}
-                    placeholder="Search for product tag, brand, and more..."
-                    className="w-full outline-0 text-sm sm:text-base bg-transparent"
-                    onFocus={() => setShowSuggestions(searchQuery.length >= 2)}
+                    placeholder="Search for products and more..."
+                    className="w-full outline-0 text-sm text-gray-800 font-medium bg-transparent placeholder-gray-500"
+                    onFocus={() => {
+                      if (
+                        searchQuery.trim().length >= 2 &&
+                        suggestions.length > 0
+                      ) {
+                        setShowSuggestions(true);
+                      }
+                    }}
                   />
                   {searchQuery && (
                     <button
                       type="button"
                       onClick={clearSearch}
-                      className="text-gray-500 hover:text-gray-700"
+                      className="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-200 transition-colors"
+                      aria-label="Clear search"
                     >
-                      <IoClose size={20} />
+                      {/* <IoClose size={16} /> */}
                     </button>
                   )}
                 </div>
@@ -458,63 +599,60 @@ const Header = () => {
               {/* Suggestions Dropdown */}
               {showSuggestions && (
                 <div
-                  className="absolute top-full left-0 right-0 no-scrollbar bg-white shadow-lg z-50 max-h-90 overflow-y-auto"
+                  className="absolute top-full left-0 right-0 no-scrollbar bg-white shadow-lg border border-gray-200 z-50 max-h-80 overflow-y-auto rounded-lg mt-1"
                   ref={suggestionsRef}
                 >
                   {isLoading ? (
-                    <div className="p-4 text-center text-gray-500">
+                    <div className="p-4 text-center text-gray-600">
                       <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mx-auto"></div>
-                      <p className="mt-2">Searching...</p>
+                      <p className="mt-2 text-sm">Searching...</p>
                     </div>
                   ) : suggestions.length > 0 ? (
                     <div>
                       {suggestions.map((suggestion, index) => (
                         <div
-                          key={index}
-                          className={`p-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0 ${
-                            index === highlightedIndex ? "bg-blue-100" : ""
+                          key={suggestion._id}
+                          className={`px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors ${
+                            index === highlightedIndex
+                              ? "bg-blue-50 border-l-4 border-l-blue-500"
+                              : ""
                           }`}
                           onClick={() => handleSuggestionClick(suggestion)}
                           onMouseEnter={() => setHighlightedIndex(index)}
                         >
                           <div className="flex items-center">
-                            {suggestion.mobileImage && (
-                              <div className="flex items-center justify-center w-12 h-12 mr-3 ">
+                            {suggestion.image && (
+                              <div className="flex items-center justify-center w-10 h-10 mr-3 rounded-lg bg-gray-100">
                                 <img
-                                  src={suggestion.mobileImage}
-                                  alt={suggestion.name}
+                                  src={suggestion.image}
+                                  alt={suggestion.keyword}
                                   loading="lazy"
-                                  className="rounded-full object-contain h-48 w-48"
+                                  className="rounded-lg object-contain w-full h-full"
+                                  onError={(e) => {
+                                    e.target.style.display = "none";
+                                  }}
                                 />
                               </div>
                             )}
                             <div className="flex-1">
                               <div className="flex items-center justify-between">
-                                <span className="font-medium text-gray-800">
-                                  {suggestion.name}
+                                <span className="text-sm font-medium text-gray-800">
+                                  {truncateProductName(suggestion.keyword, 50)}
                                 </span>
                               </div>
-
-                              {suggestion.category && (
-                                <p className="text-sm text-gray-600 mt-1">
-                                  in {suggestion.category}
-                                  {suggestion.subCategory &&
-                                    ` › ${suggestion.subCategory}`}
-                                </p>
-                              )}
                             </div>
                           </div>
                         </div>
                       ))}
                       <div
-                        className="p-3 hover:bg-blue-50 cursor-pointer border-t border-gray-200 font-medium text-center text-blue-600"
-                        onClick={navigateToSearch}
+                        className="p-3 bg-gray-50 cursor-pointer font-medium text-center text-blue-600 border-t border-gray-200 hover:bg-gray-100 transition-colors"
+                        onClick={() => navigateToSearch()}
                       >
                         View all results for "{searchQuery}"
                       </div>
                     </div>
                   ) : searchQuery.length >= 2 ? (
-                    <div className="p-4 text-center text-gray-500">
+                    <div className="p-4 text-center text-gray-600 text-sm">
                       No results found for "{searchQuery}"
                     </div>
                   ) : null}
@@ -524,27 +662,26 @@ const Header = () => {
           </div>
 
           {/* Mobile Header Section */}
-          <div className=" md:hidden lg:hidden w-full flex flex-col gap-2 px-2">
+          <div className="md:hidden w-full flex flex-col gap-3">
             {/* Top Row */}
-            <div className="flex items-center justify-between p-2">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 {/* Mobile Menu */}
                 <div className="lg:hidden block" ref={menuRef}>
                   <button
-                    className="text-gray-700 gap-1 flex-row relative hover:text-gray-900 transition-all duration-200 rounded-full hover:bg-gray-100 hover:scale-105 active:scale-95 flex items-center"
+                    className="text-white hover:text-blue-200 transition-colors duration-200 rounded-lg hover:bg-[#ffffff20] flex items-center p-2"
                     aria-label="Menu"
                     onClick={handleClickMenu}
                   >
-                    <GiHamburgerMenu className="text-2xl" />
+                    <GiHamburgerMenu className="text-xl text-white" />
                   </button>
                 </div>
                 <Link href={"/"}>
-                  <p
-                    className="text-xl text-[#000000] leading-none italic"
-                    style={{ fontFamily: "Times New Roman, Times, serif" }}
-                  >
-                    EWShopping
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-lg text-white leading-none font-semibold">
+                      EWShopping
+                    </p>
+                  </div>
                 </Link>
               </div>
               <div className="flex flex-row items-center gap-2">
@@ -552,29 +689,23 @@ const Header = () => {
                   href="https://play.google.com/store/apps/details?id=com.ewsapp"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="bg-[#f5f6fb] rounded-lg p-2"
+                  className="bg-[#ffffff20] rounded-lg p-2 hover:bg-[#ffffff30] transition-colors duration-300"
                 >
-                  <IoLogoGooglePlaystore className="text-xl text-green-600 hover:scale-110 transition-transform duration-200" />
+                  <IoLogoGooglePlaystore className="text-lg text-white" />
                 </a>
                 <div
-                  className="flex flex-row items-center relative text-center p-2 bg-[#f5f6fb] rounded-lg"
+                  className="flex flex-row items-center relative text-center p-2 bg-[#ffffff20] rounded-lg hover:bg-[#ffffff30] transition-colors duration-300 cursor-pointer"
                   onClick={() => setActiveModal("Cart")}
                 >
-                  <MdOutlineShoppingCart className="text-xl" />
+                  <MdOutlineShoppingCart className="text-lg text-white" />
                   <span
-                    className={`absolute -top-2 -right-1  text-white text-xs  rounded-full h-4 w-4 flex items-center justify-center  ${
-                      isMounted
-                        ? CartItems.length > 0
-                          ? "bg-blue-950"
-                          : null
-                        : null
+                    className={`absolute -top-1 -right-1 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center ${
+                      isMounted && CartItems.length > 0
+                        ? "bg-blue-600 shadow-sm"
+                        : "bg-gray-400"
                     }`}
                   >
-                    {isMounted
-                      ? CartItems.length > 0
-                        ? CartItems.length
-                        : 0
-                      : 0}
+                    {isMounted ? CartItems.length || 0 : 0}
                   </span>
                 </div>
               </div>
@@ -583,17 +714,24 @@ const Header = () => {
             {/* Location */}
             {renderLocationSection()}
 
-            {/* Search */}
+            {/* Mobile Search - Always empty unless on search page */}
             <div
               className="block md:hidden lg:hidden"
-              onClick={() => router.push("/searchmobile")}
+              onClick={() => {
+                // If already on search page, just focus on search
+                if (pathname.includes("/search/")) {
+                  return;
+                }
+                router.push("/searchmobile");
+              }}
             >
-              <div className="sm:py-2 py-3 flex flex-row gap-2 items-center rounded-[8px] w-full bg-blue-100/40 px-4 cursor-pointer">
-                <IoSearch size={20} className="text-gray-500" />
+              <div className="flex flex-row gap-2 items-center rounded-lg w-full bg-[#ffffff20] px-4 py-2.5 cursor-pointer border border-[#ffffff30]">
+                <IoSearch size={18} className="text-white" />
                 <input
                   type="search"
-                  placeholder="Search for product tag, brand, and more..."
-                  className="w-full outline-0 text-sm sm:text-base bg-transparent"
+                  value={isSearchPage ? searchQuery : ""}
+                  placeholder="Search for products and more..."
+                  className="w-full outline-0 text-sm bg-transparent text-white placeholder-white font-medium cursor-pointer"
                   readOnly
                 />
               </div>
@@ -602,48 +740,61 @@ const Header = () => {
         </div>
 
         {/* Right Menu */}
-        <div className="md:w-[20vw] lg:w-[70vw] flex flex-row items-center justify-end md:justify-evenly gap-2">
+        <div className="md:w-[20vw] lg:w-[70vw] flex flex-row items-center justify-end md:justify-evenly gap-3">
           {/* Account */}
           {isMounted && (
             <div
               className="relative md:hidden lg:block hidden"
+              onMouseEnter={() => setActiveModal("Account")}
+              onMouseLeave={() => setActiveModal(null)}
               ref={accountRef}
             >
               <button
                 onMouseEnter={() => setActiveModal("Account")}
-                className="text-gray-700 gap-1 flex-row relative hover:text-gray-900 transition-all duration-200 p-2 rounded-full hover:bg-gray-100 hover:scale-105 active:scale-95 flex items-center"
+                className="gap-1 flex items-center 
+             p-2 rounded-lg
+             text-white
+             transition-all duration-200
+             hover:scale-[1.06]
+             hover:text-white
+             hover:bg-[#ffffff20]"
                 aria-label="Account"
               >
-                <LuUser className="text-2xl mb-1" />
-                <span className="text-[1rem] font-medium hidden lg:block">
-                  {isAuth ? `${loginData?.Name?.split(" ")[0]}` : "Login"}
+                <LuUser className="text-xl text-white transition-all duration-200" />
+
+                <span className="text-sm font-medium hidden lg:block text-white transition-all duration-200">
+                  {isAuth ? ` ${loginData?.Name?.split(" ")[0]}` : " Login"}
                 </span>
               </button>
 
               {activeModal === "Account" && (
                 <div
                   onMouseLeave={() => setActiveModal(null)}
-                  className="absolute mt-2 w-48 bg-white shadow-lg rounded-lg z-[30] overflow-hidden"
+                  className="absolute mt-1 w-48 bg-white shadow-lg rounded-lg z-[30] overflow-hidden border border-gray-200"
                 >
                   {accountMenu.map((item, idx) =>
                     item.path ? (
                       <Link
                         key={idx}
                         href={item.path}
-                        className="w-full flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-100 transition-all"
-                        onClick={closeAllModals}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+                        onClick={(e) => e.stopPropagation()}
                       >
-                        {item.icon}
-                        <span>{item.label}</span>
+                        <div className="text-gray-600">{item.icon}</div>
+                        <span className="font-medium text-sm">
+                          {item.label}
+                        </span>
                       </Link>
                     ) : (
                       <button
                         key={idx}
                         onClick={item.onClick}
-                        className="w-full flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-100 transition-all text-left"
+                        className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0 text-left"
                       >
-                        {item.icon}
-                        <span>{item.label}</span>
+                        <div className="text-gray-600">{item.icon}</div>
+                        <span className="font-medium text-sm">
+                          {item.label}
+                        </span>
                       </button>
                     )
                   )}
@@ -656,14 +807,30 @@ const Header = () => {
           <div className="sm:block hidden">
             <Link
               href="/accounts/wishlist"
-              className="text-gray-700 relative gap-2 hover:text-gray-900 transition-all duration-200 p-2 rounded-full hover:bg-gray-100 hover:scale-105 active:scale-95 flex items-center"
+              className="relative gap-1 flex items-center 
+               p-2 rounded-lg
+               text-white
+               transition-all duration-200
+               hover:scale-[1.06]
+               hover:text-white
+               hover:bg-[#ffffff20]"
               aria-label="Wishlist"
             >
-              <LuHeart className="text-xl" />
-              <span className="absolute -top-[.5px] left-5 gap-2 bg-[#2f415d] text-white text-[10px] sm:text-xs rounded-full min-w-[18px] h-[18px] flex items-center justify-center font-semibold border-2 border-white shadow-lg">
+              <LuHeart className="text-xl text-white transition-all duration-200" />
+
+              <span
+                className="absolute -top-1 -right-1 bg-white text-black 
+                     text-xs rounded-full min-w-[18px] h-[18px] 
+                     flex items-center justify-center font-semibold 
+                     border-2 border-white transition-all duration-200"
+              >
                 {isMounted ? wishlistItems.length : 0}
               </span>
-              <span className="text-[1rem] font-medium hidden lg:block">
+
+              <span
+                className="text-sm font-medium hidden lg:block text-white
+                     transition-all duration-200"
+              >
                 Wishlist
               </span>
             </Link>
@@ -672,15 +839,31 @@ const Header = () => {
           {/* Cart */}
           <div className="sm:block hidden" ref={cartRef}>
             <button
-              className="text-gray-700 relative gap-2 hover:text-gray-900 transition-all duration-200 p-2 rounded-full hover:bg-gray-100 hover:scale-105 active:scale-95 flex items-center"
+              className="relative gap-1 flex items-center 
+               p-2 rounded-lg
+               text-white
+               transition-all duration-200
+               hover:scale-[1.06]
+               hover:text-white
+               hover:bg-[#ffffff20]"
               aria-label="Shopping Cart"
               onClick={() => toggleModal("Cart")}
             >
-              <BsCart3 className="text-xl" />
-              <span className="absolute -top-[.5px] left-5 bg-[#2f415d] text-white text-[10px] sm:text-xs rounded-full min-w-[18px] h-[18px] flex items-center justify-center font-semibold border-2 border-white shadow-lg">
+              <BsCart3 className="text-xl text-white transition-all duration-200" />
+
+              <span
+                className="absolute -top-1 -right-1 bg-white text-black 
+                     text-xs rounded-full min-w-[18px] h-[18px] 
+                     flex items-center justify-center font-semibold 
+                     border-2 border-white transition-all duration-200"
+              >
                 {isMounted ? CartItems.length : 0}
               </span>
-              <span className="text-[1rem] font-medium hidden lg:block">
+
+              <span
+                className="text-sm font-medium hidden lg:block text-white
+                     transition-all duration-200"
+              >
                 Cart
               </span>
             </button>
@@ -692,11 +875,20 @@ const Header = () => {
               href="https://seller.ewshopping.com/"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-gray-700 gap-1 flex-row relative hover:text-gray-900 select-none transition-all duration-200 p-2 rounded-full hover:bg-gray-100 hover:scale-105 active:scale-95 flex items-center"
+              className="gap-1 text-white flex items-center
+               p-2 rounded-lg
+               transition-all duration-200
+               hover:scale-[1.06]
+               hover:text-white
+               hover:bg-[#ffffff20]"
               aria-label="Seller"
             >
-              <AiTwotoneShop className="text-xl sm:hidden md:hidden lg:block" />
-              <span className="text-[1rem] font-medium hidden lg:block">
+              <AiTwotoneShop className="text-xl text-white transition-all duration-200" />
+
+              <span
+                className="text-sm font-medium hidden lg:block text-white 
+                     transition-all duration-200"
+              >
                 Seller
               </span>
             </a>
@@ -714,47 +906,52 @@ const Header = () => {
       {/* Mobile Sidebar Menu */}
       {activeModal === "Menu" && (
         <div
-          className="fixed inset-0 bg-black/40 z-[100] w-full flex justify-start"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] w-full flex justify-start"
           onClick={closeAllModals}
         >
           <div
-            className="w-64 bg-white h-full shadow-lg p-4 flex flex-col relative"
+            className="w-80 bg-white h-full shadow-xl p-4 flex flex-col relative"
             onClick={(e) => e.stopPropagation()}
             ref={mobileMenuRef}
           >
             {/* Close Button */}
             <button
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+              className="absolute top-4 right-4 text-gray-600 hover:text-gray-800 transition-colors p-2 rounded-lg hover:bg-gray-100"
               onClick={closeAllModals}
               aria-label="Close menu"
             >
-              <IoClose size={24} />
+              <IoClose size={20} />
             </button>
 
             {/* Logo & Profile */}
-            <div className="flex flex-col items-center border-b pb-4 mb-4 mt-6">
-              <div className="w-12 h-12 bg-[#2f415d] text-white flex items-center justify-center rounded-full text-lg font-bold">
-                {isMounted && isAuth ? loginData?.Name?.charAt(0) : "G"}
+            <div className="flex flex-col items-center border-b border-gray-200 pb-4 mb-4 mt-8">
+              <div className="w-16 h-16 bg-blue-500 text-white flex items-center justify-center rounded-full text-xl font-bold">
+                {isMounted && isAuth ? loginData?.Name?.charAt(0) : ""}
               </div>
-              <span className="mt-2 font-semibold">
+              <span className="mt-3 font-semibold text-gray-800 text-lg">
                 {isMounted && isAuth
                   ? `Hello, ${loginData?.Name}`
                   : "Hello, Guest"}
               </span>
+              <p className="text-blue-600 text-sm mt-1">
+                {isMounted && isAuth
+                  ? "Welcome back!"
+                  : "Sign in for better experience"}
+              </p>
             </div>
 
             {/* Menu Items */}
-            <div className="flex flex-col gap-2 overflow-y-auto no-scrollbar">
+            <div className="flex flex-col gap-1 overflow-y-auto no-scrollbar flex-1">
               {sideMenu.map((item, idx) =>
                 item.path ? (
                   <Link
                     key={idx}
                     href={item.path}
-                    className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md transition-all"
+                    className="flex items-center gap-3 px-3 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors border border-transparent hover:border-gray-200"
                     onClick={closeAllModals}
                   >
-                    {item.icon}
-                    <span className="text-sm">{item.label}</span>
+                    <div className="text-gray-600 text-lg">{item.icon}</div>
+                    <span className="text-sm font-medium">{item.label}</span>
                   </Link>
                 ) : (
                   <button
@@ -763,10 +960,10 @@ const Header = () => {
                       if (item.onClick) item.onClick();
                       closeAllModals();
                     }}
-                    className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-all text-left"
+                    className="flex items-center gap-3 px-3 py-3 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors border border-transparent hover:border-gray-200 text-left"
                   >
-                    {item.icon}
-                    <span>{item.label}</span>
+                    <div className="text-gray-600 text-lg">{item.icon}</div>
+                    <span className="font-medium">{item.label}</span>
                   </button>
                 )
               )}

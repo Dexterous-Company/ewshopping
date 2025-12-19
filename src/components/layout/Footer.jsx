@@ -4,7 +4,7 @@ import Link from "next/link";
 import Cartheader from "../Home/Cartheader";
 import { FaRegHeart } from "react-icons/fa";
 import { PiGridFourLight } from "react-icons/pi";
-import { FaRegUser } from "react-icons/fa6";
+import { FaRegUser, FaShop } from "react-icons/fa6";
 import { AiOutlineHome } from "react-icons/ai";
 import { BsCart3 } from "react-icons/bs";
 import { useDispatch, useSelector } from "react-redux";
@@ -22,7 +22,11 @@ import {
 } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import { signout } from "@/redux/athentication/Athentication";
-import { red } from "@mui/material/colors";
+import { LuUser } from "react-icons/lu";
+import { CiHeart, CiShop } from "react-icons/ci";
+import { IoMdHeartEmpty } from "react-icons/io";
+import { MdOutlineShoppingCart } from "react-icons/md";
+
 const Footer = () => {
   const { CartItems } = useSelector((state) => state.cart);
   const { items: wishlistItems } = useSelector((state) => state.wishlist);
@@ -78,9 +82,9 @@ const Footer = () => {
   useEffect(() => {
     setMounted(true);
   }, []);
+  
   const handleLogout = () => {
     dispatch(signout());
-    // closeAllModals();
     router.push("/login");
   };
 
@@ -92,8 +96,9 @@ const Footer = () => {
           ? [["My Account", "/accounts/profile"]]
           : [["Login", "/login"]]),
         ["About Us", "/aboutus"],
-        ["Privacy Policy", "/privacyPolicy"],
-        ["Terms & Conditions", "/termsAndCondition"],
+        ["Privacy Policy", "/privacypolicy"],
+        ["Terms & Conditions", "/termsandcondition"],
+        ["Blogs", "/blog"],
       ],
     },
     {
@@ -107,13 +112,13 @@ const Footer = () => {
     {
       title: "Customer Service",
       links: [
-        ["Affiliate", "/affilliate"],
         ["FAQ", "/faq"],
-        ["Contact Us", "/contactUs"],
-        ["Cancellation Policy", "/cancellationPolicy"],
-        ["Refund Policy", "/refundPolicy"],
+        ["Contact Us", "/contactus"],
+        ["Cancellation Policy", "/cancellationpolicy"],
+        ["Refund Policy", "/refundpolicy"],
         ["Career", "/carrer"],
-        ["Exchnage Policy", "/exchangepolicy"],
+        ["Exchange Policy", "/exchangepolicy"],
+        ["Shipping Policy", "/shippingpolicy"],
       ],
     },
   ];
@@ -156,29 +161,34 @@ const Footer = () => {
       alt: "Footer Logo",
     },
   ];
+
   return (
-    <div className="overflow-x-hidden w-full bg-[#2f415d]">
+    <div className="overflow-x-hidden w-full bg-gray-900 text-white">
       {/* Footer Top */}
-      <section className="bg-[#2f415d] text-white py-8 hidden sm:block">
-        <div className="container mx-auto px-4 grid md:grid-cols-4 sm:grid-cols-2 gap-8">
+      <section className="bg-gray-900 text-white py-12 hidden sm:block">
+        <div className="container mx-auto px-4 grid lg:grid-cols-4 md:grid-cols-2 gap-8">
           {footerLinks.map((col, i) => (
-            <div key={i}>
-              <h4 className="text-lg font-bold mb-4">{col.title}</h4>
-              <ul className="space-y-2">
+            <div key={i} className="relative">
+              <h4 className="text-lg font-semibold mb-6 text-white flex items-center gap-2">
+                {col.title}
+              </h4>
+              <ul className="space-y-3">
                 {col.links.map(([text, href]) => (
                   <li key={text}>
                     {text === "Sign Out" ? (
                       <button
                         onClick={handleLogout}
-                        className="hover:text-blue-400 transition-colors"
+                        className="text-gray-300 hover:text-white transition-colors duration-200 flex items-center gap-3 group"
                       >
+                        <div className="w-1 h-1 bg-gray-400 rounded-full group-hover:bg-white transition-colors"></div>
                         {text}
                       </button>
                     ) : (
                       <Link
                         href={href}
-                        className="hover:text-blue-400 transition-colors"
+                        className="text-gray-300 hover:text-white transition-colors duration-200 flex items-center gap-3 group"
                       >
+                        <div className="w-1 h-1 bg-gray-400 rounded-full group-hover:bg-white transition-colors"></div>
                         {text}
                       </Link>
                     )}
@@ -188,141 +198,175 @@ const Footer = () => {
             </div>
           ))}
 
-          <div>
-            <h4 className="text-lg font-bold mb-4">Contact Us</h4>
-            <p className="mb-2 flex gap-1 tems-center">
-              <FaMapMarkerAlt /> Ewshopping, Rajendra Place, New Delhi, Pin
-              -110008
-            </p>
-            <p className="mb-2 flex gap-1 items-center">
-              <FaPhoneAlt />{" "}
-              <Link href="tel:8447282606" className="hover:text-blue-400">
-                +91 8447282606
-              </Link>
-            </p>
-            <p className="mb-4 flex gap-1 tems-center">
-              <FaEnvelope />
-              <Link
-                href="mailto:info@ewshopping.com"
-                className="hover:text-blue-400"
-              >
-                info@ewshopping.com
-              </Link>
-            </p>
-            <div className="flex space-x-3 text-xl">
-              {socialLinks.map((item, index) => (
+          <div className="relative">
+            <h4 className="text-lg font-semibold mb-6 text-white flex items-center gap-2">
+              Contact Us
+            </h4>
+            <div className="space-y-4">
+              <div className="flex gap-3 items-center text-gray-300">
+                <FaMapMarkerAlt className="text-blue-400 flex-shrink-0 mt-1" />
+                <span>Ewshopping, Rajendra Place, New Delhi, Pin - 110008</span>
+              </div>
+              <div className="flex gap-3 items-center">
+                <FaPhoneAlt className="text-blue-400 flex-shrink-0" />
                 <Link
-                  key={index}
-                  href={item.url}
-                  target="_blank" // opens in new tab
-                  rel="noopener noreferrer"
-                  className="hover:text-blue-400"
+                  href="tel:8447282606"
+                  className="text-gray-300 hover:text-white transition-colors"
                 >
-                  {item.icon}
+                  +91 8447282606
                 </Link>
-              ))}
+              </div>
+              <div className="flex gap-3 items-center">
+                <FaEnvelope className="text-blue-400 flex-shrink-0" />
+                <Link
+                  href="mailto:info@ewshopping.com"
+                  className="text-gray-300 hover:text-white transition-colors"
+                >
+                  info@ewshopping.com
+                </Link>
+              </div>
+
+              {/* Social Links */}
+              <div className="pt-4">
+                <p className="text-white mb-4 font-medium">Follow us on</p>
+                <div className="flex space-x-3">
+                  {socialLinks.map((item, index) => (
+                    <Link
+                      key={index}
+                      href={item.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-gray-800 hover:bg-blue-600 text-white p-3 rounded-lg transition-all duration-300 hover:scale-105"
+                    >
+                      {item.icon}
+                    </Link>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Footer Bottom */}
-      <section className="bg-[#2f415d] text-gray-300 py-4 hidden sm:block">
-        <div className="container mx-auto px-4 flex flex-col md:flex-row-reverse justify-between items-center">
-          <div className="flex space-x-1 mb-2 md:mb-0">
+      <section className="bg-gray-800 border-t border-gray-700 py-6 hidden sm:block">
+        <div className="container mx-auto px-4 flex flex-col lg:flex-row justify-between items-center">
+          {/* Payment Methods */}
+          <div className="flex flex-wrap gap-3 mb-4 lg:mb-0 justify-center">
             {footerImage.map((item, index) => (
               <div
-                className="h-6 w-8  rounded-base  object-contain"
+                className="h-10 w-14 bg-white rounded-lg p-1 flex items-center justify-center border border-gray-300"
                 key={index}
               >
                 <img
                   src={item.src}
                   alt={item.alt}
                   loading="lazy"
-                  className="h-6 w-8 rounded-base object-contain"
+                  className="h-6 w-10 object-contain"
                 />
               </div>
             ))}
           </div>
-          <div className="text-sm">
-            © 2024 EWShopping. All Rights Reserved. | Design by Dexterous
-            Technology.
+
+          {/* Copyright */}
+          <div className="text-center lg:text-left">
+            <div className="text-sm text-gray-300 flex items-center gap-2 justify-center lg:justify-start">
+              © 2025 EWShopping. All rights reserved.
+            </div>
+            <div className="text-xs text-gray-400 mt-1">
+              Design by Dexterous Technology
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Mobile Footer Menu */}
-      <div className="fixed bottom-0 left-0 right-0 font-medium bg-[#cfebfe] shadow-lg flex justify-between items-center px-6 py-2 lg:hidden z-50">
-        {/* 🏠 Home */}
+      {/* Mobile Footer Menu - ONLY TEXT COLORS CHANGED */}
+      <div className="fixed bottom-0 left-0 right-0 bg-gray-900 shadow-2xl flex justify-between items-center  lg:hidden z-50 border-t border-gray-700">
+        {/* Home */}
         <Link
           href="/"
-          className="flex flex-col items-center gap-1 text-center relative "
+          className="flex flex-col items-center gap-1 text-center group flex-1"
         >
-          <img
-            src="/Logoe.png"
-            alt="Home"
-            className="w-8 h-8 p-1 object-contain bg-[#2f415d] rounded-full"
-          />
-          <span className="text-xs">Home</span>
+          <div className="relative p-2 group-hover:bg-gray-800 rounded-lg transition-colors">
+            <AiOutlineHome className="text-xl text-white group-hover:text-blue-400 transition-colors" />
+          </div>
+          <span className="text-xs text-white font-medium group-hover:text-blue-400 transition-colors">
+            Home
+          </span>
         </Link>
 
-        {/* 🛍️ Shop */}
+        {/* Shop */}
         <Link
           href="/category"
-          className="flex flex-col items-center gap-1 text-center relative mt-3"
+          className="flex flex-col items-center gap-1 text-center group flex-1"
         >
-          <PiGridFourLight className="text-2xl" />
-          <span className="text-xs">Shop</span>
+          <div className="relative p-2 group-hover:bg-gray-800 rounded-lg transition-colors">
+            <FaShop className="text-xl text-white group-hover:text-blue-400 transition-colors" />
+          </div>
+          <span className="text-xs text-white font-medium group-hover:text-blue-400 transition-colors">
+            Shop
+          </span>
         </Link>
 
-        {/* 👤 Account */}
+        {/* Account */}
         <Link
           href={mounted && isAuth ? "/accounts" : "/login"}
-          className="flex flex-col items-center gap-1 text-center relative mt-5"
+          className="flex flex-col items-center gap-1 text-center group flex-1"
         >
-          <FaRegUser className="text-xl" />
-          <span className="text-xs">Account</span>
+          <div className="relative p-2 group-hover:bg-gray-800 rounded-lg transition-colors">
+            <LuUser className="text-lg text-white group-hover:text-blue-400 transition-colors" />
+          </div>
+          <span className="text-xs text-white font-medium group-hover:text-blue-400 transition-colors">
+            Account
+          </span>
         </Link>
 
-        {/* ❤️ Wishlist */}
+        {/* Wishlist */}
         <Link
           href={mounted && isAuth ? "/accounts/wishlist" : "/login"}
-          className="flex flex-col items-center gap-1 text-center relative mt-5"
+          className="flex flex-col items-center gap-1 text-center group relative flex-1"
         >
-          <FaRegHeart className="relative text-xl" />
-          <span
-            className={`absolute -top-2 right-1  text-xs rounded-full h-4 w-4 flex items-center justify-center ${
-              isMounted
-                ? wishlistItems.length > 0
-                  ? "bg-blue-950 text-white"
-                  : null
-                : null
-            }`}
-          >
-            {isMounted
-              ? wishlistItems.length > 0
-                ? wishlistItems.length
-                : null
-              : null}
+          <div className="relative p-2 group-hover:bg-gray-800 rounded-lg transition-colors">
+            <IoMdHeartEmpty className="text-xl text-white group-hover:text-blue-400 transition-colors" />
+            <span
+              className={`absolute -top-1 -right-1 text-xs rounded-full h-4 w-4 flex items-center justify-center ${
+                isMounted && wishlistItems.length > 0
+                  ? "bg-red-500 text-white shadow-sm text-[10px]"
+                  : "hidden"
+              }`}
+            >
+              {isMounted && wishlistItems.length > 0
+                ? wishlistItems.length > 9 ? '9+' : wishlistItems.length
+                : null}
+            </span>
+          </div>
+          <span className="text-xs text-white font-medium group-hover:text-blue-400 transition-colors">
+            Wishlist
           </span>
-          <span className="text-xs">Wishlist</span>
         </Link>
 
-        {/* 🛒 Cart */}
+        {/* Cart */}
         <div
-          className="flex flex-col items-center relative text-center mt-5"
-          onClick={() => setIsCartOpen(!isCartOpen)}
+          className="flex flex-col items-center text-center group cursor-pointer relative flex-1"
+          onClick={() =>router.push("/cart")}
         >
-          <BsCart3 className="text-xl" />
-          <span
-            className={`absolute -top-2 -right-1  text-white text-xs rounded-full h-4 w-4 flex items-center justify-center ${
-              isMounted ? (CartItems.length > 0 ? "bg-blue-950" : null) : null
-            }
-            `}
-          >
-            {isMounted ? (CartItems.length > 0 ? CartItems.length : 0) : null}
+          <div className="relative p-2 group-hover:bg-gray-800 rounded-lg transition-colors">
+            <MdOutlineShoppingCart className="text-xl text-white group-hover:text-blue-400 transition-colors" />
+            <span
+              className={`absolute -top-1 -right-1 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center ${
+                isMounted && CartItems.length > 0
+                  ? "bg-blue-500 shadow-sm text-[10px]"
+                  : "hidden"
+              }`}
+            >
+              {isMounted && CartItems.length > 0 
+                ? CartItems.length > 9 ? '9+' : CartItems.length 
+                : 0}
+            </span>
+          </div>
+          <span className="text-xs text-white font-medium group-hover:text-blue-400 transition-colors">
+            Cart
           </span>
-          <span className="text-xs">Cart</span>
         </div>
       </div>
 
@@ -332,14 +376,6 @@ const Footer = () => {
         cartItems={CART_ITEMS}
         closeCart={closeAll}
       />
-
-      {/* Scroll to Top */}
-      <div
-        id="site-scroll"
-        className="fixed bottom-20 right-4 bg-gray-800 text-white p-2 rounded-full cursor-pointer hidden"
-      >
-        ⬆️
-      </div>
     </div>
   );
 };

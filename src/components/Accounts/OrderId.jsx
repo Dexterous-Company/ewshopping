@@ -26,6 +26,9 @@ const OrderDetails = () => {
   const [error, setError] = useState(null);
   const [open, setOpen] = useState({ type: null, index: null });
 
+  console.log("orderData", orderData);
+  
+
   useEffect(() => {
     if (!orderID) return;
     const fetchOrderDetails = async () => {
@@ -112,7 +115,7 @@ const OrderDetails = () => {
       yPos = 90;
       doc.setFontSize(10);
       doc.text("EWSHOPPING", margin, yPos);
-      doc.text("Rajendra Place, New Delhi - 110008", margin, yPos + 5);
+      doc.text("Noida sector 3 metro 16 Pincode - 201301", margin, yPos + 5);
       doc.text("info@ewshopping.com | +91 8447282606", margin, yPos + 10);
 
       // Rest of the invoice content remains the same...
@@ -250,7 +253,6 @@ const OrderDetails = () => {
       canvas.width = img.naturalWidth;
       ctx.drawImage(img, 0, 0);
       const dataUrl = canvas.toDataURL("image/png");
-      console.log(dataUrl); // Copy this base64 string
     };
     img.src = imgUrl;
   }

@@ -12,7 +12,7 @@ const SearchHeader = ({ setQuerySearch, onFocus, querySearch }) => {
     if (e.key === 'Enter' && querySearch.trim()) {
       const searchParams = new URLSearchParams();
       searchParams.set('q', querySearch.trim());
-      router.push(`/searchresults?${searchParams.toString()}`);
+      router.push(`/search?${searchParams.toString()}`);
     }
   };
 

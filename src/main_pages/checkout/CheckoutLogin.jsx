@@ -162,7 +162,7 @@ const CheckoutLogin = () => {
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-[#212121] rounded-full flex items-center justify-center">
+              <div className="w-10 h-10 bg-[#2f415d] rounded-full flex items-center justify-center">
                 <FaCheck className="text-[#ffff] text-lg" />
               </div>
               <div>
@@ -176,7 +176,7 @@ const CheckoutLogin = () => {
                 </div>
                 <p className="text-gray-900 font-medium">
                   Welcome back,{" "}
-                  <span className="text-gray-700">{loginData?.Name}</span>
+                  <span className="text-blue-700">{loginData?.Name}</span>
                 </p>
                 <p className="text-sm text-gray-600 mt-1">
                   +91 {loginData?.Mobile}
@@ -304,13 +304,13 @@ const CheckoutLogin = () => {
                 {/* Terms */}
                 <p className="text-xs text-gray-500 leading-relaxed">
                   By continuing, you agree to Ewshopping's{" "}
-                  <Link href={"/termsAndCondition"}>
+                  <Link href={"/termsandcondition"}>
                     <span className="text-blue-600 cursor-pointer font-medium">
                       Terms of Use
                     </span>{" "}
                   </Link>
                   and{" "}
-                  <Link href="/privacyPolicy">
+                  <Link href="/privacypolicy">
                     <span className="text-blue-600 cursor-pointer font-medium">
                       Privacy Policy
                     </span>
@@ -322,7 +322,7 @@ const CheckoutLogin = () => {
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="w-full bg-gray-900 text-white font-medium py-3.5 rounded-lg hover:bg-gray-800 transition-colors flex items-center justify-center gap-2"
+                  className="w-full bg-blue-900 text-white font-medium py-3.5 rounded-lg hover:bg-blue-800 transition-colors flex items-center justify-center gap-2"
                   onClick={showOtp ? verifyOtp : sendOtp}
                 >
                   <FaLock className="text-sm" />

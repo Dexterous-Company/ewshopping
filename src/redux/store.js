@@ -7,6 +7,8 @@ import AthenticationReducer from "./athentication/Athentication";
 import promotionBannerSlice from "./header/BrandPromotionSlice";
 import promotionCardSlice from "./header/cardPromotionSlice";
 import searchSlice from "./serach/searchProductsSlice";
+import newSearchSlice from "./serach/newSerchProdactSlice";
+import brandSlice from "./serach/brandSlice";
 import subCategoryPromotionReducer from "./header/SubCategoryPromotionSlice";
 import infoSlice from "./product/productSlice";
 import orderSlice from "./order/OrderSlice";
@@ -18,6 +20,9 @@ import subCategoryReducer from "../redux/subcategory/SubCategorySlice";
 import categoryReducer from "../redux/category/categorySlice";
 import shopProductsReducer from "../redux/sellerProduct/SellerProductSlice";
 import contactReducer from "../redux/contactUs/ContactUsSlice";
+import categoryTagProductReducer from "../redux/categoryTag/CategoryTagProductSlice";
+import blogReducer from "../redux/blog/blogSlice";
+import relatedProductsReducer from "../redux/product/RelatedProductsSlice";
 
 export const store = configureStore({
   reducer: {
@@ -29,6 +34,8 @@ export const store = configureStore({
     bPromotion: promotionBannerSlice,
     cPromotion: promotionCardSlice,
     search: searchSlice,
+    searchNew: newSearchSlice,
+    brandData: brandSlice,
     subCategoryPromotion: subCategoryPromotionReducer,
     info: infoSlice,
     order: orderSlice,
@@ -40,5 +47,8 @@ export const store = configureStore({
     category: categoryReducer,
     shopProducts: shopProductsReducer,
     contacts: contactReducer,
+    categoryTagProduct: categoryTagProductReducer,
+    blog: blogReducer,
+    relatedProducts: relatedProductsReducer
   },
 });

@@ -291,10 +291,16 @@ const Affilliate = () => {
                 <div key={i} className="p-3 sm:p-4">
                   <button
                     onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                    aria-label={
+                      openFaq === i
+                        ? `Collapse answer for ${item.q}`
+                        : `Expand answer for ${item.q}`
+                    }
                     className="flex justify-between items-center w-full text-left font-medium text-gray-800 hover:text-[#e96f84]"
                   >
                     <span className="text-sm sm:text-lg">{item.q}</span>
                     <FiChevronDown
+                      aria-hidden="true"
                       className={`transition-transform ${
                         openFaq === i ? "rotate-180" : ""
                       }`}
@@ -380,7 +386,12 @@ const Affilliate = () => {
               If you're ready to monetise your content or audience, join the
               EWShopping affiliate network now. Sign up, promote, and earn.
             </p>
-            <button className="bg-white text-[#2f415d] px-4 sm:px-8 py-2 rounded-lg font-bold hover:bg-gray-100 transition-colors text-xs sm:text-base">
+            <button
+              type="button"
+
+              aria-label="Apply now for the EWShopping affiliate program"
+              className="bg-white text-[#2f415d] px-4 sm:px-8 py-2 rounded-lg font-bold hover:bg-gray-100 transition-colors text-xs sm:text-base"
+            >
               Apply Now → Affiliate Registration Link
             </button>
           </section>

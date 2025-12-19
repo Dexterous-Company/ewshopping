@@ -105,7 +105,7 @@ const reviewSlice = createSlice({
     userRetingAll: [],
     singleReviews: {},
     stats: [],
-    rating: 0,
+    rating: 5,
     totalRatings: 0,
     ratingBreakdown: [],
     customerReviews: [],

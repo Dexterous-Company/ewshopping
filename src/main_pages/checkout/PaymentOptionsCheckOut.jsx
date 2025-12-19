@@ -42,7 +42,7 @@ const PaymentOptions = ({ continueSumamryData, showSummary }) => {
   const dispatch = useDispatch();
   const router = useRouter();
 
-  const [selectedPayment, setSelectedPayment] = useState("RAZORPAY");
+  const [selectedPayment, setSelectedPayment] = useState("PAYU");
   const [showConfirmOrder, setShowConfirmOrder] = useState(false);
   const [buttonPress, setbuttonPress] = useState(false);
   const [orderComment, setorderComment] = useState("");
@@ -80,7 +80,7 @@ const PaymentOptions = ({ continueSumamryData, showSummary }) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           availablestock: quantity,
-          variantId: variantId, // Add the variant ID
+          variantId: variantId,
         }),
       });
     } catch (error) {
@@ -90,6 +90,7 @@ const PaymentOptions = ({ continueSumamryData, showSummary }) => {
 
   const handleSelect = async (method, e) => {
     e.stopPropagation();
+    
     if (method === "RAZORPAY") {
       if (!razorpayLoaded) {
         toast.error("Payment gateway is loading. Please try again.");
@@ -99,15 +100,20 @@ const PaymentOptions = ({ continueSumamryData, showSummary }) => {
       await handleRazorpayPayment();
       return;
     }
-    if (method !== "COD") {
-      w;
-      toast.error(
-        "Currently, only Cash on Delivery (COD) and Online Payment are available"
-      );
+    
+    if (method === "PAYU") {
+      setSelectedPayment(method);
+      await handlePayUPayment();
       return;
     }
-    setSelectedPayment(method);
-    setShowConfirmOrder(true);
+    
+    if (method === "COD") {
+      setSelectedPayment(method);
+      setShowConfirmOrder(true);
+      return;
+    }
+
+    toast.error("Currently, only Cash on Delivery (COD) and Online Payment are available");
   };
 
   const sendOrderSMS = async (mobile, orderId, ProductName) => {
@@ -119,17 +125,85 @@ const PaymentOptions = ({ continueSumamryData, showSummary }) => {
         },
         body: JSON.stringify({
           mobile: mobile,
-          orderId: orderId + " for product " + ProductName +"...",
+          orderId: orderId + " for product " + ProductName + "...",
         }),
       });
 
       const smsResult = await smsResponse.json();
-      console.log("SMS sent:", smsResult);
       return smsResult;
     } catch (error) {
       console.error("Failed to send SMS:", error);
       return { success: false, error: error.message };
     }
+  };
+
+  // PayU Payment Handler
+  const handlePayUPayment = async () => {
+    try {
+      setbuttonPress(true);
+      
+      if (CartItems.length <= 0 || !current_address) {
+        toast.error("Please select address and add items to cart");
+        setbuttonPress(false);
+        return;
+      }
+
+      const ordersArray = prepareOrderData();
+
+      // Create PayU order
+      const payuOrderResponse = await fetch(
+        `${Baseurl}/api/v1/payment/create-order`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            amount: Netpayable,
+            customerInfo: {
+              firstName: loginData?.Name || "Customer",
+              email: loginData?.Email || "Customer@gmail.com",
+              phone: loginData?.Mobile || "9999999999"
+            },
+            productInfo: `Order from ${CartItems.length} product(s)`,
+            orderData: ordersArray
+          }),
+        }
+      );
+
+      const payuOrderData = await payuOrderResponse.json();
+      console.log("payuOrderData", payuOrderData);
+      
+      
+      if (!payuOrderData.success) {
+        throw new Error(payuOrderData.message || "Failed to create PayU order");
+      }
+
+      // Submit form to PayU
+      submitToPayU(payuOrderData.order, payuOrderData.paymentUrl);
+      
+    } catch (error) {
+      console.error("PayU payment error:", error);
+      toast.error(error.message || "PayU payment initialization failed");
+      setbuttonPress(false);
+    }
+  };
+
+  // Submit form to PayU
+  const submitToPayU = (orderData, paymentUrl) => {
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = paymentUrl;
+    form.style.display = 'none';
+
+    Object.keys(orderData).forEach(key => {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = key;
+      input.value = orderData[key];
+      form.appendChild(input);
+    });
+
+    document.body.appendChild(form);
+    form.submit();
   };
 
   // Razorpay Payment Handler
@@ -156,7 +230,6 @@ const PaymentOptions = ({ continueSumamryData, showSummary }) => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             amount: Netpayable,
-            // amount: 1,
             receipt: `receipt_${Date.now()}`,
             notes: {
               userId: loginData._id,
@@ -176,14 +249,12 @@ const PaymentOptions = ({ continueSumamryData, showSummary }) => {
       const options = {
         key: "rzp_live_RP3WMS74GDFC0c",
         amount: razorpayOrderData.order.amount,
-        // amount: 1,
         currency: razorpayOrderData.order.currency,
         name: "Ewshopping",
         description: "Order Payment",
         image: "https://ewshopping.com/Logoe.png",
         order_id: razorpayOrderData.order.id,
         handler: async function (response) {
-          console.log(ordersArray, "ordersArray,,,,");
           const verificationResponse = await verifyRazorpayPayment(
             response,
             ordersArray
@@ -194,10 +265,7 @@ const PaymentOptions = ({ continueSumamryData, showSummary }) => {
             for (const item of CartItems) {
               const availableStock = Number(item.availableStock);
               const cartQuantity = Number(item.cart_Quentity);
-              console.log({ availableStock, cartQuantity });
               const newStock = availableStock - cartQuantity;
-              console.log(newStock, "newstock");
-              console.log(item.slugurl, newStock, item.AttributeId);
 
               if (availableStock !== 0) {
                 await decreaseProductStock(
@@ -209,17 +277,11 @@ const PaymentOptions = ({ continueSumamryData, showSummary }) => {
             }
 
             // ✅ Send SMS for each order
-            if (
-              verificationResponse.orders &&
-              verificationResponse.orders.length > 0
-            ) {
+            if (verificationResponse.orders && verificationResponse.orders.length > 0) {
               for (const order of verificationResponse.orders) {
-                console.log(order, "order details");
-                
                 await sendOrderSMS(loginData.Mobile, order.ProductId.slice(-6), order.ProductName.slice(0, 9));
               }
             } else {
-              // Fallback: Generate a simple order ID
               const fallbackOrderId = `ORD${Date.now()}`;
               await sendOrderSMS(loginData.Mobile, fallbackOrderId);
             }
@@ -253,14 +315,7 @@ const PaymentOptions = ({ continueSumamryData, showSummary }) => {
     }
   };
 
-  // In verifyRazorpayPayment function, add logging:
   const verifyRazorpayPayment = async (response, ordersArray) => {
-    console.log("Sending verification request with data:", {
-      razorpay_order_id: response.razorpay_order_id,
-      razorpay_payment_id: response.razorpay_payment_id,
-      orderData: ordersArray,
-    });
-
     try {
       const verifyResponse = await fetch(
         `${Baseurl}/api/v1/order/razorpay/verify-payment`,
@@ -277,7 +332,6 @@ const PaymentOptions = ({ continueSumamryData, showSummary }) => {
       );
 
       const result = await verifyResponse.json();
-      console.log("Verification response:", result);
       return result;
     } catch (error) {
       console.error("Verification error:", error);
@@ -285,7 +339,6 @@ const PaymentOptions = ({ continueSumamryData, showSummary }) => {
     }
   };
 
-  // Updated prepareOrderData function in PaymentOptions component
   const prepareOrderData = () => {
     const address_string = current_address
       ? Object.values(current_address)
@@ -295,16 +348,16 @@ const PaymentOptions = ({ continueSumamryData, showSummary }) => {
 
     const today_date = new Date();
     const expected_date = new Date();
-    expected_date.setDate(expected_date.getDate() + 4);
+    expected_date.setDate(expected_date.getDate() + 10);
 
     return CartItems.map((item) => {
-      // Calculate values with fallbacks
       const mrp = Number(item.Mrp) || 0;
       const price = Number(item.Price) || 0;
       const quantity = Number(item.cart_Quentity) || 1;
       const productTotalMrp = mrp * quantity;
       const productTotalPrice = price * quantity;
       const saving = productTotalMrp - productTotalPrice;
+      
       return {
         // Product details
         Mrp: mrp,
@@ -357,7 +410,7 @@ const PaymentOptions = ({ continueSumamryData, showSummary }) => {
 
         // Payment info
         PaymentMode: "Online Payment",
-        PaymentStatus: "Paid",
+        PaymentStatus: "Pending",
         TxnId: "",
 
         // Dates
@@ -402,12 +455,10 @@ const PaymentOptions = ({ continueSumamryData, showSummary }) => {
         const cartItem = CartItems.find(
           (i) => i.AttributeId === order.ProductId
         );
-        console.log(cartItem, "cartitem");
 
         if (cartItem) {
           const newStock =
             Number(cartItem.availablestock) - Number(cartItem.cart_Quentity);
-          console.log(newStock, "newStock");
 
           await decreaseProductStock(
             cartItem.slugurl,
@@ -424,7 +475,6 @@ const PaymentOptions = ({ continueSumamryData, showSummary }) => {
         } else if (result.orderId) {
           await sendOrderSMS(loginData.Mobile, result.orderId);
         } else {
-          // Fallback order ID
           const fallbackOrderId = `ORD${Date.now()}`;
           await sendOrderSMS(loginData.Mobile, fallbackOrderId);
         }
@@ -433,7 +483,6 @@ const PaymentOptions = ({ continueSumamryData, showSummary }) => {
       toast.success("All orders placed successfully!");
       router.push("/OrderSuccess");
     } catch (err) {
-      console.log(err);
       toast.error("Something went wrong");
     } finally {
       setbuttonPress(false);
@@ -441,13 +490,58 @@ const PaymentOptions = ({ continueSumamryData, showSummary }) => {
   };
 
   const paymentMethods = [
+    // {
+    //   id: "RAZORPAY",
+    //   label: "UPI / Credit Card / Debit Card / NetBanking",
+    //   available: true,
+    //   icon: "/assets/images/upi.jpg"
+    // },
     {
-      id: "RAZORPAY",
-      label: "UPI / Credit Card / Debit Card / NetBanking",
+      id: "PAYU",
+      label: "PayU - UPI / Cards / NetBanking",
       available: true,
+      icon:  "/assets/images/upi.jpg" // Add PayU logo
     },
-    // { id: "COD", label: "Cash on Delivery", available: true },
+    // {
+    //   id: "COD",
+    //   label: "Cash on Delivery", 
+    //   available: true,
+    //   icon: "/assets/images/cod.png"
+    // },
   ];
+
+  const getPaymentButtonText = () => {
+    if (buttonPress) return "Processing...";
+    
+    switch(selectedPayment) {
+      case "RAZORPAY":
+        return "Pay with Razorpay";
+      case "PAYU":
+        return "Pay with PayU";
+      case "COD":
+        return "Confirm COD Order";
+      default:
+        return "Pay Now";
+    }
+  };
+
+  const handlePaymentAction = (e) => {
+    e.preventDefault();
+    
+    switch(selectedPayment) {
+      case "RAZORPAY":
+        handleRazorpayPayment();
+        break;
+      case "PAYU":
+        handlePayUPayment();
+        break;
+      case "COD":
+        cash_on_delivery_press(e);
+        break;
+      default:
+        toast.error("Please select a payment method");
+    }
+  };
 
   return (
     <>
@@ -499,59 +593,33 @@ const PaymentOptions = ({ continueSumamryData, showSummary }) => {
                     disabled={!method.available}
                   />
                   <div className="flex-1">
-                    {method.id === "RAZORPAY" && (
-                      <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3">
+                      {method.icon && (
                         <img
-                          src="/assets/images/upi.jpg"
-                          alt="Razorpay"
+                          src={method.icon}
+                          alt={method.label}
                           className="w-10 h-6 object-contain"
                         />
-                        <span className="font-semibold text-gray-800">
-                          {method.label}
-                        </span>
-                      </div>
-                    )}
-                    {method.id === "COD" && (
-                      <div className="flex flex-col gap-3">
-                        <div className="flex items-center justify-between">
-                          <span className="font-semibold text-gray-800">
-                            {method.label}
-                          </span>
-                          <AnimatePresence>
-                            {showConfirmOrder && (
-                              <motion.button
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -10 }}
-                                onClick={(e) => cash_on_delivery_press(e)}
-                                className="bg-[#2f415d] text-white px-4 py-2 rounded-lg hover:bg-[#e96f84] transition"
-                                disabled={buttonPress}
-                              >
-                                {buttonPress
-                                  ? "Processing..."
-                                  : "Confirm Order"}
-                              </motion.button>
-                            )}
-                          </AnimatePresence>
-                        </div>
-                      </div>
-                    )}
+                      )}
+                      <span className="font-semibold text-gray-800">
+                        {method.label}
+                      </span>
+                    </div>
                   </div>
                 </label>
               </motion.div>
             ))}
           </div>
 
-          <div className="px-5 py-3 border-t text-blue-600 font-semibold text-sm flex items-center gap-2 cursor-pointer hover:text-blue-800">
+          <div className="px-5 py-4 border-t">
             <motion.button
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              onClick={(e) => handleSelect("RAZORPAY", e)}
-              className="bg-[#2f415d] text-white px-4 py-2 rounded-lg hover:bg-[#e96f84] transition"
+              onClick={handlePaymentAction}
+              className="w-full bg-[#2f415d] text-white py-3 px-6 rounded-lg hover:bg-[#e96f84] transition font-bold text-lg disabled:bg-gray-400 disabled:cursor-not-allowed"
               disabled={buttonPress}
             >
-              {buttonPress ? "Processing..." : "Pay Now"}
+              {getPaymentButtonText()}
             </motion.button>
           </div>
         </motion.div>
@@ -561,4 +629,5 @@ const PaymentOptions = ({ continueSumamryData, showSummary }) => {
     </>
   );
 };
+
 export default PaymentOptions;

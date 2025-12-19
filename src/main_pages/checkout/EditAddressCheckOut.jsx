@@ -38,10 +38,10 @@ const InputField = ({
       </label>
       <div
         className={`relative flex items-center rounded-lg border ${
-          error ? "border-red-500 bg-red-50" : "border-gray-300 bg-gray-50"
+          error ? "border-red-500 bg-red-50" : "border-gray-300 bg-blue-50"
         }`}
       >
-        <div className="flex items-center justify-center w-12 h-12 bg-gray-800 rounded-l-lg">
+        <div className="flex items-center justify-center w-12 h-12 bg-[#2f415d] rounded-l-lg">
           {icon}
         </div>
         <input
@@ -213,7 +213,6 @@ const EditAddressForm = ({ editAddressObject, onClose }) => {
           return false;
         }
       } catch (error) {
-        console.log("Error fetching city/state:", error);
         setLocationData(null);
         setErrors((prev) => ({ ...prev, Pincode: "Error fetching data" }));
         return false;
@@ -424,8 +423,8 @@ const EditAddressForm = ({ editAddressObject, onClose }) => {
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Town/Village/Area
                       </label>
-                      <div className="relative flex items-center rounded-lg border border-gray-300 bg-gray-50">
-                        <div className="flex items-center justify-center w-12 h-12 bg-gray-800 rounded-l-lg">
+                      <div className="relative flex items-center rounded-lg border border-gray-300 bg-blue-50">
+                        <div className="flex items-center justify-center w-12 h-12 bg-[#2f415d] rounded-l-lg">
                           <FaMapMarkerAlt className="text-white text-lg" />
                         </div>
                         <select
@@ -527,7 +526,7 @@ const EditAddressForm = ({ editAddressObject, onClose }) => {
           <button
             onClick={update_address}
             disabled={buttonPress}
-            className="w-full py-3 bg-[#2f415d] text-white rounded-lg font-bold text-lg hover:bg-[#1e2e45] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-3  text-white bg-[#2f415d] rounded-lg font-bold text-lg hover:bg-blue-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {buttonPress ? "Updating Address..." : "Update Address"}
           </button>

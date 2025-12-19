@@ -1,51 +1,25 @@
-"use client";
+import HomePage from '@/components/HomePage/HomePage';
+import React from 'react'
 
-import { useEffect } from "react";
-import { useDispatch } from "react-redux";
-import BannerGrid from "@/main_pages/HomeScreen/BannerGrid";
-import BoxCategories from "@/main_pages/HomeScreen/BoxCategores";
-import CategoryCarousel from "@/main_pages/HomeScreen/CategoryCarousel";
-import FeaturedBrand from "@/main_pages/HomeScreen/FeaturedBrand";
-import HomeBanner from "@/main_pages/HomeScreen/HomeBanner";
-import HomeProduct from "@/main_pages/HomeScreen/HomeProduct";
-import PopularItems from "@/main_pages/HomeScreen/PopularItems";
-import MobileAccessoriesIOSPhones from "@/main_pages/HomeScreen/EventProduct";
 
-const Page = () => {
-  const dispatch = useDispatch();
-
-  return (
-    <center>
-      <div className="w-full sm:mt-0">
-        <CategoryCarousel />
-        <HomeBanner />
-        <HomeProduct
-          title={"one"}
-          smallTitle={"Top exchange offers & new launches"}
-        />
-        <div className="sm:hidden block">
-          <BoxCategories selectedIndexes={[2]} />
-        </div>
-        <BannerGrid />
-        <MobileAccessoriesIOSPhones />
-        <FeaturedBrand title={"Featured Brand"} />
-        <div className="sm:hidden block">
-          <BoxCategories selectedIndexes={[1]} />
-        </div>
-        <div className="sm:block hidden">
-          <BoxCategories selectedIndexes={[0, 1, 2]} />
-        </div>
-        <HomeProduct title={"three"} border={"4"} />
-        {/* <PopularItems /> -->this one 3 grids  */}
-        {/* for bottom */}
-        <HomeProduct title={"two"} border={"30"} />
-        <div className="sm:hidden block">
-          <BoxCategories selectedIndexes={[0]} />
-        </div>
-        <div className="block sm:hidden mt-[6rem]"></div>
-      </div>
-    </center>
-  );
+export const metadata = {
+  title:
+    "EW Shopping India online shopping site for Fashion, Electronics, Lifestyle and more | Shop Now",
+  description:
+    "Shop trendy fashion, latest smartphones & lifestyle products at EW Shopping online shopping store and get the best deals & offers on top brands and products.",
+  keywords:
+    "shopping for Fashion, EwShopping, best online shopping sites in India, online shopping websites, Affordable online shopping India, top online shopping sites 2025, shopping app India, online shopping store, best deals/offers on top brands/products, Shop trendy fashion, Top online shop for electronics, Indian e-commerce platform, shop original products, buy women's online fashion, Shop trending men's clothes online, latest men's fashion 2025, Online bridal collection shopping 2026, buy electronics accessories online India, Genuine electronics accessories shopping platform, luxury watches online, Men & women's trendy fashionwear 2026, Gen Z fashion wear online",
+  alternates: {
+    canonical: "https://ewshopping.com/",
+  },
 };
 
-export default Page;
+const page = () => {
+  return (
+    <div>
+      <HomePage />
+    </div>
+  )
+}
+
+export default page
