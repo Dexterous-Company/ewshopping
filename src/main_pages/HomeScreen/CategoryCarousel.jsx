@@ -297,10 +297,10 @@ const CategoryCarousel = () => {
       "from-rose-100 to-pink-200",
       "from-cyan-100 to-blue-200",
     ];
-    
+
     const shapes = ["square", "circle", "square", "circle", "square", "circle"];
     const blurs = ["blur-md", "blur-sm", "blur-md"];
-    
+
     for (let i = 0; i < 16; i++) {
       elements.push({
         id: i,
@@ -322,7 +322,7 @@ const CategoryCarousel = () => {
     // Use deterministic widths instead of random ones
     const line1Widths = [65, 72, 58, 68, 74, 62, 70, 66, 64, 69, 61, 67];
     const line2Widths = [50, 55, 45, 44, 46, 50, 59, 56, 48, 44, 41, 56];
-    
+
     return Array(12)
       .fill(0)
       .map((_, i) => (
@@ -434,93 +434,95 @@ const CategoryCarousel = () => {
 
   return (
     <>
-<div className="w-full relative overflow-hidden bg-gradient-to-br from-amber-100 via-yellow-100 to-amber-100 shadow-inner">
-  {/* Modern Animated Background with light yellow tones */}
-  <div className="absolute inset-0 overflow-hidden">
-    {modernElements.map((element) => (
-      <div
-        key={element.id}
-        className={`absolute bg-gradient-to-br animate-float-slow ${
-          element.color
-        } ${element.shape === "square" ? "rounded-xl" : "rounded-full"} ${
-          element.blur
-        }`}
-        style={{
-          width: element.size,
-          height: element.size,
-          left: `${element.left}%`,
-          top: `${(element.id * 6.25) % 100}%`,
-          opacity: element.opacity,
-          animationDelay: `${element.animationDelay}s`,
-          animationDuration: `${element.animationDuration}s`,
-        }}
-      />
-    ))}
-  </div>
-
-  {/* Carousel */}
-  <div className="relative z-10">
-    <div
-      ref={scrollContainerRef}
-      className="flex overflow-x-auto no-scrollbar px-2 scroll-smooth py-3 gap-3"
-      style={{
-        scrollbarWidth: "none",
-        cursor: isMobile ? "grab" : "default",
-      }}
-    >
-      {status === "loading"
-        ? loadingSkeletons
-        : subCategories.map((category) => (
+      <div className="w-full relative overflow-hidden bg-gradient-to-br from-amber-100 via-yellow-100 to-amber-100 shadow-inner">
+        {/* Modern Animated Background with light yellow tones */}
+        <div className="absolute inset-0 overflow-hidden">
+          {modernElements.map((element) => (
             <div
-              key={category._id}
-              ref={(el) => setCategoryItemRef(el, category._id)}
-              className="flex flex-col items-center justify-center text-center cursor-pointer group min-w-[80px] sm:min-w-[100px] relative"
-              onMouseEnter={() => !isMobile && handleMouseEnter(category)}
-              onMouseLeave={() => !isMobile && handleMouseLeave()}
-              onClick={() => handleCategoryClick(category)}
-              // Add touch events for better mobile experience
-              onTouchStart={() => isMobile && setHoveredCategory(null)}
-            >
-              <div
-                className="relative rounded-full overflow-hidden border-2 border-white shadow-lg group-hover:shadow-2xl group-hover:scale-105 transition-all duration-300 ease-out"
-                style={{
-                  width: 85,
-                  height: 85,
-                }}
-              >
-                <Image
-                  src={
-                    category.desktopImage ||
-                    category.mobileImage ||
-                    "/default-category-image.jpg"
-                  }
-                  alt={category.name}
-                  fill
-                  className="object-cover group-hover:scale-110 transition-transform duration-500 ease-in-out"
-                  sizes="70px"
-                  loading="lazy"
-                  quality={85}
-                />
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 to-cyan-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full" />
-                <div className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-r from-purple-400/30 to-cyan-400/30 blur-md" />
-              </div>
-
-              <p
-                className="mt-3 text-[11px] sm:text-[13px] md:text-[14px] font-bold text-slate-800 group-hover:text-purple-700 whitespace-nowrap transition-all duration-300 px-2 rounded-lg group-hover:shadow-sm"
-                style={{ height: 20 }} // FIX CLS
-              >
-                {category.name.length > 10
-                  ? category.name.slice(0, 13)
-                  : category.name}
-              </p>
-
-              {/* Animated underline */}
-              <div className="absolute -bottom-1 w-6 h-1 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-500 transform group-hover:scale-110" />
-            </div>
+              key={element.id}
+              className={`absolute bg-gradient-to-br animate-float-slow ${
+                element.color
+              } ${element.shape === "square" ? "rounded-xl" : "rounded-full"} ${
+                element.blur
+              }`}
+              style={{
+                width: element.size,
+                height: element.size,
+                left: `${element.left}%`,
+                top: `${(element.id * 6.25) % 100}%`,
+                opacity: element.opacity,
+                animationDelay: `${element.animationDelay}s`,
+                animationDuration: `${element.animationDuration}s`,
+              }}
+            />
           ))}
-    </div>
-  </div>
-</div>
+        </div>
+
+        {/* Carousel */}
+        <div className="relative z-10">
+          <div
+            ref={scrollContainerRef}
+            className="flex overflow-x-auto no-scrollbar px-2 scroll-smooth py-3 gap-3"
+            style={{
+              scrollbarWidth: "none",
+              cursor: isMobile ? "grab" : "default",
+            }}
+          >
+            {status === "loading"
+              ? loadingSkeletons
+              : subCategories.map((category) => (
+                  <div
+                    key={category._id}
+                    ref={(el) => setCategoryItemRef(el, category._id)}
+                    className="flex flex-col items-center justify-center text-center cursor-pointer group min-w-[80px] sm:min-w-[100px] relative"
+                    onMouseEnter={() => !isMobile && handleMouseEnter(category)}
+                    onMouseLeave={() => !isMobile && handleMouseLeave()}
+                    onClick={() => handleCategoryClick(category)}
+                    // Add touch events for better mobile experience
+                    onTouchStart={() => isMobile && setHoveredCategory(null)}
+                  >
+                    <div
+                      className="relative rounded-full overflow-hidden border-2 border-white shadow-lg group-hover:shadow-2xl group-hover:scale-105 transition-all duration-300 ease-out"
+                      style={{
+                        width: 85,
+                        height: 85,
+                      }}
+                    >
+                      <Image
+                        src={
+                          category.desktopImage ||
+                          category.mobileImage ||
+                          "/default-category-image.jpg"
+                        }
+                        alt={category.name}
+                        fill
+                        className="object-cover group-hover:scale-110 transition-transform duration-500 ease-in-out"
+                        sizes="70px"
+                        
+                        quality={85}
+                        priority
+                        fetchPriority="high"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 to-cyan-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full" />
+                      <div className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-r from-purple-400/30 to-cyan-400/30 blur-md" />
+                    </div>
+
+                    <p
+                      className="mt-3 text-[11px] sm:text-[13px] md:text-[14px] font-bold text-slate-800 group-hover:text-purple-700 whitespace-nowrap transition-all duration-300 px-2 rounded-lg group-hover:shadow-sm"
+                      style={{ height: 20 }} // FIX CLS
+                    >
+                      {category.name.length > 10
+                        ? category.name.slice(0, 13)
+                        : category.name}
+                    </p>
+
+                    {/* Animated underline */}
+                    <div className="absolute -bottom-1 w-6 h-1 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-500 transform group-hover:scale-110" />
+                  </div>
+                ))}
+          </div>
+        </div>
+      </div>
     </>
   );
 };

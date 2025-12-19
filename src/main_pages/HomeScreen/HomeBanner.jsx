@@ -59,7 +59,9 @@ const HomeBanner = () => {
                 alt={banner.name || `Banner ${index + 1}`}
                 fill
                 className="sm:object-fill object-cover"
-                priority={index < 2} // Prioritize first 2 images
+                //priority={index < 2} // Prioritize first 2 images
+                  priority
+
                 sizes="100vw"
               />
 

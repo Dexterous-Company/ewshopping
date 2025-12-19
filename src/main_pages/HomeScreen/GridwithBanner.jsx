@@ -38,20 +38,29 @@ const GridwithBanner = () => {
         <div className="bg-white p-4 shadow rounded col-span-1">
           <div className="flex items-center justify-between mb-4">
             <span className="font-bold text-lg">Monsoon Essentials</span>
-            <FaAngleRight className="text-white bg-[#21f5d] p-1 rounded-full" size={20} />
+            <FaAngleRight
+              className="text-white bg-[#21f5d] p-1 rounded-full"
+              size={20}
+            />
           </div>
           <div className="grid grid-cols-2 gap-3">
             {items.map((item, index) => (
-              <div key={index} className="shadow rounded p-2 text-center h-full">
-                <img 
-                  src={item.img} 
-                  alt={item.title} 
-                  className="w-full mb-2 rounded" 
+              <div
+                key={index}
+                className="shadow rounded p-2 text-center h-full"
+              >
+                <img
+                  src={item.img}
+                  alt={item.title}
+                  className="w-full mb-2 rounded"
                   width={item.width}
                   height={item.height}
                   loading="lazy"
                 />
-                <div className="font-semibold truncate text-left" title={item.title}>
+                <div
+                  className="font-semibold truncate text-left"
+                  title={item.title}
+                >
                   {item.title}
                 </div>
                 <div className="text-green-600 text-sm font-bold text-left">
@@ -66,7 +75,7 @@ const GridwithBanner = () => {
             src="assets/images/bann.png"
             alt="Banner"
             className="w-full h-full object-contain rounded shadow"
-            loading="lazy"
+            priority
           />
         </div>
       </div>
