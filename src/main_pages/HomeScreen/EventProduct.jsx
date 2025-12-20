@@ -30,10 +30,11 @@ const ProductCard = ({ product }) => {
                 alt={product.name}
                 fill
                 sizes="(max-width: 768px) 120px, 160px"
-
-                loading="lazy"
+                
                 decoding="async"
                 className="w-full h-full  object-contain"
+                priority
+                fetchPriority="high"
               />
             </div>
 
@@ -45,9 +46,10 @@ const ProductCard = ({ product }) => {
                 className="w-full h-full  object-contain"
                 fill
                 sizes="(max-width: 768px) 120px, 160px"
-
-                loading="lazy"
+                
                 decoding="async"
+                priority
+                fetchPriority="high"
               />
             </div>
           </div>

@@ -9,6 +9,8 @@ import { AiOutlineHome } from "react-icons/ai";
 import { BsCart3 } from "react-icons/bs";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchUserWishlist } from "@/redux/wishlist/wishlistSlice";
+import Image from "next/image";
+
 import {
   FaFacebookF,
   FaTwitter,
@@ -82,7 +84,7 @@ const Footer = () => {
   useEffect(() => {
     setMounted(true);
   }, []);
-  
+
   const handleLogout = () => {
     dispatch(signout());
     router.push("/login");
@@ -258,11 +260,14 @@ const Footer = () => {
                 className="h-10 w-14 bg-white rounded-lg p-1 flex items-center justify-center border border-gray-300"
                 key={index}
               >
-                <img
+                <Image
                   src={item.src}
                   alt={item.alt}
+                  width={40}
+                  height={24}
+                  className="object-contain"
+                  sizes="(max-width: 640px) 40px, 40px"
                   loading="lazy"
-                  className="h-6 w-10 object-contain"
                 />
               </div>
             ))}
@@ -336,7 +341,9 @@ const Footer = () => {
               }`}
             >
               {isMounted && wishlistItems.length > 0
-                ? wishlistItems.length > 9 ? '9+' : wishlistItems.length
+                ? wishlistItems.length > 9
+                  ? "9+"
+                  : wishlistItems.length
                 : null}
             </span>
           </div>
@@ -348,7 +355,7 @@ const Footer = () => {
         {/* Cart */}
         <div
           className="flex flex-col items-center text-center group cursor-pointer relative flex-1"
-          onClick={() =>router.push("/cart")}
+          onClick={() => router.push("/cart")}
         >
           <div className="relative p-2 group-hover:bg-gray-800 rounded-lg transition-colors">
             <MdOutlineShoppingCart className="text-xl text-white group-hover:text-blue-400 transition-colors" />
@@ -359,8 +366,10 @@ const Footer = () => {
                   : "hidden"
               }`}
             >
-              {isMounted && CartItems.length > 0 
-                ? CartItems.length > 9 ? '9+' : CartItems.length 
+              {isMounted && CartItems.length > 0
+                ? CartItems.length > 9
+                  ? "9+"
+                  : CartItems.length
                 : 0}
             </span>
           </div>

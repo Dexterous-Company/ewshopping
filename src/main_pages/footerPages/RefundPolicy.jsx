@@ -31,6 +31,7 @@ const RefundPolicy = () => {
     const element = document.getElementById(`section-${index}`);
     if (element) {
       element.scrollIntoView({ behavior: "smooth", block: "start" });
+      element.focus({ preventScroll: true });
     }
   };
 
@@ -71,13 +72,17 @@ const RefundPolicy = () => {
             <li>
               <button
                 onClick={() => scrollToSection(0)}
+                aria-current={activeSection === 0 ? "true" : undefined}
                 className={`w-full flex items-center text-left px-3 py-2 sm:px-4 sm:py-2 rounded-lg transition-all duration-200 ${
                   activeSection === 0
                     ? "bg-blue-100 text-[#000] border-l-4 border-[#000]"
                     : "hover:bg-gray-100 hover:border-l-4 hover:border-gray-300"
                 }`}
               >
-                <FiFileText className="mr-2 sm:mr-3 text-[#000]" />
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-2 sm:mr-3 text-[#000]"
+                />
                 <span className="text-xs sm:text-sm font-medium">
                   Introduction
                 </span>
@@ -86,13 +91,17 @@ const RefundPolicy = () => {
             <li>
               <button
                 onClick={() => scrollToSection(1)}
+                aria-current={activeSection === 1 ? "true" : undefined}
                 className={`w-full flex items-center text-left px-3 py-2 sm:px-4 sm:py-2 rounded-lg transition-all duration-200 ${
                   activeSection === 1
                     ? "bg-blue-100 text-[#000] border-l-4 border-[#000]"
                     : "hover:bg-gray-100 hover:border-l-4 hover:border-gray-300"
                 }`}
               >
-                <FiFileText className="mr-2 sm:mr-3 text-[#000]" />
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-2 sm:mr-3 text-[#000]"
+                />
                 <span className="text-xs sm:text-sm font-medium">
                   Eligibility for Returns
                 </span>
@@ -101,13 +110,17 @@ const RefundPolicy = () => {
             <li>
               <button
                 onClick={() => scrollToSection(2)}
+                aria-current={activeSection === 2 ? "true" : undefined}
                 className={`w-full flex items-center text-left px-3 py-2 sm:px-4 sm:py-2 rounded-lg transition-all duration-200 ${
                   activeSection === 2
                     ? "bg-blue-100 text-[#000] border-l-4 border-[#000]"
                     : "hover:bg-gray-100 hover:border-l-4 hover:border-gray-300"
                 }`}
               >
-                <FiFileText className="mr-2 sm:mr-3 text-[#000]" />
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-2 sm:mr-3 text-[#000]"
+                />
                 <span className="text-xs sm:text-sm font-medium">
                   How to Initiate a Return
                 </span>
@@ -116,13 +129,17 @@ const RefundPolicy = () => {
             <li>
               <button
                 onClick={() => scrollToSection(3)}
+                aria-current={activeSection === 3 ? "true" : undefined}
                 className={`w-full flex items-center text-left px-3 py-2 sm:px-4 sm:py-2 rounded-lg transition-all duration-200 ${
                   activeSection === 3
                     ? "bg-blue-100 text-[#000] border-l-4 border-[#000]"
                     : "hover:bg-gray-100 hover:border-l-4 hover:border-gray-300"
                 }`}
               >
-                <FiFileText className="mr-2 sm:mr-3 text-[#000]" />
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-2 sm:mr-3 text-[#000]"
+                />
                 <span className="text-xs sm:text-sm font-medium">
                   Return Verification Process
                 </span>
@@ -131,13 +148,17 @@ const RefundPolicy = () => {
             <li>
               <button
                 onClick={() => scrollToSection(4)}
+                aria-current={activeSection === 4 ? "true" : undefined}
                 className={`w-full flex items-center text-left px-3 py-2 sm:px-4 sm:py-2 rounded-lg transition-all duration-200 ${
                   activeSection === 4
                     ? "bg-blue-100 text-[#000] border-l-4 border-[#000]"
                     : "hover:bg-gray-100 hover:border-l-4 hover:border-gray-300"
                 }`}
               >
-                <FiFileText className="mr-2 sm:mr-3 text-[#000]" />
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-2 sm:mr-3 text-[#000]"
+                />
                 <span className="text-xs sm:text-sm font-medium">
                   Refund Process and Timeline
                 </span>
@@ -146,13 +167,17 @@ const RefundPolicy = () => {
             <li>
               <button
                 onClick={() => scrollToSection(5)}
+                aria-current={activeSection === 5 ? "true" : undefined}
                 className={`w-full flex items-center text-left px-3 py-2 sm:px-4 sm:py-2 rounded-lg transition-all duration-200 ${
                   activeSection === 5
                     ? "bg-blue-100 text-[#000] border-l-4 border-[#000]"
                     : "hover:bg-gray-100 hover:border-l-4 hover:border-gray-300"
                 }`}
               >
-                <FiFileText className="mr-2 sm:mr-3 text-[#000]" />
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-2 sm:mr-3 text-[#000]"
+                />
                 <span className="text-xs sm:text-sm font-medium">
                   Damaged or Defective Products
                 </span>
@@ -161,13 +186,17 @@ const RefundPolicy = () => {
             <li>
               <button
                 onClick={() => scrollToSection(6)}
+                aria-current={activeSection === 6 ? "true" : undefined}
                 className={`w-full flex items-center text-left px-3 py-2 sm:px-4 sm:py-2 rounded-lg transition-all duration-200 ${
                   activeSection === 6
                     ? "bg-blue-100 text-[#000] border-l-4 border-[#000]"
                     : "hover:bg-gray-100 hover:border-l-4 hover:border-gray-300"
                 }`}
               >
-                <FiFileText className="mr-2 sm:mr-3 text-[#000]" />
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-2 sm:mr-3 text-[#000]"
+                />
                 <span className="text-xs sm:text-sm font-medium">
                   Important Notes
                 </span>
@@ -176,13 +205,17 @@ const RefundPolicy = () => {
             <li>
               <button
                 onClick={() => scrollToSection(7)}
+                aria-current={activeSection === 7 ? "true" : undefined}
                 className={`w-full flex items-center text-left px-3 py-2 sm:px-4 sm:py-2 rounded-lg transition-all duration-200 ${
                   activeSection === 7
                     ? "bg-blue-100 text-[#000] border-l-4 border-[#000]"
                     : "hover:bg-gray-100 hover:border-l-4 hover:border-gray-300"
                 }`}
               >
-                <FiFileText className="mr-2 sm:mr-3 text-[#000]" />
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-2 sm:mr-3 text-[#000]"
+                />
                 <span className="text-xs sm:text-sm font-medium">
                   Contact Us
                 </span>
@@ -191,13 +224,17 @@ const RefundPolicy = () => {
             <li>
               <button
                 onClick={() => scrollToSection(8)}
+                aria-current={activeSection === 8 ? "true" : undefined}
                 className={`w-full flex items-center text-left px-3 py-2 sm:px-4 sm:py-2 rounded-lg transition-all duration-200 ${
                   activeSection === 8
                     ? "bg-blue-100 text-[#000] border-l-4 border-[#000]"
                     : "hover:bg-gray-100 hover:border-l-4 hover:border-gray-300"
                 }`}
               >
-                <FiFileText className="mr-2 sm:mr-3 text-[#000]" />
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-2 sm:mr-3 text-[#000]"
+                />
                 <span className="text-xs sm:text-sm font-medium">
                   Updates to This Policy
                 </span>
@@ -228,12 +265,16 @@ const RefundPolicy = () => {
             {/* Introduction */}
             <section
               id="section-0"
+              tabIndex={-1}
               data-index="0"
               ref={(el) => (sectionRefs.current[0] = el)}
               className="scroll-mt-20 000 pb-3 sm:pb-4"
             >
               <h2 className="text-xl sm:text-xl font-bold text-[#000] mb-4 sm:mb-6 flex items-center">
-                <FiFileText className="mr-3 text-[#000] flex-shrink-0" />
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-3 text-[#000] flex-shrink-0"
+                />
                 Introduction
               </h2>
               <div className="text-black whitespace-pre-line text-sm sm:text-base leading-relaxed">
@@ -259,11 +300,15 @@ const RefundPolicy = () => {
             <section
               id="section-1"
               data-index="1"
+              tabIndex={-1}
               ref={(el) => (sectionRefs.current[1] = el)}
               className="scroll-mt-20 000 pb-2 sm:pb-4"
             >
               <h2 className="text-xl sm:text-xl font-bold text-[#000] mb-4 sm:mb-6 flex items-center">
-                <FiFileText className="mr-3 text-[#000] flex-shrink-0" />
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-3 text-[#000] flex-shrink-0"
+                />
                 1. Eligibility for Returns
               </h2>
               <div className="text-black whitespace-pre-line text-sm sm:text-base leading-relaxed">
@@ -333,11 +378,15 @@ const RefundPolicy = () => {
             <section
               id="section-2"
               data-index="2"
+              tabIndex={-1}
               ref={(el) => (sectionRefs.current[2] = el)}
               className="scroll-mt-20 000 pb-3 sm:pb-5"
             >
               <h2 className="text-xl sm:text-xl font-bold text-[#000] mb-2 sm:mb-3 flex items-center">
-                <FiFileText className="mr-3 text-[#000] flex-shrink-0" />
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-3 text-[#000] flex-shrink-0"
+                />
                 2. How to Initiate a Return
               </h2>
               <div className="text-black whitespace-pre-line text-sm sm:text-base leading-relaxed">
@@ -384,11 +433,15 @@ const RefundPolicy = () => {
             <section
               id="section-3"
               data-index="3"
+              tabIndex={-1}
               ref={(el) => (sectionRefs.current[3] = el)}
               className="scroll-mt-20 000 pb-3 sm:pb-5"
             >
               <h2 className="text-xl sm:text-xl font-bold text-[#000] mb-4 sm:mb-6 flex items-center">
-                <FiFileText className="mr-3 text-[#000] flex-shrink-0" />
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-3 text-[#000] flex-shrink-0"
+                />
                 3. Return Verification Process
               </h2>
               <div className="text-black whitespace-pre-line text-sm sm:text-base leading-relaxed">
@@ -417,11 +470,15 @@ const RefundPolicy = () => {
             <section
               id="section-4"
               data-index="4"
+              tabIndex={-1}
               ref={(el) => (sectionRefs.current[4] = el)}
               className="scroll-mt-20 000 pb-3 sm:pb-5"
             >
               <h2 className="text-xl sm:text-xl font-bold text-[#000] mb-4 sm:mb-6 flex items-center">
-                <FiFileText className="mr-3 text-[#000] flex-shrink-0" />
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-3 text-[#000] flex-shrink-0"
+                />
                 4. Refund Process and Timeline
               </h2>
               <div className="text-black whitespace-pre-line text-sm sm:text-base leading-relaxed">
@@ -473,11 +530,15 @@ const RefundPolicy = () => {
             <section
               id="section-5"
               data-index="5"
+              tabIndex={-1}
               ref={(el) => (sectionRefs.current[5] = el)}
               className="scroll-mt-20 000 pb-2 sm:pb-4"
             >
               <h2 className="text-xl sm:text-xl font-bold text-[#000] mb-2 sm:mb-4 flex items-center">
-                <FiFileText className="mr-3 text-[#000] flex-shrink-0" />
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-3 text-[#000] flex-shrink-0"
+                />
                 5. Damaged or Defective Products
               </h2>
               <div className="text-black whitespace-pre-line text-sm sm:text-base leading-relaxed">
@@ -508,11 +569,15 @@ const RefundPolicy = () => {
             <section
               id="section-6"
               data-index="6"
+              tabIndex={-1}
               ref={(el) => (sectionRefs.current[6] = el)}
               className="scroll-mt-20 000 pb-2 sm:pb-4"
             >
               <h2 className="text-xl sm:text-xl font-bold text-[#000] mb-2 sm:mb-4 flex items-center">
-                <FiFileText className="mr-3 text-[#000] flex-shrink-0" />
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-3 text-[#000] flex-shrink-0"
+                />
                 6. Important Notes
               </h2>
               <div className="text-black whitespace-pre-line text-sm sm:text-base leading-relaxed">
@@ -547,11 +612,15 @@ const RefundPolicy = () => {
             <section
               id="section-7"
               data-index="7"
+              tabIndex={-1}
               ref={(el) => (sectionRefs.current[7] = el)}
               className="scroll-mt-20 000 pb-2 sm:pb-4"
             >
               <h2 className="text-xl sm:text-xl font-bold text-[#000] mb-2 sm:mb-4 flex items-center">
-                <FiFileText className="mr-3 text-[#000] flex-shrink-0" />
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-3 text-[#000] flex-shrink-0"
+                />
                 7. Contact Us
               </h2>
               <div className="text-black whitespace-pre-line text-sm sm:text-base leading-relaxed">
@@ -587,11 +656,15 @@ const RefundPolicy = () => {
             <section
               id="section-8"
               data-index="8"
+              tabIndex={-1}
               ref={(el) => (sectionRefs.current[8] = el)}
               className="scroll-mt-20 000 pb-2 sm:pb-4 last:border-b-0"
             >
               <h2 className="text-xl sm:text-xl font-bold text-[#000] mb-2 sm:mb-4 flex items-center">
-                <FiFileText className="mr-3 text-[#000] flex-shrink-0" />
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-3 text-[#000] flex-shrink-0"
+                />
                 8. Updates to This Policy
               </h2>
               <div className="text-black whitespace-pre-line text-sm sm:text-base leading-relaxed">

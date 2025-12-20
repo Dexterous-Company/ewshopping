@@ -26,7 +26,7 @@ const Faq = () => {
   const faqSections = [
     {
       title: "Orders & Shipping",
-      icon: <FiShoppingBag className="mr-2" />,
+      icon: <FiShoppingBag aria-hidden="true" className="mr-2" />,
       questions: [
         {
           question: "How do I track my order?",
@@ -52,7 +52,7 @@ const Faq = () => {
     },
     {
       title: "Returns & Refunds",
-      icon: <FiMail className="mr-2" />,
+      icon: <FiMail aria-hidden="true" className="mr-2" />,
       questions: [
         {
           question: "What is your return policy?",
@@ -78,7 +78,7 @@ const Faq = () => {
     },
     {
       title: "Payments & Pricing",
-      icon: <FiPhone className="mr-2" />,
+      icon: <FiPhone aria-hidden="true" className="mr-2" />,
       questions: [
         {
           question: "What payment methods do you accept?",
@@ -104,7 +104,7 @@ const Faq = () => {
     },
     {
       title: "Account & Security",
-      icon: <FiShoppingBag className="mr-2" />,
+      icon: <FiShoppingBag aria-hidden="true" className="mr-2" />,
       questions: [
         {
           question: "How do I create an account?",
@@ -158,10 +158,11 @@ const Faq = () => {
 
           {/* Dialog Trigger Button */}
           <button
+            aria-label="Open EW Shopping FAQ guide"
             onClick={() => setIsDialogOpen(true)}
             className="bg-white text-blue-600 px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold hover:bg-blue-50 transition-all duration-200 flex items-center justify-center gap-2 mx-auto shadow-lg hover:shadow-xl text-sm sm:text-base"
           >
-            <FiInfo className="text-base sm:text-lg" />
+            <FiInfo aria-hidden="true" className="text-base sm:text-lg" />
             EW Shopping FAQs Guide
           </button>
         </div>
@@ -169,28 +170,13 @@ const Faq = () => {
 
       {/* FAQ Dialog Box */}
       {isDialogOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="faq-dialog-title"
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+        >
           <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
-            {/* Header */}
-            {/* <div className="bg-[#2f415d] p-4 sm:p-6 text-white">
-              <div className="flex justify-between items-center">
-                <div>
-                  <h2 className="text-xl sm:text-2xl font-bold">
-                    EW Shopping FAQs Guide
-                  </h2>
-                  <p className="text-blue-100 mt-1 text-xs sm:text-sm">
-                    Quick Help & Support Information
-                  </p>
-                </div>
-                <button
-                  onClick={() => setIsDialogOpen(false)}
-                  className="text-white hover:bg-white hover:bg-opacity-20 p-1 sm:p-2 rounded-full transition-all duration-200"
-                >
-                  <FiX className="text-lg sm:text-xl" />
-                </button>
-              </div>
-            </div> */}
-
             {/* Content */}
             <div className="p-4 sm:p-6 max-h-[60vh] overflow-y-auto">
               <div className="space-y-3 sm:space-y-4">
@@ -281,6 +267,8 @@ const Faq = () => {
                   <li key={index}>
                     <button
                       onClick={() => toggleSection(index)}
+                      aria-expanded={activeSection === index}
+                      aria-controls={`sidebar-section-${index}`}
                       className={`w-full text-left px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 md:py-3 rounded-lg flex items-center transition text-xs sm:text-sm md:text-base ${
                         activeSection === index
                           ? "bg-blue-100 text-blue-600"
@@ -291,9 +279,9 @@ const Faq = () => {
                       <span className="truncate">{section.title}</span>
                       <span className="ml-auto">
                         {activeSection === index ? (
-                          <FiChevronUp />
+                          <FiChevronUp aria-hidden="true" />
                         ) : (
-                          <FiChevronDown />
+                          <FiChevronDown aria-hidden="true" />
                         )}
                       </span>
                     </button>
@@ -325,13 +313,13 @@ const Faq = () => {
                 <ul className="space-y-0.5 sm:space-y-1 md:space-y-2">
                   {popularQuestions.map((question, index) => (
                     <li key={index}>
-                      <a
-                        href="#"
-                        className="text-xs text-gray-600 hover:text-blue-500 transition flex items-center"
+                      <button
+                        type="button"
+                        className="text-xs text-gray-600 hover:text-blue-500 transition flex items-center text-left"
                       >
                         <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full mr-1.5 sm:mr-2 flex-shrink-0"></span>
                         <span className="truncate">{question}</span>
-                      </a>
+                      </button>
                     </li>
                   ))}
                 </ul>
@@ -345,7 +333,7 @@ const Faq = () => {
                   Can't find what you're looking for?
                 </p>
                 <button className="w-full bg-[#2f415d] hover:bg-blue-700 text-white py-1.5 sm:py-2 px-2 sm:px-3 md:px-4 rounded-lg transition flex items-center justify-center text-xs sm:text-sm md:text-base">
-                  <FiMail className="mr-1 sm:mr-2" />
+                  <FiMail aria-hidden="true" className="mr-1 sm:mr-2" />
                   Contact Support
                 </button>
               </div>
@@ -384,6 +372,10 @@ const Faq = () => {
                             onClick={() =>
                               toggleQuestion(`${sIndex}-${qIndex}`)
                             }
+                            aria-expanded={
+                              openQuestion === `${sIndex}-${qIndex}`
+                            }
+                            aria-controls={`faq-answer-${sIndex}-${qIndex}`}
                             className={`w-full text-left p-2 sm:p-3 md:p-4 flex items-center justify-between text-xs sm:text-sm md:text-base ${
                               openQuestion === `${sIndex}-${qIndex}`
                                 ? "bg-blue-50 text-blue-600"
@@ -394,13 +386,23 @@ const Faq = () => {
                               {item.question}
                             </span>
                             {openQuestion === `${sIndex}-${qIndex}` ? (
-                              <FiChevronUp className="text-blue-500 flex-shrink-0 text-sm sm:text-base" />
+                              <FiChevronUp
+                                aria-hidden="true"
+                                className="text-blue-500 flex-shrink-0 text-sm sm:text-base"
+                              />
                             ) : (
-                              <FiChevronDown className="text-gray-500 flex-shrink-0 text-sm sm:text-base" />
+                              <FiChevronDown
+                                aria-hidden="true"
+                                className="text-gray-500 flex-shrink-0 text-sm sm:text-base"
+                              />
                             )}
                           </button>
                           {openQuestion === `${sIndex}-${qIndex}` && (
-                            <div className="p-2 sm:p-3 md:p-4 bg-white text-gray-600 animate-fade-in text-xs sm:text-sm md:text-base">
+                            <div
+                              id={`faq-answer-${sIndex}-${qIndex}`}
+                              role="region"
+                              className="p-2 sm:p-3 md:p-4 bg-white text-gray-600 animate-fade-in text-xs sm:text-sm md:text-base"
+                            >
                               {typeof item.answer === "string" ? (
                                 <p>{item.answer}</p>
                               ) : (
@@ -421,7 +423,10 @@ const Faq = () => {
               <div className="bg-white rounded-xl shadow-md p-3 sm:p-4 md:p-6 border-t-4 border-blue-500">
                 <div className="flex items-start">
                   <div className="bg-blue-100 p-1.5 sm:p-2 md:p-3 rounded-full mr-2 sm:mr-3 md:mr-4">
-                    <FiMail className="text-blue-600 text-base sm:text-lg md:text-xl" />
+                    <FiMail
+                      aria-hidden="true"
+                      className="text-blue-600 text-base sm:text-lg md:text-xl"
+                    />
                   </div>
                   <div>
                     <h3 className="font-bold text-sm sm:text-base md:text-lg mb-1 sm:mb-2">
@@ -443,7 +448,10 @@ const Faq = () => {
               <div className="bg-white rounded-xl shadow-md p-3 sm:p-4 md:p-6 border-t-4 border-green-500">
                 <div className="flex items-start">
                   <div className="bg-green-100 p-1.5 sm:p-2 md:p-3 rounded-full mr-2 sm:mr-3 md:mr-4">
-                    <FiPhone className="text-green-600 text-base sm:text-lg md:text-xl" />
+                    <FiPhone
+                      aria-hidden="true"
+                      className="text-green-600 text-base sm:text-lg md:text-xl"
+                    />
                   </div>
                   <div>
                     <h3 className="font-bold text-sm sm:text-base md:text-lg mb-1 sm:mb-2">
@@ -472,7 +480,10 @@ const Faq = () => {
                 <div className="aspect-w-16 aspect-h-9 bg-gray-200 rounded-lg overflow-hidden relative min-h-[150px] sm:min-h-[200px] md:min-h-[250px]">
                   <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blue-100 to-blue-200">
                     <div className="text-center p-3 sm:p-4">
-                      <FiShoppingBag className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl text-blue-600 mx-auto mb-2 sm:mb-3 md:mb-4" />
+                      <FiShoppingBag
+                        aria-hidden="true"
+                        className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl text-blue-600 mx-auto mb-2 sm:mb-3 md:mb-4"
+                      />
                       <h4 className="font-semibold text-gray-800 text-base sm:text-lg md:text-xl mb-1 sm:mb-2">
                         EW Shopping Guide
                       </h4>

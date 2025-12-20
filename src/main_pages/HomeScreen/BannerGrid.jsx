@@ -70,11 +70,11 @@ const BannerGrid = () => {
                     alt={altText}
                     fill
                     className="object-cover rounded-md"
-                    loading="lazy"
                     decoding="async"
                     sizes="(max-width: 639px) 50vw, 33vw"
                     quality={75}
-                    priority={false}
+                    priority
+                    fetchPriority="high"
                   />
 
                   <div className="absolute inset-0 flex flex-col items-start justify-center p-1 sm:p-4 md:p-6 text-left z-10 text-black bg-gradient-to-r from-white/10 via-transparent to-transparent">
