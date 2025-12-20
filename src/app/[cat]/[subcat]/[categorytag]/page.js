@@ -1,11 +1,11 @@
 
-import SubCategoryPage from "@/main_pages/SearchOptimization/SubCategoryPage";
 import { Suspense } from "react";
+import CatTagPage from "./categoryTag";
 
 export default function Page({ params }) {
   return (
     <Suspense fallback={null}>
-      <SubCategoryPage params={params} />
+      <CatTagPage params={params} />
     </Suspense>
   );
 }

@@ -1,8 +1,6 @@
 /* @import url("https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700&display=swap"); */
 @import "tailwindcss";
 
-
-
 .font-poppins { font-family: var(--font-poppins), sans-serif; }
 .font-manrope { font-family: var(--font-manrope), sans-serif; }
 

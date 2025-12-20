@@ -109,13 +109,21 @@ const FilterSkeleton = () => {
 
 const CategoryPageMain = ({ params }) => {
   let cat = "";
-  
-  if (params?.value) {
-    try {
-      const parsed = JSON.parse(params.value);
-      cat = parsed?.cat || "";
-    } catch (e) {
-      console.error("Failed to parse params.value", e);
+  console.log("Received params:", params);
+  if (params?.subcategory) {
+    cat = params.subcategory;
+  } else if (params?.slug) {
+    cat = params.slug;
+  } else if (params?.value) {
+    if (typeof params.value === "string") {
+      try {
+        const parsed = JSON.parse(params.value);
+        cat = parsed?.cat || "";
+      } catch (e) {
+        cat = params.value;
+      }
+    } else if (typeof params.value === "object") {
+      cat = params.value.cat || "";
     }
   }
 
