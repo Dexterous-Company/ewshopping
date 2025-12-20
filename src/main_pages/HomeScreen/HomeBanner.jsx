@@ -8,7 +8,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { getBanners } from "@/redux/header/BannerSlice";
 import { useRouter } from "next/navigation";
 
-
 const HomeBanner = () => {
   const dispatch = useDispatch();
   const { banners, status, error } = useSelector((state) => state.banner);
@@ -31,7 +30,7 @@ const HomeBanner = () => {
       </div>
     );
   }
-  const router = useRouter()
+  const router = useRouter();
   const handleClick = (e, banner) => {
     e.preventDefault();
     if (banner) {
@@ -40,7 +39,10 @@ const HomeBanner = () => {
   };
 
   return (
-    <div className="w-[100%]  h-auto sm:px-0 px-2 sm:rounded-none rounded-xl" id="swi_cont">
+    <div
+      className="w-[100%]  h-auto sm:px-0 px-2 sm:rounded-none rounded-xl"
+      id="swi_cont"
+    >
       <Swiper
         autoplay={{
           delay: 3000,
@@ -51,23 +53,28 @@ const HomeBanner = () => {
         modules={[Autoplay]}
         className="mySwiper"
       >
-        {banners?.map((banner, index) => (
-          <SwiperSlide key={banner._id} onClick={(e) => handleClick(e, banner)}>
-            <div className="relative w-full h-[75px] sm:h-[180px] md:h-[250px] lg:h-[200px]">
-              <Image
-                src={banner.desktopImage}
-                alt={banner.name || `Banner ${index + 1}`}
-                fill
-                className="sm:object-fill object-cover"
-                //priority={index < 2} // Prioritize first 2 images
-                  priority
+        {banners?.map((banner, index) => {
+          const isLCP = index === 0; // ✅ define here
 
-                sizes="100vw"
-              />
-
-            </div>
-          </SwiperSlide>
-        ))}
+          return (
+            <SwiperSlide
+              key={banner._id}
+              onClick={(e) => handleClick(e, banner)}
+            >
+              <div className="relative w-full h-[75px] sm:h-[180px] md:h-[250px] lg:h-[200px]">
+                <Image
+                  src={banner.desktopImage}
+                  alt={banner.name || `Banner ${index + 1}`}
+                  fill
+                  className="object-cover"
+                  priority={isLCP} // ✅ only first image
+                  loading={isLCP ? "eager" : undefined}
+                  sizes="100vw"
+                />
+              </div>
+            </SwiperSlide>
+          );
+        })}
       </Swiper>
     </div>
   );
