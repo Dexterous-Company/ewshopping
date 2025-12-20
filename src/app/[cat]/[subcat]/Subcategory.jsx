@@ -109,15 +109,25 @@ const FilterSkeleton = () => {
 
 const Subcatmain = ({ params }) => {
   let subcat = "";
-  
-  if (params?.value) {
-    try {
-      const parsed = JSON.parse(params.value);
-      subcat = parsed?.subcat || "";
-    } catch (e) {
-      console.error("Failed to parse params.value", e);
+  console.log("Received params:", params);
+  if (params?.subcategory) {
+    subcat = params.subcategory;
+  } else if (params?.slug) {
+    subcat = params.slug;
+  } else if (params?.value) {
+    if (typeof params.value === "string") {
+      try {
+        const parsed = JSON.parse(params.value);
+        subcat = parsed?.subcat || "";
+      } catch (e) {
+        subcat = params.value;
+      }
+    } else if (typeof params.value === "object") {
+      subcat = params.value.subcat || "";
     }
   }
+
+  console.log("Using subcat:", subcat);
 
   const dispatch = useDispatch();
   const searchParams = useSearchParams();
@@ -141,10 +151,10 @@ const Subcatmain = ({ params }) => {
   const initialSearchDone = useRef(false);
   const filtersInitialized = useRef(false);
   const searchTimeoutRef = useRef(null);
-  
+
   // Track current subcategory to detect changes
   const currentSubcatRef = useRef(subcat);
-  
+
   // State to show skeleton during subcategory transition
   const [isSubcatTransition, setIsSubcatTransition] = useState(false);
 
@@ -253,7 +263,7 @@ const Subcatmain = ({ params }) => {
     const initialParams = buildSearchParams(1);
     dispatch(searchNewProducts(initialParams));
     initialSearchDone.current = true;
-    
+
     // Reset transition state after a short delay
     if (isSubcatTransition) {
       setTimeout(() => {
@@ -380,7 +390,7 @@ const Subcatmain = ({ params }) => {
       });
     }
     setSelectedFilters(resetFilters);
-    
+
     // Trigger search with cleared filters
     const searchParams = buildSearchParams(1, resetFilters);
     debouncedSearch(searchParams);
@@ -524,7 +534,11 @@ const Subcatmain = ({ params }) => {
               if (!values.length) return null;
 
               // Skip Color and Model filters for enhanced UI
-              if (filter.name === "Color" || filter.name === "Model" || filter.name === "Option 1") {
+              if (
+                filter.name === "Color" ||
+                filter.name === "Model" ||
+                filter.name === "Option 1"
+              ) {
                 return null;
               }
 
@@ -559,7 +573,9 @@ const Subcatmain = ({ params }) => {
                       className="text-sm text-blue-600 mt-1"
                       onClick={() => toggleFilterExpand(filter.name)}
                     >
-                      {expanded ? "Show Less" : `View ${values.length - 4} More`}
+                      {expanded
+                        ? "Show Less"
+                        : `View ${values.length - 4} More`}
                     </button>
                   )}
                 </div>
@@ -599,7 +615,9 @@ const Subcatmain = ({ params }) => {
                       >
                         <input
                           type="checkbox"
-                          checked={selectedFilters.Color?.includes(color) || false}
+                          checked={
+                            selectedFilters.Color?.includes(color) || false
+                          }
                           onChange={() => handleFilterChange("Color", color)}
                         />
                         {color}
@@ -612,7 +630,9 @@ const Subcatmain = ({ params }) => {
                     onClick={() => setShowMoreColors(!showMoreColors)}
                     className="text-sm text-blue-600 mt-1"
                   >
-                    {showMoreColors ? "Show Less" : `View ${availableColors.length - 6} More`}
+                    {showMoreColors
+                      ? "Show Less"
+                      : `View ${availableColors.length - 6} More`}
                   </button>
                 )}
               </div>
@@ -651,7 +671,9 @@ const Subcatmain = ({ params }) => {
                       >
                         <input
                           type="checkbox"
-                          checked={selectedFilters.Model?.includes(model) || false}
+                          checked={
+                            selectedFilters.Model?.includes(model) || false
+                          }
                           onChange={() => handleFilterChange("Model", model)}
                         />
                         {model}
@@ -664,7 +686,9 @@ const Subcatmain = ({ params }) => {
                     onClick={() => setShowMoreModels(!showMoreModels)}
                     className="text-sm text-blue-600 mt-1"
                   >
-                    {showMoreModels ? "Show Less" : `View ${availableModels.length - 6} More`}
+                    {showMoreModels
+                      ? "Show Less"
+                      : `View ${availableModels.length - 6} More`}
                   </button>
                 )}
               </div>
@@ -754,22 +778,25 @@ const Subcatmain = ({ params }) => {
           )}
 
           {/* Load More Button */}
-          {!loadingMore && !showSkeleton && products && products.length < total && (
-            <div className="text-center mt-8">
-              <button
-                onClick={handleLoadMore}
-                className="bg-white border border-gray-300 hover:bg-gray-50 text-gray-800 font-medium py-2 px-6 rounded-lg transition-colors"
-              >
-                Load More Products
-              </button>
-            </div>
-          )}
+          {!loadingMore &&
+            !showSkeleton &&
+            products &&
+            products.length < total && (
+              <div className="text-center mt-8">
+                <button
+                  onClick={handleLoadMore}
+                  className="bg-white border border-gray-300 hover:bg-gray-50 text-gray-800 font-medium py-2 px-6 rounded-lg transition-colors"
+                >
+                  Load More Products
+                </button>
+              </div>
+            )}
         </div>
       </div>
-      
+
       {/* MOBILE FILTER */}
       {!showSkeleton && (
-        <NewFilter 
+        <NewFilter
           filters={filters}
           loading={loading}
           selectedFilters={selectedFilters}

@@ -108,16 +108,26 @@ const FilterSkeleton = () => {
 };
 
 const CatTagPage = ({ params }) => {
-  let categoryTag = "";
-
-  if (params?.value) {
-    try {
-      const parsed = JSON.parse(params.value);
-      categoryTag = parsed?.categorytag || "";
-    } catch (e) {
-      console.error("Failed to parse params.value", e);
+   let categoryTag = "";
+    console.log("Received params:", params);
+  if (params?.subcategory) {
+    categoryTag = params.subcategory;
+  } else if (params?.slug) {
+    categoryTag = params.slug;
+  } else if (params?.value) {
+    if (typeof params.value === 'string') {
+      try {
+        const parsed = JSON.parse(params.value);
+        categoryTag = parsed?.categorytag || "";
+      } catch (e) {
+        categoryTag = params.value;
+      }
+    } else if (typeof params.value === 'object') {
+      categoryTag = params.value.categorytag || "";
     }
   }
+  
+  console.log("Using categoryTag:", categoryTag);
 
   const dispatch = useDispatch();
   const searchParams = useSearchParams();
