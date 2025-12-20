@@ -10,7 +10,7 @@ const NewSingleProductCard = ({ product }) => {
   const [isHovered, setIsHovered] = useState(false);
 
   const handleImageError = () => {
-    setImageSrc("https://via.placeholder.com/300");
+    setImageSrc("/placeholder.jpg");
   };
 
   // Determine label color based on type
