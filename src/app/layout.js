@@ -1,8 +1,8 @@
 // app/layout.js
 import MainLayout from "@/components/MainLayout";
 import "./globals.css";
-import "../main_pages/HomeScreen/InfiniteScroll.css"
-import "../main_pages/HomeScreen/HoverCss.css"
+//import "../main_pages/HomeScreen/InfiniteScroll.css"
+//import "../main_pages/HomeScreen/HoverCss.css"
 import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
@@ -18,12 +18,16 @@ const poppins = Poppins({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700', '800'],
   variable: '--font-poppins',
+    display: 'swap',
+
 });
 
 const manrope = Manrope({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700', '800'],
   variable: '--font-manrope',
+    display: 'swap',
+
 });
 
 export const metadata = {
@@ -44,7 +48,7 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en"  className={`${poppins.variable} ${manrope.variable}`}>
-      <body cz-shortcut-listen="true">
+      <body> 
         {/* Google Tag Manager */}
         <Script
           id="google-tag-manager"

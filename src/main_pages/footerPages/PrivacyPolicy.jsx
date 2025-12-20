@@ -31,6 +31,7 @@ const PrivacyPolicy = () => {
     const element = document.getElementById(`section-${index}`);
     if (element) {
       element.scrollIntoView({ behavior: "smooth", block: "start" });
+      element.focus({ preventScroll: true });
     }
   };
 
@@ -43,8 +44,8 @@ const PrivacyPolicy = () => {
           style={{
             backgroundImage:
               "url('https://ewshoppingsellerapinew.dexterous.in/uploads/1765886038154.webp')",
-           // backgroundSize: "contain",
-           // backgroundPosition: "center center",
+            // backgroundSize: "contain",
+            // backgroundPosition: "center center",
           }}
         ></div>
       </div>
@@ -71,13 +72,17 @@ const PrivacyPolicy = () => {
             <li>
               <button
                 onClick={() => scrollToSection(0)}
+                aria-current={activeSection === 0 ? "true" : undefined}
                 className={`w-full flex items-center text-left px-3 py-2 sm:px-4 sm:py-2 rounded-lg transition-all duration-200 ${
                   activeSection === 0
                     ? "bg-blue-100 text-[#000] border-l-4 border-[#000]"
                     : "hover:bg-gray-100 hover:border-l-4 hover:border-gray-300"
                 }`}
               >
-                <FiFileText className="mr-2 sm:mr-3 text-[#000]" />
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-2 sm:mr-3 text-[#000]"
+                />
                 <span className="text-xs sm:text-sm font-medium">
                   Introduction
                 </span>
@@ -86,13 +91,17 @@ const PrivacyPolicy = () => {
             <li>
               <button
                 onClick={() => scrollToSection(1)}
+                aria-current={activeSection === 1 ? "true" : undefined}
                 className={`w-full flex items-center text-left px-3 py-2 sm:px-4 sm:py-2 rounded-lg transition-all duration-200 ${
                   activeSection === 1
                     ? "bg-blue-100 text-[#000] border-l-4 border-[#000]"
                     : "hover:bg-gray-100 hover:border-l-4 hover:border-gray-300"
                 }`}
               >
-                <FiFileText className="mr-2 sm:mr-3 text-[#000]" />
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-2 sm:mr-3 text-[#000]"
+                />
                 <span className="text-xs sm:text-sm font-medium">
                   Information/Data we collect
                 </span>
@@ -101,13 +110,17 @@ const PrivacyPolicy = () => {
             <li>
               <button
                 onClick={() => scrollToSection(2)}
+                aria-current={activeSection === 2 ? "true" : undefined}
                 className={`w-full flex items-center text-left px-3 py-2 sm:px-4 sm:py-2 rounded-lg transition-all duration-200 ${
                   activeSection === 2
                     ? "bg-blue-100 text-[#000] border-l-4 border-[#000]"
                     : "hover:bg-gray-100 hover:border-l-4 hover:border-gray-300"
                 }`}
               >
-                <FiFileText className="mr-2 sm:mr-3 text-[#000]" />
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-2 sm:mr-3 text-[#000]"
+                />
                 <span className="text-xs sm:text-sm font-medium">
                   Purpose of Data Collection
                 </span>
@@ -116,13 +129,17 @@ const PrivacyPolicy = () => {
             <li>
               <button
                 onClick={() => scrollToSection(3)}
+                aria-current={activeSection === 3 ? "true" : undefined}
                 className={`w-full flex items-center text-left px-3 py-2 sm:px-4 sm:py-2 rounded-lg transition-all duration-200 ${
                   activeSection === 3
                     ? "bg-blue-100 text-[#000] border-l-4 border-[#000]"
                     : "hover:bg-gray-100 hover:border-l-4 hover:border-gray-300"
                 }`}
               >
-                <FiFileText className="mr-2 sm:mr-3 text-[#000]" />
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-2 sm:mr-3 text-[#000]"
+                />
                 <span className="text-xs sm:text-sm font-medium">
                   Cookies and Tracking Technologies
                 </span>
@@ -131,13 +148,17 @@ const PrivacyPolicy = () => {
             <li>
               <button
                 onClick={() => scrollToSection(4)}
+                aria-current={activeSection === 4 ? "true" : undefined}
                 className={`w-full flex items-center text-left px-3 py-2 sm:px-4 sm:py-2 rounded-lg transition-all duration-200 ${
                   activeSection === 4
                     ? "bg-blue-100 text-[#000] border-l-4 border-[#000]"
                     : "hover:bg-gray-100 hover:border-l-4 hover:border-gray-300"
                 }`}
               >
-                <FiFileText className="mr-2 sm:mr-3 text-[#000]" />
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-2 sm:mr-3 text-[#000]"
+                />
                 <span className="text-xs sm:text-sm font-medium">
                   Data Security
                 </span>
@@ -146,13 +167,17 @@ const PrivacyPolicy = () => {
             <li>
               <button
                 onClick={() => scrollToSection(5)}
+                aria-current={activeSection === 5 ? "true" : undefined}
                 className={`w-full flex items-center text-left px-3 py-2 sm:px-4 sm:py-2 rounded-lg transition-all duration-200 ${
                   activeSection === 5
                     ? "bg-blue-100 text-[#000] border-l-4 border-[#000]"
                     : "hover:bg-gray-100 hover:border-l-4 hover:border-gray-300"
                 }`}
               >
-                <FiFileText className="mr-2 sm:mr-3 text-[#000]" />
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-2 sm:mr-3 text-[#000]"
+                />
                 <span className="text-xs sm:text-sm font-medium">
                   Data Retention
                 </span>
@@ -161,13 +186,17 @@ const PrivacyPolicy = () => {
             <li>
               <button
                 onClick={() => scrollToSection(6)}
+                aria-current={activeSection === 6 ? "true" : undefined}
                 className={`w-full flex items-center text-left px-3 py-2 sm:px-4 sm:py-2 rounded-lg transition-all duration-200 ${
                   activeSection === 6
                     ? "bg-blue-100 text-[#000] border-l-4 border-[#000]"
                     : "hover:bg-gray-100 hover:border-l-4 hover:border-gray-300"
                 }`}
               >
-                <FiFileText className="mr-2 sm:mr-3 text-[#000]" />
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-2 sm:mr-3 text-[#000]"
+                />
                 <span className="text-xs sm:text-sm font-medium">
                   Sharing of Information
                 </span>
@@ -176,13 +205,17 @@ const PrivacyPolicy = () => {
             <li>
               <button
                 onClick={() => scrollToSection(7)}
+                aria-current={activeSection === 7 ? "true" : undefined}
                 className={`w-full flex items-center text-left px-3 py-2 sm:px-4 sm:py-2 rounded-lg transition-all duration-200 ${
                   activeSection === 7
                     ? "bg-blue-100 text-[#000] border-l-4 border-[#000]"
                     : "hover:bg-gray-100 hover:border-l-4 hover:border-gray-300"
                 }`}
               >
-                <FiFileText className="mr-2 sm:mr-3 text-[#000]" />
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-2 sm:mr-3 text-[#000]"
+                />
                 <span className="text-xs sm:text-sm font-medium">
                   Your Rights
                 </span>
@@ -191,13 +224,17 @@ const PrivacyPolicy = () => {
             <li>
               <button
                 onClick={() => scrollToSection(8)}
+                aria-current={activeSection === 8 ? "true" : undefined}
                 className={`w-full flex items-center text-left px-3 py-2 sm:px-4 sm:py-2 rounded-lg transition-all duration-200 ${
                   activeSection === 8
                     ? "bg-blue-100 text-[#000] border-l-4 border-[#000]"
                     : "hover:bg-gray-100 hover:border-l-4 hover:border-gray-300"
                 }`}
               >
-                <FiFileText className="mr-2 sm:mr-3 text-[#000]" />
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-2 sm:mr-3 text-[#000]"
+                />
                 <span className="text-xs sm:text-sm font-medium">
                   Privacy Policy for children and minors
                 </span>
@@ -206,13 +243,17 @@ const PrivacyPolicy = () => {
             <li>
               <button
                 onClick={() => scrollToSection(9)}
+                aria-current={activeSection === 9 ? "true" : undefined}
                 className={`w-full flex items-center text-left px-3 py-2 sm:px-4 sm:py-2 rounded-lg transition-all duration-200 ${
                   activeSection === 9
                     ? "bg-blue-100 text-[#000] border-l-4 border-[#000]"
                     : "hover:bg-gray-100 hover:border-l-4 hover:border-gray-300"
                 }`}
               >
-                <FiFileText className="mr-2 sm:mr-3 text-[#000]" />
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-2 sm:mr-3 text-[#000]"
+                />
                 <span className="text-xs sm:text-sm font-medium">
                   External Links
                 </span>
@@ -221,13 +262,17 @@ const PrivacyPolicy = () => {
             <li>
               <button
                 onClick={() => scrollToSection(10)}
+                aria-current={activeSection === 10 ? "true" : undefined}
                 className={`w-full flex items-center text-left px-3 py-2 sm:px-4 sm:py-2 rounded-lg transition-all duration-200 ${
                   activeSection === 10
                     ? "bg-blue-100 text-[#000] border-l-4 border-[#000]"
                     : "hover:bg-gray-100 hover:border-l-4 hover:border-gray-300"
                 }`}
               >
-                <FiFileText className="mr-2 sm:mr-3 text-[#000]" />
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-2 sm:mr-3 text-[#000]"
+                />
                 <span className="text-xs sm:text-sm font-medium">
                   Responsibility limitations
                 </span>
@@ -236,13 +281,17 @@ const PrivacyPolicy = () => {
             <li>
               <button
                 onClick={() => scrollToSection(11)}
+                aria-current={activeSection === 11 ? "true" : undefined}
                 className={`w-full flex items-center text-left px-3 py-2 sm:px-4 sm:py-2 rounded-lg transition-all duration-200 ${
                   activeSection === 11
                     ? "bg-blue-100 text-[#000] border-l-4 border-[#000]"
                     : "hover:bg-gray-100 hover:border-l-4 hover:border-gray-300"
                 }`}
               >
-                <FiFileText className="mr-2 sm:mr-3 text-[#000]" />
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-2 sm:mr-3 text-[#000]"
+                />
                 <span className="text-xs sm:text-sm font-medium">
                   Jurisdiction and Governing Law
                 </span>
@@ -251,13 +300,17 @@ const PrivacyPolicy = () => {
             <li>
               <button
                 onClick={() => scrollToSection(12)}
+                aria-current={activeSection === 12 ? "true" : undefined}
                 className={`w-full flex items-center text-left px-3 py-2 sm:px-4 sm:py-2 rounded-lg transition-all duration-200 ${
                   activeSection === 12
                     ? "bg-blue-100 text-[#000] border-l-4 border-[#000]"
                     : "hover:bg-gray-100 hover:border-l-4 hover:border-gray-300"
                 }`}
               >
-                <FiFileText className="mr-2 sm:mr-3 text-[#000]" />
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-2 sm:mr-3 text-[#000]"
+                />
                 <span className="text-xs sm:text-sm font-medium">
                   Updates in this Privacy Policy
                 </span>
@@ -266,13 +319,17 @@ const PrivacyPolicy = () => {
             <li>
               <button
                 onClick={() => scrollToSection(13)}
+                aria-current={activeSection === 13 ? "true" : undefined}
                 className={`w-full flex items-center text-left px-3 py-2 sm:px-4 sm:py-2 rounded-lg transition-all duration-200 ${
                   activeSection === 13
                     ? "bg-blue-100 text-[#000] border-l-4 border-[#000]"
                     : "hover:bg-gray-100 hover:border-l-4 hover:border-gray-300"
                 }`}
               >
-                <FiFileText className="mr-2 sm:mr-3 text-[#000]" />
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-2 sm:mr-3 text-[#000]"
+                />
                 <span className="text-xs sm:text-sm font-medium">
                   Grievance Settlement & Contact Information
                 </span>
@@ -308,7 +365,10 @@ const PrivacyPolicy = () => {
               className="scroll-mt-20 000 pb-3 sm:pb-4"
             >
               <h2 className="text-xl sm:text-xl font-bold text-[#000] mb-4 sm:mb-6 flex items-center">
-                <FiFileText className="mr-3 text-[#000] flex-shrink-0" />
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-3 text-[#000] flex-shrink-0"
+                />
                 Introduction
               </h2>
               <div className="text-black whitespace-pre-line text-sm sm:text-base leading-relaxed">
@@ -343,7 +403,10 @@ const PrivacyPolicy = () => {
               className="scroll-mt-20 000 pb-2 sm:pb-4"
             >
               <h2 className="text-xl sm:text-xl font-bold text-[#000] mb-4 sm:mb-6 flex items-center">
-                <FiFileText className="mr-3 text-[#000] flex-shrink-0" />
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-3 text-[#000] flex-shrink-0"
+                />
                 1. Information/Data we collect
               </h2>
               <div className="text-black whitespace-pre-line text-sm sm:text-base leading-relaxed">
@@ -416,7 +479,10 @@ const PrivacyPolicy = () => {
               className="scroll-mt-20 000 pb-3 sm:pb-5"
             >
               <h2 className="text-xl sm:text-xl font-bold text-[#000] mb-2 sm:mb-3 flex items-center">
-                <FiFileText className="mr-3 text-[#000] flex-shrink-0" />
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-3 text-[#000] flex-shrink-0"
+                />
                 2. Purpose of Data Collection
               </h2>
               <div className="text-black whitespace-pre-line text-sm sm:text-base leading-relaxed">
@@ -470,7 +536,10 @@ const PrivacyPolicy = () => {
               className="scroll-mt-20 000 pb-3 sm:pb-5"
             >
               <h2 className="text-xl sm:text-xl font-bold text-[#000] mb-4 sm:mb-6 flex items-center">
-                <FiFileText className="mr-3 text-[#000] flex-shrink-0" />
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-3 text-[#000] flex-shrink-0"
+                />
                 3. Cookies and Tracking Technologies
               </h2>
               <div className="text-black whitespace-pre-line text-sm sm:text-base leading-relaxed">
@@ -496,7 +565,10 @@ const PrivacyPolicy = () => {
               className="scroll-mt-20 000 pb-3 sm:pb-5"
             >
               <h2 className="text-xl sm:text-xl font-bold text-[#000] mb-4 sm:mb-6 flex items-center">
-                <FiFileText className="mr-3 text-[#000] flex-shrink-0" />
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-3 text-[#000] flex-shrink-0"
+                />
                 4. Data Security
               </h2>
               <div className="text-black whitespace-pre-line text-sm sm:text-base leading-relaxed">
@@ -524,7 +596,10 @@ const PrivacyPolicy = () => {
               className="scroll-mt-20 000 pb-3 sm:pb-5"
             >
               <h2 className="text-xl sm:text-xl font-bold text-[#000] mb-4 sm:mb-6 flex items-center">
-                <FiFileText className="mr-3 text-[#000] flex-shrink-0" />
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-3 text-[#000] flex-shrink-0"
+                />
                 5. Data Retention
               </h2>
               <div className="text-black whitespace-pre-line text-sm sm:text-base leading-relaxed">
@@ -544,7 +619,10 @@ const PrivacyPolicy = () => {
               className="scroll-mt-20 000 pb-3 sm:pb-5"
             >
               <h2 className="text-xl sm:text-xl font-bold text-[#000] mb-4 sm:mb-6 flex items-center">
-                <FiFileText className="mr-3 text-[#000] flex-shrink-0" />
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-3 text-[#000] flex-shrink-0"
+                />
                 6. Sharing of Information
               </h2>
               <div className="text-black whitespace-pre-line text-sm sm:text-base leading-relaxed">
@@ -598,7 +676,10 @@ const PrivacyPolicy = () => {
               className="scroll-mt-20 000 pb-2 sm:pb-4"
             >
               <h2 className="text-xl sm:text-xl font-bold text-[#000] mb-2 sm:mb-4 flex items-center">
-                <FiFileText className="mr-3 text-[#000] flex-shrink-0" />
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-3 text-[#000] flex-shrink-0"
+                />
                 7. Your Rights
               </h2>
               <div className="text-black whitespace-pre-line text-sm sm:text-base leading-relaxed">
@@ -650,7 +731,10 @@ const PrivacyPolicy = () => {
               className="scroll-mt-20 000 pb-2 sm:pb-4"
             >
               <h2 className="text-xl sm:text-xl font-bold text-[#000] mb-4 sm:mb-6 flex items-center">
-                <FiFileText className="mr-3 text-[#000] flex-shrink-0" />
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-3 text-[#000] flex-shrink-0"
+                />
                 8. Privacy Policy for children and minors
               </h2>
               <div className="text-black whitespace-pre-line text-sm sm:text-base leading-relaxed">
@@ -672,7 +756,10 @@ const PrivacyPolicy = () => {
               className="scroll-mt-20 000 pb-4 sm:pb-5"
             >
               <h2 className="text-xl sm:text-xl font-bold text-[#000] mb-4 sm:mb-6 flex items-center">
-                <FiFileText className="mr-3 text-[#000] flex-shrink-0" />
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-3 text-[#000] flex-shrink-0"
+                />
                 9. External Links
               </h2>
               <div className="text-black whitespace-pre-line text-sm sm:text-base leading-relaxed">
@@ -694,7 +781,10 @@ const PrivacyPolicy = () => {
               className="scroll-mt-20 000 pb-2 sm:pb-4"
             >
               <h2 className="text-xl sm:text-xl font-bold text-[#000] mb-4 sm:mb-6 flex items-center">
-                <FiFileText className="mr-3 text-[#000] flex-shrink-0" />
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-3 text-[#000] flex-shrink-0"
+                />
                 10. Responsibility limitations
               </h2>
               <div className="text-black whitespace-pre-line text-sm sm:text-base leading-relaxed">
@@ -731,7 +821,10 @@ const PrivacyPolicy = () => {
               className="scroll-mt-20 000 pb-2 sm:pb-4"
             >
               <h2 className="text-xl sm:text-xl font-bold text-[#000] mb-4 sm:mb-6 flex items-center">
-                <FiFileText className="mr-3 text-[#000] flex-shrink-0" />
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-3 text-[#000] flex-shrink-0"
+                />
                 11. Jurisdiction and Governing Law
               </h2>
               <div className="text-black whitespace-pre-line text-sm sm:text-base leading-relaxed">
@@ -751,7 +844,10 @@ const PrivacyPolicy = () => {
               className="scroll-mt-20 000 pb-2 sm:pb-4"
             >
               <h2 className="text-xl sm:text-xl font-bold text-[#000] mb-4 sm:mb-6 flex items-center">
-                <FiFileText className="mr-3 text-[#000] flex-shrink-0" />
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-3 text-[#000] flex-shrink-0"
+                />
                 12. Updates in this Privacy Policy
               </h2>
               <div className="text-black whitespace-pre-line text-sm sm:text-base leading-relaxed">
@@ -771,7 +867,10 @@ const PrivacyPolicy = () => {
               className="scroll-mt-20 000 pb-2 sm:pb-4 last:border-b-0"
             >
               <h2 className="text-xl sm:text-xl font-bold text-[#000] mb-4 sm:mb-6 flex items-center">
-                <FiFileText className="mr-3 text-[#000] flex-shrink-0" />
+                <FiFileText
+                  aria-hidden="true"
+                  className="mr-3 text-[#000] flex-shrink-0"
+                />
                 13. Grievance Settlement & Contact Information
               </h2>
               <div className="text-black whitespace-pre-line text-sm sm:text-base leading-relaxed">
