@@ -6,13 +6,11 @@ export const fetchRelatedProducts = createAsyncThunk(
   "cart/fetchRelatedProducts ",
   async (productId, { rejectWithValue }) => {
     try {
-      console.log("arbaz 1", `${Baseurl}/api/v1/product/subcategory/${productId}`);
 
       const response = await axios.get(
         `${Baseurl}/api/v1/product/subcategory/${productId}`
       );
 
-      console.log("arbaz 2", response.data);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);

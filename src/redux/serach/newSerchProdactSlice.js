@@ -7,7 +7,6 @@ export const searchNewProducts = createAsyncThunk(
   "searchNew/searchNewProducts",
   async (params, { rejectWithValue }) => {
     try {
-      console.log("Search API Params:", params);
       
       const response = await axios.post(`${Baseurl}/api/v1/search/search`, params);      
       return response.data;
@@ -78,7 +77,6 @@ const newSearchSlice = createSlice({
         state.error = null;
       })
       .addCase(searchNewProducts.fulfilled, (state, action) => {
-        console.log("Search API Response:", action.payload);
         state.loading = false;
         state.success = action.payload.success;
         state.query = action.payload.query;

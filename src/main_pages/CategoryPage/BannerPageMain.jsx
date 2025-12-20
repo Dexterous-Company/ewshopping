@@ -186,7 +186,6 @@ const BannerPageMain = ({ params }) => {
   // Initialize selected filters when filters are loaded from API
   useEffect(() => {
     if (filters && filters.length > 0 && !filtersInitialized.current) {
-      console.log("Filters loaded from API, initializing filter state");
 
       const initialFilters = {};
       filters.forEach((filter) => {
@@ -203,7 +202,6 @@ const BannerPageMain = ({ params }) => {
       return;
     }
 
-    console.log("Filter change detected");
     const params = buildSearchParams(1);
     debouncedSearch(params);
   }, [selectedFilters, searchQuery, categoryTag, limit, debouncedSearch, sort]);

@@ -109,7 +109,6 @@ const FilterSkeleton = () => {
 
 const Subcatmain = ({ params }) => {
   let subcat = "";
-  console.log("Received params:", params);
   if (params?.subcategory) {
     subcat = params.subcategory;
   } else if (params?.slug) {
@@ -127,7 +126,6 @@ const Subcatmain = ({ params }) => {
     }
   }
 
-  console.log("Using subcat:", subcat);
 
   const dispatch = useDispatch();
   const searchParams = useSearchParams();

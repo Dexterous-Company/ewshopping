@@ -170,7 +170,6 @@ const PaymentOptions = ({ continueSumamryData, showSummary }) => {
       );
 
       const payuOrderData = await payuOrderResponse.json();
-      console.log("payuOrderData", payuOrderData);
       
       
       if (!payuOrderData.success) {

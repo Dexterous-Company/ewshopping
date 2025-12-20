@@ -7,10 +7,8 @@ export const searchNewProducts = createAsyncThunk(
   "brandNew/searchNewProducts",
   async (params, { rejectWithValue }) => {
     try {
-      console.log("Search API Params:", params);
       
       const response = await axios.post(`${Baseurl}/api/v1/product/getDataUsingBrandAndSubCat`, params);
-      console.log("response.data", response.data);
       
       return response.data;
     } catch (err) {
@@ -80,7 +78,6 @@ const newBrandSlice = createSlice({
         state.error = null;
       })
       .addCase(searchNewProducts.fulfilled, (state, action) => {
-        console.log("Search API Response:", action.payload);
         state.loading = false;
         state.success = action.payload.success;
         state.query = action.payload.query;

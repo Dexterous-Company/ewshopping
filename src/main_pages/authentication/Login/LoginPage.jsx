@@ -87,7 +87,6 @@ const LoginPage = () => {
       if (number === "9028121976") {
         OTP = "111444";
       }
-      console.log("---->", OTP);
       // 🔐 Encrypt OTP before sending
       const encryptedOTP = CryptoJS.AES.encrypt(OTP, SECRET_KEY).toString();
       const formdata = { mobile: number, OTP: encryptedOTP };

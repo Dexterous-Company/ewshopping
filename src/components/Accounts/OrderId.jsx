@@ -26,7 +26,6 @@ const OrderDetails = () => {
   const [error, setError] = useState(null);
   const [open, setOpen] = useState({ type: null, index: null });
 
-  console.log("orderData", orderData);
   
 
   useEffect(() => {

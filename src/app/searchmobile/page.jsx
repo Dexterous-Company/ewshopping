@@ -362,8 +362,6 @@ const SearchPage = () => {
       
       if (response.ok) {
         const data = await response.json();
-        console.log("suggestionsData", data);
-        
         // Handle both response formats
         const suggestionsData = data.data?.suggestions || data.suggestions || [];
         setSuggestions(suggestionsData);
