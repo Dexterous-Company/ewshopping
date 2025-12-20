@@ -1,5 +1,6 @@
 import ProductMainPage from "@/main_pages/ProductPages.jsx/ProductMainPage";
 
-export default function Page({ params }) {
-  return <ProductMainPage slug={params?.slug} />;
+export default async function Page({ params }) {
+  const { slug } = await params;
+  return <ProductMainPage slug={slug} />;
 }
