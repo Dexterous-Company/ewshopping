@@ -153,7 +153,6 @@ const BannerSearchPage = ({ params }) => {
       };
     }
 
-    console.log("Building search params:", params);
     return params;
   };
 
@@ -178,7 +177,6 @@ const BannerSearchPage = ({ params }) => {
   useEffect(() => {
     if (initialSearchDone.current) return;
 
-    console.log("Initial search dispatch");
     const initialParams = buildSearchParams(1);
 
     dispatch(searchNewProducts(initialParams));
@@ -188,7 +186,6 @@ const BannerSearchPage = ({ params }) => {
   // Initialize selected filters when filters are loaded from API
   useEffect(() => {
     if (filters && filters.length > 0 && !filtersInitialized.current) {
-      console.log("Filters loaded from API, initializing filter state");
 
       const initialFilters = {};
       filters.forEach((filter) => {
@@ -205,7 +202,6 @@ const BannerSearchPage = ({ params }) => {
       return;
     }
 
-    console.log("Filter change detected");
     const params = buildSearchParams(1);
     debouncedSearch(params);
   }, [selectedFilters, searchQuery, categoryTag, limit, debouncedSearch, sort]);

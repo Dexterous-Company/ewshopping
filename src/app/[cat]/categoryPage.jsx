@@ -109,7 +109,6 @@ const FilterSkeleton = () => {
 
 const CategoryPageMain = ({ params }) => {
   let cat = "";
-  console.log("Received params:", params);
   if (params?.subcategory) {
     cat = params.subcategory;
   } else if (params?.slug) {

@@ -181,7 +181,6 @@ const AthenticationSlice = createSlice({
     LoginOtp(state, action) {
       state.mob = action.payload.number;
       state.otp = action.payload.OTP;
-      console.log(action.payload.OTP ,"action.payload.OTPs");
       
     },
     setCheckoutAuthenticationStatus(state, action) {

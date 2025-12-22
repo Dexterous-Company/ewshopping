@@ -27,14 +27,12 @@ const CartLeft = () => {
     amountToGetfeeDeliveryPercentage = 0,
   } = cartData || {};
 
-  console.log("CartItems", CartItems);
   
 
   // Safely get authentication data with fallbacks
   const authData = useSelector((state) => state.Athentication) || {};
   const loginData = authData.loginData || {};
   const current_address = authData.current_address || null;
-  console.log("authData", loginData);
   
 
   const dispatch = useDispatch();

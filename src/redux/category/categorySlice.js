@@ -53,7 +53,6 @@ export const getAllCategoryTagsAllCategories = createAsyncThunk(
     try {
       const url = `${Baseurl}/api/v1/category/category-tags/${categoryurl}`;
       const resp = await axios.get(url);
-      console.log("📡 API Response for", categoryurl, ":", resp.data);
 
       // Return the data with categoryUrl for proper storage
       return {
@@ -103,7 +102,6 @@ export const categorySlice = createSlice({
       })
       .addCase(getAllCategoryTagsAllCategories.fulfilled, (state, action) => {
         const { categoryUrl, data } = action.payload;
-        console.log("💾 Storing data for", categoryUrl, ":", data);
         state.tagsStatus[categoryUrl] = "succeeded";
         state.allCategoryTags[categoryUrl] = data; // Store by categoryUrl
         state.tagsError[categoryUrl] = null;
