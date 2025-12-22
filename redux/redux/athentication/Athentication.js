@@ -180,9 +180,7 @@ const AthenticationSlice = createSlice({
   reducers: {
     LoginOtp(state, action) {
       state.mob = action.payload.number;
-      state.otp = action.payload.OTP;
-      console.log(action.payload.OTP ,"action.payload.OTPs");
-      
+      state.otp = action.payload.OTP;      
     },
     setCheckoutAuthenticationStatus(state, action) {
       state.checkout_authentication_status = action.payload;

@@ -109,7 +109,6 @@ const FilterSkeleton = () => {
 
 const CatTagPage = ({ params }) => {
    let categoryTag = "";
-    console.log("Received params:", params);
   if (params?.subcategory) {
     categoryTag = params.subcategory;
   } else if (params?.slug) {
@@ -127,7 +126,6 @@ const CatTagPage = ({ params }) => {
     }
   }
   
-  console.log("Using categoryTag:", categoryTag);
 
   const dispatch = useDispatch();
   const searchParams = useSearchParams();

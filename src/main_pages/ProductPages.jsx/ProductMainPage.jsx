@@ -6,14 +6,12 @@ import { getSingleApprovedProductDetails } from "@/redux/product/productSlice";
 import RelatedProducts from "./RelatedProducts";
 
 const ProductMainPage = ({ slug }) => {
-  console.log("slug-->", slug);
   
   const dispatch = useDispatch();
   useEffect(() => {
     if (!slug) return;
     const fetchProduct = async () => {
       try {
-        console.log("arbaz--->", slug);
         
         await dispatch(getSingleApprovedProductDetails(slug));
       } catch (error) {

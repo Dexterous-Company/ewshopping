@@ -1,16 +1,29 @@
 "use client";
 
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect } from "react";
 import { useDispatch } from "react-redux";
-import BannerGrid from "@/main_pages/HomeScreen/BannerGrid";
-import BoxCategories from "@/main_pages/HomeScreen/BoxCategores";
+import dynamic from "next/dynamic";
+
+// ✅ ABOVE THE FOLD (NORMAL IMPORTS)
 import CategoryCarousel from "@/main_pages/HomeScreen/CategoryCarousel";
-import FeaturedBrand from "@/main_pages/HomeScreen/FeaturedBrand";
 import HomeBanner from "@/main_pages/HomeScreen/HomeBanner";
 import HomeProduct from "@/main_pages/HomeScreen/HomeProduct";
-import PopularItems from "@/main_pages/HomeScreen/PopularItems";
-import MobileAccessoriesIOSPhones from "@/main_pages/HomeScreen/EventProduct";
-// import NewBrands from "@/main_pages/HomeScreen/NewBrands";
+
+// 🔥 BELOW THE FOLD (DYNAMIC)
+const BannerGrid = dynamic(
+  () => import("@/main_pages/HomeScreen/BannerGrid"),
+  { ssr: false }
+);
+
+const BoxCategories = dynamic(
+  () => import("@/main_pages/HomeScreen/BoxCategores"),
+  { ssr: false }
+);
+
+const MobileAccessoriesIOSPhones = dynamic(
+  () => import("@/main_pages/HomeScreen/EventProduct"),
+  { ssr: false }
+);
 
 const Baseurl = process.env.NEXT_PUBLIC_API_URL;
 
