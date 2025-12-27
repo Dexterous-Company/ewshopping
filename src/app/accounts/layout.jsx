@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-// import Header from "@/components/layout/MobileHeader";
 import Accountspage from "../../components/Accounts/Accountspage";
 
 const AccountLayout = ({ children }) => {
@@ -24,11 +23,6 @@ const AccountLayout = ({ children }) => {
 
   return (
     <>
-      {/* <div className="hidden sm:block">
-        <Header />
-      </div> */}
-
-      {/* Mobile view */}
       {isMobile ? (
         <div className="bg-white w-full min-h-screen p-3">
           {isRootAccountPage ? <Accountspage /> : children}

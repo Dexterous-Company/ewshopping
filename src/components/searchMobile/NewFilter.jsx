@@ -3,35 +3,74 @@ import React, { useState, useEffect } from "react";
 import { FaSortAmountDown, FaTimes } from "react-icons/fa";
 import { BsFilter } from "react-icons/bs";
 import { IoClose } from "react-icons/io5";
-import { useSearchParams, useRouter } from "next/navigation";
+import Slider from "@mui/material/Slider";
+import { styled } from "@mui/material/styles";
 
-const NewFilter = ({ 
-  filters, 
-  loading, 
-  selectedFilters, 
-  onFilterChange, 
-  sort, 
-  onSortChange, 
-  priceRange, 
-  onPriceRangeChange,
-  onClearAllFilters 
+/* ---------------- PRICE SLIDER FOR MOBILE ---------------- */
+const MobilePriceSlider = styled(Slider)({
+  color: "#2874f0",
+  height: 2.5,
+  padding: "8px 0",
+  "& .MuiSlider-track": {
+    border: "none",
+    height: 2.5,
+  },
+  "& .MuiSlider-rail": {
+    backgroundColor: "#d1d5db",
+    opacity: 1,
+    height: 2.5,
+  },
+  "& .MuiSlider-thumb": {
+    height: 12,
+    width: 12,
+    backgroundColor: "#fff",
+    border: "2px solid #2874f0",
+    boxShadow: "0 1px 4px rgba(0,0,0,0.25)",
+    "&:hover": {
+      boxShadow: "0 2px 8px rgba(0,0,0,0.35)",
+    },
+    "&::after": {
+      display: "none",
+    },
+  },
+});
+
+const NewFilter = ({
+  filters,
+  loadingFilters,
+  selectedFilters,
+  sort,
+  productPriceRange,
+  tempPriceRange,
+  onFilterChange,
+  onSortChange,
+  onTempPriceRangeChange,
 }) => {
-  const router = useRouter();
   const [selected, setSelected] = useState(null);
   const [activeOption, setActiveOption] = useState(sort || "relevance");
-  const [tempPriceRange, setTempPriceRange] = useState(priceRange || [0, 50000]);
-  const [tempSelectedFilters, setTempSelectedFilters] = useState(selectedFilters || {});
+  const [mobileTempPriceRange, setMobileTempPriceRange] = useState(
+    tempPriceRange || [productPriceRange?.min || 0, productPriceRange?.max || 1000]
+  );
+  const [mobileSelectedFilters, setMobileSelectedFilters] = useState(
+    selectedFilters || {}
+  );
+  const [expandedFilters, setExpandedFilters] = useState({});
 
   // Initialize from props
   useEffect(() => {
     setActiveOption(sort || "relevance");
-    setTempPriceRange(priceRange || [0, 50000]);
-    setTempSelectedFilters(selectedFilters || {});
-  }, [sort, priceRange, selectedFilters]);
+    setMobileTempPriceRange(
+      tempPriceRange || [productPriceRange?.min || 0, productPriceRange?.max || 1000]
+    );
+    setMobileSelectedFilters(selectedFilters || {});
+  }, [sort, tempPriceRange, productPriceRange, selectedFilters]);
 
   const closeModal = () => {
     setSelected(null);
   };
+
+  const toggleFilterExpand = (name) =>
+    setExpandedFilters((p) => ({ ...p, [name]: !p[name] }));
 
   const handleApplySort = () => {
     onSortChange(activeOption);
@@ -39,59 +78,69 @@ const NewFilter = ({
   };
 
   const handleApplyFilters = () => {
-    const updatedFilters = {
-      ...tempSelectedFilters,
-      priceRange: {
-        min: tempPriceRange[0],
-        max: tempPriceRange[1],
-        label: `₹${tempPriceRange[0].toLocaleString()} - ₹${tempPriceRange[1].toLocaleString()}`,
-      },
-    };
+    const priceRangeMin = productPriceRange?.min || 0;
+    const priceRangeMax = productPriceRange?.max || 1000;
     
+    // Apply price range if it's different from default
+    const priceRangeFilter = 
+      mobileTempPriceRange[0] !== priceRangeMin || 
+      mobileTempPriceRange[1] !== priceRangeMax
+        ? { min: mobileTempPriceRange[0], max: mobileTempPriceRange[1] }
+        : null;
+
+    const updatedFilters = {
+      ...mobileSelectedFilters,
+      priceRange: priceRangeFilter,
+    };
+
     onFilterChange(updatedFilters);
-    onPriceRangeChange(tempPriceRange);
     closeModal();
   };
 
-  const handleBrandToggle = (brand) => {
-    setTempSelectedFilters(prev => ({
-      ...prev,
-      Brand: prev.Brand?.includes(brand) 
-        ? prev.Brand.filter(b => b !== brand)
-        : [...(prev.Brand || []), brand]
-    }));
+  const handleFilterChange = (name, value) => {
+    setMobileSelectedFilters((prev) => {
+      const curr = prev[name] || [];
+      return {
+        ...prev,
+        [name]: curr.includes(value)
+          ? curr.filter((v) => v !== value)
+          : [...curr, value],
+      };
+    });
   };
 
-  const handleColorToggle = (color) => {
-    setTempSelectedFilters(prev => ({
+  const removeSelected = (name, value) => {
+    setMobileSelectedFilters((prev) => ({
       ...prev,
-      Color: prev.Color?.includes(color) 
-        ? prev.Color.filter(c => c !== color)
-        : [...(prev.Color || []), color]
+      [name]: prev[name]?.filter((v) => v !== value),
     }));
-  };
-
-  const handleModelToggle = (model) => {
-    setTempSelectedFilters(prev => ({
-      ...prev,
-      Model: prev.Model?.includes(model) 
-        ? prev.Model.filter(m => m !== model)
-        : [...(prev.Model || []), model]
-    }));
-  };
-
-  const handlePriceChange = (minValue, maxValue) => {
-    setTempPriceRange([minValue, maxValue]);
   };
 
   const clearAllFilters = () => {
-    setTempSelectedFilters({});
-    setTempPriceRange([0, 50000]);
-    setActiveOption("relevance");
-    if (onClearAllFilters) {
-      onClearAllFilters();
+    const priceRangeMin = productPriceRange?.min || 0;
+    const priceRangeMax = productPriceRange?.max || 1000;
+    
+    const clearedFilters = { priceRange: null };
+    
+    // Initialize all filter categories to empty arrays
+    if (filters && filters.length > 0) {
+      filters.forEach((filter) => {
+        if (filter.values && filter.values.length > 0) {
+          clearedFilters[filter.name] = [];
+        }
+      });
     }
-    closeModal();
+    
+    setMobileSelectedFilters(clearedFilters);
+    setMobileTempPriceRange([priceRangeMin, priceRangeMax]);
+  };
+
+  const handlePriceChange = (e, newValue) => {
+    setMobileTempPriceRange(newValue);
+  };
+
+  const handlePriceChangeCommitted = (e, newValue) => {
+    setMobileTempPriceRange(newValue);
   };
 
   const options = {
@@ -108,82 +157,39 @@ const NewFilter = ({
     { title: "Filter", Icon: <BsFilter size={16} /> },
   ];
 
-  // Process filter values for display
-  const processFilterValues = (value) => {
-    if (!value) return [];
-    return [...new Set(value.split(", "))].filter((item) => item.trim());
-  };
-
-  // Get available colors, models, etc. from filters
-  const colorFilter = filters?.find(filter => filter.name === "Color" || filter.name === "Option 1");
-  const modelFilter = filters?.find(filter => filter.name === "Model");
-  const brandFilter = filters?.find(filter => filter.name === "Brand");
-
-  const availableColors = colorFilter ? processFilterValues(colorFilter.value) : [];
-  const availableModels = modelFilter ? processFilterValues(modelFilter.value) : [];
-  const availableBrands = brandFilter ? processFilterValues(brandFilter.value) : [];
+  // Filter out empty filter values
+  const validFilters = (filters || []).filter(
+    (filter) => filter.values && filter.values.length > 0
+  );
 
   // Count active filters for badge
-  const activeFilterCount = 
-    (tempSelectedFilters.Color?.length || 0) +
-    (tempSelectedFilters.Model?.length || 0) +
-    (tempSelectedFilters.Brand?.length || 0) +
-    (tempPriceRange[0] > 0 || tempPriceRange[1] < 50000 ? 1 : 0) +
-    (activeOption !== "relevance" ? 1 : 0);
-
-  // Custom Slider Component
-  const CustomSlider = ({ min, max, value, onChange }) => {
-    const handleMinChange = (e) => {
-      const newMin = Math.min(Number(e.target.value), value[1] - 100);
-      onChange(newMin, value[1]);
-    };
-
-    const handleMaxChange = (e) => {
-      const newMax = Math.max(Number(e.target.value), value[0] + 100);
-      onChange(value[0], newMax);
-    };
-
-    const progressLeft = (value[0] / max) * 100;
-    const progressRight = 100 - (value[1] / max) * 100;
-
-    return (
-      <div className="space-y-6">
-        <div className="relative h-1.5 bg-gray-100 rounded-full">
-          <div
-            className="absolute h-1.5 bg-gray-700 rounded-full"
-            style={{
-              left: `${progressLeft}%`,
-              right: `${progressRight}%`,
-            }}
-          />
-          <input
-            type="range"
-            min={min}
-            max={max}
-            value={value[0]}
-            onChange={handleMinChange}
-            className="absolute w-full h-1.5 opacity-0 cursor-pointer z-10"
-          />
-          <input
-            type="range"
-            min={min}
-            max={max}
-            value={value[1]}
-            onChange={handleMaxChange}
-            className="absolute w-full h-1.5 opacity-0 cursor-pointer z-10"
-          />
-        </div>
-        <div className="flex justify-between text-sm">
-          <span className="text-gray-700 font-medium">
-            ₹{value[0].toLocaleString()}
-          </span>
-          <span className="text-gray-700 font-medium">
-            ₹{value[1].toLocaleString()}
-          </span>
-        </div>
-      </div>
-    );
+  const getActiveFilterCount = () => {
+    const priceRangeMin = productPriceRange?.min || 0;
+    const priceRangeMax = productPriceRange?.max || 1000;
+    
+    let count = 0;
+    
+    // Count price filter
+    if (mobileSelectedFilters.priceRange || 
+        (mobileTempPriceRange[0] !== priceRangeMin || 
+         mobileTempPriceRange[1] !== priceRangeMax)) {
+      count++;
+    }
+    
+    // Count other filters
+    Object.entries(mobileSelectedFilters).forEach(([key, value]) => {
+      if (key !== "priceRange" && Array.isArray(value) && value.length > 0) {
+        count += value.length;
+      }
+    });
+    
+    return count;
   };
+
+  const activeFilterCount = getActiveFilterCount();
+
+  const priceRangeMin = productPriceRange?.min || 0;
+  const priceRangeMax = productPriceRange?.max || 1000;
 
   return (
     <>
@@ -194,14 +200,14 @@ const NewFilter = ({
             <button
               key={item.title}
               onClick={() => setSelected(item.title)}
-              className="flex flex-1 flex-col items-center py-3 gap-1 cursor-pointer transition-colors duration-200 hover:bg-gray-50 active:bg-gray-100"
+              className="flex flex-1 flex-col items-center py-3 gap-1 cursor-pointer transition-colors duration-200 hover:bg-gray-50 active:bg-gray-100 relative"
             >
-              <div className="text-gray-600">
-                {item.Icon}
-              </div>
-              <span className="text-xs font-medium text-gray-700">{item.title}</span>
+              <div className="text-gray-600">{item.Icon}</div>
+              <span className="text-xs font-medium text-gray-700">
+                {item.title}
+              </span>
               {item.title === "Filter" && activeFilterCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-gray-800 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-medium">
+                <span className="absolute top-1 right-6 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
                   {activeFilterCount}
                 </span>
               )}
@@ -234,16 +240,22 @@ const NewFilter = ({
                     onClick={() => setActiveOption(opt.value)}
                     className="flex items-center justify-between py-3 px-3 rounded-lg cursor-pointer transition-colors hover:bg-gray-50"
                   >
-                    <span className={`text-sm ${
-                      activeOption === opt.value ? "text-gray-900 font-medium" : "text-gray-600"
-                    }`}>
+                    <span
+                      className={`text-sm ${
+                        activeOption === opt.value
+                          ? "text-gray-900 font-medium"
+                          : "text-gray-600"
+                      }`}
+                    >
                       {opt.label}
                     </span>
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                      activeOption === opt.value
-                        ? "bg-gray-900 border-gray-900"
-                        : "border-gray-300"
-                    }`}>
+                    <div
+                      className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                        activeOption === opt.value
+                          ? "bg-gray-900 border-gray-900"
+                          : "border-gray-300"
+                      }`}
+                    >
                       {activeOption === opt.value && (
                         <div className="w-2 h-2 bg-white rounded-full" />
                       )}
@@ -275,9 +287,9 @@ const NewFilter = ({
                 <div className="flex items-center gap-2">
                   <button
                     onClick={clearAllFilters}
-                    className="text-sm text-gray-600 hover:text-gray-800 px-3 py-1 rounded-md font-medium transition-colors"
+                    className="text-sm text-blue-600 hover:text-blue-800 px-3 py-1 rounded-md font-medium transition-colors"
                   >
-                    Clear all
+                    CLEAR ALL
                   </button>
                   <button
                     onClick={closeModal}
@@ -289,99 +301,157 @@ const NewFilter = ({
               </div>
             </div>
 
+            {/* Selected Filters Display */}
+            {(() => {
+              const hasSelectedFilters = Object.entries(mobileSelectedFilters).some(
+                ([key, value]) => {
+                  if (key === "priceRange") {
+                    return value && (value.min !== priceRangeMin || value.max !== priceRangeMax);
+                  }
+                  return Array.isArray(value) && value.length > 0;
+                }
+              );
+
+              return hasSelectedFilters ? (
+                <div className="px-4 py-2 flex flex-wrap gap-2 border-b border-gray-300 bg-gray-100">
+                  {Object.entries(mobileSelectedFilters).map(([key, values]) => {
+                    if (key === "priceRange") {
+                      if (values && (values.min !== priceRangeMin || values.max !== priceRangeMax)) {
+                        return (
+                          <div
+                            key={`price-${values.min}-${values.max}`}
+                            className="flex items-center gap-1 bg-gray-200 text-gray-700 text-[11px] px-2 py-[3px] rounded"
+                          >
+                            <FaTimes
+                              size={8}
+                              className="cursor-pointer"
+                              onClick={() => {
+                                setMobileSelectedFilters((p) => ({
+                                  ...p,
+                                  priceRange: null,
+                                }));
+                                setMobileTempPriceRange([priceRangeMin, priceRangeMax]);
+                              }}
+                            />
+                            <span>
+                              ₹{values.min} – ₹{values.max}
+                            </span>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }
+
+                    if (Array.isArray(values) && values.length > 0) {
+                      return values.map((v) => (
+                        <div
+                          key={`${key}-${v}`}
+                          className="flex items-center gap-1 bg-gray-200 text-gray-700 text-[11px] px-2 py-[3px] rounded"
+                        >
+                          <FaTimes
+                            size={8}
+                            className="cursor-pointer"
+                            onClick={() => removeSelected(key, v)}
+                          />
+                          <span>{v}</span>
+                        </div>
+                      ));
+                    }
+                    return null;
+                  })}
+                </div>
+              ) : null;
+            })()}
+
             <div className="flex-1 overflow-y-auto">
               {/* Price Section */}
               <div className="border-b border-gray-100">
                 <div className="p-4">
-                  <h3 className="font-medium text-gray-900 mb-4 flex items-center gap-2">
-                    <span>💰</span> Price Range
-                  </h3>
-                  <CustomSlider
-                    min={0}
-                    max={50000}
-                    value={tempPriceRange}
-                    onChange={handlePriceChange}
-                  />
+                  <h3 className="font-medium text-gray-900 mb-4">PRICE</h3>
+                  <div className="w-[90%] mx-auto">
+                    <MobilePriceSlider
+                      value={mobileTempPriceRange}
+                      min={priceRangeMin}
+                      max={priceRangeMax}
+                      onChange={handlePriceChange}
+                      onChangeCommitted={handlePriceChangeCommitted}
+                    />
+                    <div className="flex justify-between text-xs text-gray-600 mt-2">
+                      <span>₹{priceRangeMin}</span>
+                      <span>₹{priceRangeMax}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* Brand Section */}
-              {availableBrands.length > 0 && (
-                <div className="border-b border-gray-100">
-                  <div className="p-4">
-                    <h3 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-                      <span>🏷️</span> Brand
-                    </h3>
-                    <div className="grid grid-cols-2 gap-2">
-                      {availableBrands.slice(0, 6).map((brand, i) => (
-                        <button
-                          key={i}
-                          onClick={() => handleBrandToggle(brand)}
-                          className={`py-2 px-3 rounded-md border text-sm transition-all duration-200 ${
-                            tempSelectedFilters.Brand?.includes(brand)
-                              ? "border-gray-900 bg-gray-900 text-white"
-                              : "border-gray-300 text-gray-700 hover:border-gray-400"
-                          }`}
-                        >
-                          {brand}
-                        </button>
-                      ))}
-                    </div>
+              {/* Loading State */}
+              {loadingFilters && validFilters.length === 0 && (
+                <div className="px-4 py-4 border-b border-gray-200">
+                  <div className="animate-pulse space-y-2">
+                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                    <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+                    <div className="h-3 bg-gray-200 rounded w-2/3"></div>
                   </div>
                 </div>
               )}
 
-              {/* Color Section */}
-              {availableColors.length > 0 && (
-                <div className="border-b border-gray-100">
-                  <div className="p-4">
-                    <h3 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-                      <span>🎨</span> Color
-                    </h3>
-                    <div className="grid grid-cols-2 gap-2">
-                      {availableColors.slice(0, 6).map((color, i) => (
-                        <button
-                          key={i}
-                          onClick={() => handleColorToggle(color)}
-                          className={`py-2 px-3 rounded-md border text-sm transition-all duration-200 ${
-                            tempSelectedFilters.Color?.includes(color)
-                              ? "border-gray-900 bg-gray-900 text-white"
-                              : "border-gray-300 text-gray-700 hover:border-gray-400"
-                          }`}
-                        >
-                          {color}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
+              {/* Dynamic Filters */}
+              {validFilters.length > 0 ? (
+                validFilters.map((filter) => {
+                  const values = filter.values || [];
+                  if (!values || values.length === 0) return null;
 
-              {/* Model Section */}
-              {availableModels.length > 0 && (
-                <div className="border-b border-gray-100">
-                  <div className="p-4">
-                    <h3 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-                      <span>📱</span> Model
-                    </h3>
-                    <div className="grid grid-cols-2 gap-2">
-                      {availableModels.slice(0, 6).map((model, i) => (
-                        <button
-                          key={i}
-                          onClick={() => handleModelToggle(model)}
-                          className={`py-2 px-3 rounded-md border text-sm transition-all duration-200 ${
-                            tempSelectedFilters.Model?.includes(model)
-                              ? "border-gray-900 bg-gray-900 text-white"
-                              : "border-gray-300 text-gray-700 hover:border-gray-400"
-                          }`}
-                        >
-                          {model}
-                        </button>
-                      ))}
+                  const expanded = expandedFilters[filter.name];
+                  const visible = expanded ? values : values.slice(0, 4);
+                  const currentSelections = mobileSelectedFilters[filter.name] || [];
+
+                  return (
+                    <div
+                      key={filter.name}
+                      className="border-b border-gray-100"
+                    >
+                      <div className="p-4">
+                        <h3 className="font-medium text-gray-900 mb-2">
+                          {(filter.name === "ProductType"
+                            ? "PRODUCT TYPE"
+                            : filter.name
+                          ).toUpperCase()}
+                        </h3>
+
+                        {visible.map((v) => (
+                          <label
+                            key={v}
+                            className="flex gap-2 text-sm mb-2 text-gray-600 cursor-pointer items-center"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={currentSelections.includes(v)}
+                              onChange={() => handleFilterChange(filter.name, v)}
+                              className="cursor-pointer h-4 w-4"
+                            />
+                            <span className="truncate">{v}</span>
+                          </label>
+                        ))}
+
+                        {values.length > 4 && (
+                          <button
+                            className="text-sm text-blue-600 mt-1 hover:text-blue-800 font-medium"
+                            onClick={() => toggleFilterExpand(filter.name)}
+                          >
+                            {expanded
+                              ? "Show Less"
+                              : `View ${values.length - 4} More`}
+                          </button>
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  );
+                })
+              ) : !loadingFilters && filters?.length === 0 ? (
+                <div className="px-4 py-4 text-sm text-gray-500 text-center">
+                  No filters available
                 </div>
-              )}
+              ) : null}
             </div>
 
             <div className="p-4 border-t border-gray-200 bg-white">

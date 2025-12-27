@@ -1,23 +1,21 @@
 // HomeProduct.js - Updated with vibrant colors, arrow buttons & skeleton loader
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import CategoryCard from "./CategoryCard";
 import { getAllCategoryTagsAllCategories } from "@/redux/category/categorySlice";
 
-
 const iconsByCategory = {
-  "Gardening": "🌿",
+  Gardening: "🌿",
   "Men's Fashion": "👕",
-  "Kitchen": "🍽️",
+  Kitchen: "🍽️",
   "Cookware & Serveware": "🍳",
   "Staples & Cooking Essentials": "🫙",
   "Home Decor": "🛋️",
   "Women's Fashion": "👗",
   "Makeup & Cosmetics": "💄",
   "Bath & Body Care": "🛁",
-  "Default": "⭐"
+  Default: "⭐",
 };
-
 
 const HomeProduct = ({
   title,
@@ -27,8 +25,6 @@ const HomeProduct = ({
 }) => {
   const scrollContainerRef = useRef(null);
   const dispatch = useDispatch();
-  const [showLeftArrow, setShowLeftArrow] = useState(false);
-  const [showRightArrow, setShowRightArrow] = useState(true);
 
   const { allCategoryTags, tagsStatus, tagsError } = useSelector(
     (state) => state.category
@@ -38,7 +34,7 @@ const HomeProduct = ({
   const categoryStatus = tagsStatus[categoryUrl] || "idle";
   const categoryError = tagsError[categoryUrl];
 
-    // Get category name and icon
+  // Get category name and icon
   const categoryName = categoryData?.categoryName || "Featured Collection";
   const categoryIcon = iconsByCategory[categoryName] || iconsByCategory.Default;
 
@@ -53,37 +49,6 @@ const HomeProduct = ({
       if (hasProblematicImage) return false;
       return true;
     }) || [];
-
-  const checkScrollPosition = () => {
-    const container = scrollContainerRef.current;
-    if (container) {
-      const { scrollLeft, scrollWidth, clientWidth } = container;
-      setShowLeftArrow(scrollLeft > 0);
-      setShowRightArrow(scrollLeft + clientWidth < scrollWidth - 10);
-    }
-  };
-
-  const scrollLeft = () => {
-    scrollContainerRef.current?.scrollBy({ left: -300, behavior: "smooth" });
-    setTimeout(checkScrollPosition, 300);
-  };
-
-  const scrollRight = () => {
-    scrollContainerRef.current?.scrollBy({ left: 300, behavior: "smooth" });
-    setTimeout(checkScrollPosition, 300);
-  };
-
-  useEffect(() => {
-    const container = scrollContainerRef.current;
-    if (container) {
-      container.addEventListener("scroll", checkScrollPosition);
-      setTimeout(checkScrollPosition, 100);
-
-      return () => {
-        container.removeEventListener("scroll", checkScrollPosition);
-      };
-    }
-  }, [validTags.length]);
 
   useEffect(() => {
     if (categoryUrl && categoryUrl !== "undefined") {
@@ -148,59 +113,30 @@ const HomeProduct = ({
       <div className="relative md:mb-3 text-left sm:px-6 px-4 pt-2">
         <div className="flex items-center mb-1 space-x-2">
           <div className="w-2 h-6 bg-gradient-to-b from-indigo-600 to-purple-600 rounded-full"></div>
-<h2 className="flex items-center gap-2 text-left bg-gradient-to-r from-indigo-800 via-purple-800 to-pink-900 bg-clip-text text-transparent text-xl font-extrabold">
-  
-  <span>
-    {categoryData?.categoryName || "Featured Collection"}
-  </span>
-  <span className="text-xl">
-    {categoryIcon}
-  </span>
-</h2>
-
+          <h2 className="flex items-center gap-2 text-left bg-gradient-to-r from-indigo-800 via-purple-800 to-pink-900 bg-clip-text text-transparent text-xl font-extrabold">
+            <span>{categoryData?.categoryName || "Featured Collection"}</span>
+            <span className="text-xl">{categoryIcon}</span>
+          </h2>
         </div>
       </div>
 
-        {showLeftArrow && (
-    <button
-      onClick={scrollLeft}
-      className="absolute left-2 top-1/2 -translate-y-1/2 hidden sm:flex
-                 w-10 h-10 items-center justify-center
-                 bg-white/90 rounded-full shadow-md z-10"
-    >
-      ◀
-    </button>
-  )}
-
-  {showRightArrow && (
-    <button
-      onClick={scrollRight}
-      className="absolute right-2 top-1/2 -translate-y-1/2 hidden sm:flex
-                 w-10 h-10 items-center justify-center
-                 bg-white/90 rounded-full shadow-md z-10"
-    >
-      ▶
-    </button>
-  )}
-
-  <div
-    className="overflow-x-auto w-full scrollbar-hide md:pb-2 px-2"
-    ref={scrollContainerRef}
-  >
-    <div className="flex space-x-4 w-full py-2">
-      {validTags.map((tag, index) => (
-        <CategoryCard
-          key={`${tag.slugUrl}-${index}`}
-          name={tag.name}
-          categoryTagData={tag}
-          productCount={tag.productCount}
-          offer={tag.offerTags || []}
-          price={tag.price || ""}
-        />
-      ))}
-    </div>
-  </div>
-
+      <div
+        className="overflow-x-auto w-full scrollbar-hide md:pb-2 px-2"
+        ref={scrollContainerRef}
+      >
+        <div className="flex space-x-4 w-full py-2">
+          {validTags.map((tag, index) => (
+            <CategoryCard
+              key={`${tag.slugUrl}-${index}`}
+              name={tag.name}
+              categoryTagData={tag}
+              productCount={tag.productCount}
+              offer={tag.offerTags || []}
+              price={tag.price || ""}
+            />
+          ))}
+        </div>
+      </div>
     </section>
   );
 };
