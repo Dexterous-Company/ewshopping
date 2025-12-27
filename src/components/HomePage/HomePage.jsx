@@ -5,9 +5,16 @@ import { useDispatch } from "react-redux";
 import dynamic from "next/dynamic";
 
 // ✅ ABOVE THE FOLD (NORMAL IMPORTS)
-import CategoryCarousel from "@/main_pages/HomeScreen/CategoryCarousel";
-import HomeBanner from "@/main_pages/HomeScreen/HomeBanner";
-import HomeProduct from "@/main_pages/HomeScreen/HomeProduct";
+const CategoryCarousel= dynamic(
+  () => import("@/main_pages/HomeScreen/CategoryCarousel"),
+  { ssr: false }
+);
+const HomeBanner= dynamic(()=>import ("@/main_pages/HomeScreen/HomeBanner"),
+{ssr:false}
+);
+const HomeProduct= dynamic(()=>import ("@/main_pages/HomeScreen/HomeProduct"),
+{ssr:false}
+);
 
 // 🔥 BELOW THE FOLD (DYNAMIC)
 const BannerGrid = dynamic(
@@ -59,26 +66,7 @@ const HomePage = () => {
   }, []);
 
   // Second useEffect for productsTwo
-  useEffect(() => {
-    const fetchProductsTwo = async () => {
-      try {
-        setLoadingTwo(true);
-        const response = await fetch(
-          `${Baseurl}/api/v1/product/getEventProduct/mobile-accessories-ios-phones`
-        );
-        if (!response.ok) throw new Error("Failed to fetch products");
 
-        const data = await response.json();
-        if (data.success) setProductsTwo(data.product);
-        else throw new Error("API returned unsuccessful response");
-      } catch (err) {
-        setErrorTwo(err.message);
-      } finally {
-        setLoadingTwo(false);
-      }
-    };
-    fetchProductsTwo();
-  }, []);
 
   // Fix: Closing div was missing for the first div wrapper
   return (
@@ -96,12 +84,6 @@ const HomePage = () => {
         />
 
         {/* Event Products */}
-        <MobileAccessoriesIOSPhones
-          products={products}
-          loading={loading}
-          error={error}
-          bgGradient="bg-gradient-to-br from-amber-500 to-rose-600"
-        />
 
         {/* 📍 SINGLE CATEGORY BOXES - Desktop */}
         <div className="hidden sm:flex flex-row gap-1 py-2">
@@ -212,10 +194,10 @@ const HomePage = () => {
         />
 
         {/* Second Event Products Section */}
-        <MobileAccessoriesIOSPhones
+       {/* <MobileAccessoriesIOSPhones
           products={productsTwo}
-          loading={loadingTwo} // Use loadingTwo
-          error={errorTwo} // Use errorTwo
+          loading={loadingTwo} 
+          error={errorTwo} 
           bgGradient="bg-gradient-to-br from-indigo-800 via-gray-900 to-indigo-900"
         />
 
@@ -229,6 +211,12 @@ const HomePage = () => {
             showAllPromotions={true}
           />
         </div>
+          <MobileAccessoriesIOSPhones
+          products={products}
+          loading={loading}
+          error={error}
+          bgGradient="bg-gradient-to-br from-amber-500 to-rose-600"
+        />
 
         {/* HomeProduct - Bath Body Care */}
         <HomeProduct
@@ -236,6 +224,8 @@ const HomePage = () => {
           border="12"
           categoryUrl="bath-body-care"
         />
+       
+
         <div className="sm:hidden block py-2">
           {/* 6. Washing Machine Category */}
           <BoxCategories

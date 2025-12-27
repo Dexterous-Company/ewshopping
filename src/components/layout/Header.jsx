@@ -305,13 +305,10 @@ const Header = () => {
               </span>
             </div>
           ) : !isMounted ? (
-            // Loader with WHITE text color simulation
             <div className="flex flex-row items-center gap-2 flex-1 min-w-0">
-              {/* Blue badge loader with WHITE text */}
               <div className="animate-pulse bg-gray-300 h-6 w-16 rounded-full flex items-center">
                 <div className="bg-gray-400 h-3 w-10 mx-auto rounded"></div>
               </div>
-              {/* Address text loader with WHITE text */}
               <div className="animate-pulse bg-gray-300 h-6 w-40 rounded-lg flex items-center">
                 <div className="bg-gray-400 h-3 w-32 mx-2 rounded"></div>
               </div>
@@ -375,7 +372,7 @@ const Header = () => {
         const suggestionsData = data.success ? data.suggestions || [] : [];
         setSuggestions(suggestionsData);
         setShowSuggestions(suggestionsData.length > 0);
-        setHighlightedIndex(suggestionsData.length > 0 ? 0 : -1);
+        setHighlightedIndex(-1); // Reset to -1, don't auto-select first item
       } else {
         throw new Error(`API error: ${response.status}`);
       }
@@ -392,7 +389,7 @@ const Header = () => {
   const handleInputChange = (e) => {
     const value = e.target.value;
     setSearchQuery(value);
-    setHighlightedIndex(-1);
+    setHighlightedIndex(-1); // Reset to -1 when typing
 
     if (debounceTimeout) {
       clearTimeout(debounceTimeout);
@@ -416,63 +413,50 @@ const Header = () => {
     }
   };
 
-  // FIXED: Always use "all" as the category
+  // Always use "all" as the category for typed searches
   const navigateToSearch = () => {
     if (searchQuery.trim()) {
       const encodedKeyword = encodeURIComponent(searchQuery.trim());
-      // Always use "all" as the category
       router.push(`/search/all/${encodedKeyword}`);
       closeAllModals();
       setShowSuggestions(false);
     }
   };
 
-  // FIXED: Always use "all" as the category for suggestions
+  // Handle suggestion click with CategoryTagUrl
   const handleSuggestionClick = (suggestion) => {
-    setSearchQuery(suggestion.keyword);
+    const keyword = suggestion.keyword || suggestion.name;
+    setSearchQuery(keyword);
     setShowSuggestions(false);
-
-    // Always use "all" as the category to get URL format: /all/bag
-    const categoryTag = "all";
-
-    router.push(
-      `/search/${categoryTag}/${encodeURIComponent(suggestion.keyword)}`
-    );
+    
+    // Use the suggestion's CategoryTagUrl if available, otherwise use "all"
+    const categoryTag = suggestion.CategoryTagUrl || "all";
+    router.push(`/search/${categoryTag}/${encodeURIComponent(keyword)}`);
   };
 
   const handleKeyDown = (e) => {
-    switch (e.key) {
-      case "ArrowDown":
-        if (!showSuggestions) return;
-        e.preventDefault();
-        setHighlightedIndex((prev) =>
-          prev < suggestions.length - 1 ? prev + 1 : 0
-        );
-        break;
-      case "ArrowUp":
-        if (!showSuggestions) return;
-        e.preventDefault();
-        setHighlightedIndex((prev) =>
-          prev > 0 ? prev - 1 : suggestions.length - 1
-        );
-        break;
-      case "Enter":
-        e.preventDefault();
-        if (
-          showSuggestions &&
-          highlightedIndex >= 0 &&
-          suggestions[highlightedIndex]
-        ) {
-          handleSuggestionClick(suggestions[highlightedIndex]);
-        } else {
-          navigateToSearch();
-        }
-        break;
-      case "Escape":
-        setShowSuggestions(false);
-        setHighlightedIndex(-1);
-        break;
+    if (e.key !== "Enter") return;
+    
+    e.preventDefault();
+
+    // If user clicked on a suggestion with mouse, highlightedIndex will be set
+    // If user is just typing and pressing Enter, highlightedIndex will be -1
+    const keyword =
+      highlightedIndex >= 0 && suggestions[highlightedIndex]
+        ? suggestions[highlightedIndex].keyword
+        : searchQuery; // Use typed query when no suggestion is selected
+
+    if (!keyword?.trim()) return;
+
+    // Get category for the selected suggestion, otherwise use "all"
+    let categoryTag = "all";
+    if (highlightedIndex >= 0 && suggestions[highlightedIndex]) {
+      // Use CategoryTagUrl from selected suggestion
+      categoryTag = suggestions[highlightedIndex].CategoryTagUrl || "all";
     }
+
+    router.push(`/search/${categoryTag}/${encodeURIComponent(keyword.trim())}`);
+    closeAllModals();
   };
 
   const clearSearch = () => {
@@ -560,7 +544,7 @@ const Header = () => {
           </div>
         </Link>
 
-        {/* Search - FIXED SECTION */}
+        {/* Search */}
         <div className="w-full relative z-[50]" ref={searchRef}>
           <div className="hidden md:block lg:block">
             <div className="relative search-container no-scrollbar">
@@ -639,7 +623,17 @@ const Header = () => {
                                 <span className="text-sm font-medium text-gray-800">
                                   {truncateProductName(suggestion.keyword, 50)}
                                 </span>
+                                {suggestion.CategoryTag && (
+                                  <span className="text-xs text-gray-500 ml-2">
+                                    in {suggestion.CategoryTag}
+                                  </span>
+                                )}
                               </div>
+                              {suggestion.CategoryTagUrl && (
+                                <div className="text-xs text-gray-500 mt-1">
+                                  Category: {suggestion.CategoryTagUrl}
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>

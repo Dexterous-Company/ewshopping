@@ -1,536 +1,420 @@
 "use client";
 
 import {
-  searchNewProducts,
-  loadMoreProducts,
-} from "@/redux/serach/newSerchProdactSlice";
+  CategoryTagProducts,
+  loadMoreCategoryTagProducts,
+  getCategoryTagFilters,
+  resetFiltersLoaded,
+} from "@/redux/serach/catTagProdactSlice";
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { FaTimes, FaSearch } from "react-icons/fa";
+import { FaTimes } from "react-icons/fa";
 import NewSingleProductCard from "@/main_pages/ProductPages.jsx/NewSingleProductCard";
 import { useSearchParams, useRouter } from "next/navigation";
 import Slider from "@mui/material/Slider";
 import { styled } from "@mui/material/styles";
-import useInfiniteScroll from "@/hooks/useInfiniteScroll";
 import NewFilter from "@/components/searchMobile/NewFilter";
 
-// Custom styled price slider
-const PriceSlider = styled(Slider)(({ theme }) => ({
+/* ---------------- PRICE SLIDER ---------------- */
+const PriceSlider = styled(Slider)({
   color: "#2874f0",
-  height: 4,
+  height: 2.5,
+  padding: "8px 0",
+
   "& .MuiSlider-track": {
     border: "none",
-    backgroundColor: "#2874f0",
+    height: 2.5,
   },
+
   "& .MuiSlider-rail": {
-    backgroundColor: "#e0e0e0",
+    backgroundColor: "#d1d5db",
     opacity: 1,
+    height: 2.5,
   },
+
   "& .MuiSlider-thumb": {
-    height: 16,
-    width: 16,
+    height: 12,
+    width: 12,
     backgroundColor: "#fff",
-    border: `2px solid #2874f0`,
-    boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
-    "&:hover, &.Mui-focusVisible": {
-      boxShadow: `0 0 0 6px rgba(40, 116, 240, 0.1)`,
+    border: "2px solid #2874f0",
+    boxShadow: "0 1px 4px rgba(0,0,0,0.25)",
+
+    "&:hover": {
+      boxShadow: "0 2px 8px rgba(0,0,0,0.35)",
+    },
+
+    "&::after": {
+      display: "none",
     },
   },
-}));
+});
 
-// Sort options matching your UI
 const SORTS = [
-  { value: "relevance", label: "Relevance" },
-  { value: "price_asc", label: "Price -- Low to High" },
-  { value: "price_desc", label: "Price -- High to Low" },
-  { value: "newest", label: "Newest First" },
+  { label: "Relevance", value: "relevance" },
+  { label: "Price -- Low to High", value: "price_asc" },
+  { label: "Price -- High to Low", value: "price_desc" },
+  { label: "Newest First", value: "newest" },
 ];
 
-// Process filter values - split and remove duplicates
-const processFilterValues = (value) => {
-  if (!value) return [];
-  return [...new Set(value.split(", "))].filter((item) => item.trim());
-};
-
-// Skeleton Loader Component
-const ProductSkeleton = () => {
-  return (
-    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden animate-pulse">
-      <div className="relative aspect-square bg-gray-200"></div>
-      <div className="p-3">
-        <div className="h-4 bg-gray-200 rounded mb-2"></div>
-        <div className="h-3 bg-gray-200 rounded w-3/4 mb-2"></div>
-        <div className="h-6 bg-gray-300 rounded w-1/2 mb-3"></div>
-        <div className="flex justify-between items-center">
-          <div className="h-8 bg-gray-200 rounded w-24"></div>
-          <div className="h-6 bg-gray-200 rounded w-16"></div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Filter Sidebar Skeleton (simpler version)
-const FilterSkeleton = () => {
-  return (
-    <div className="hidden lg:block w-[270px] bg-gray-50 border border-gray-300 text-gray-600 animate-pulse">
-      {/* Header Skeleton */}
-      <div className="border-b border-gray-300 p-4">
-        <div className="h-6 bg-gray-200 rounded w-24"></div>
-      </div>
-
-      {/* Price Filter Skeleton */}
-      <div className="border-b border-gray-200 p-4">
-        <div className="h-4 bg-gray-200 rounded w-20 mb-3"></div>
-        <div className="h-2 bg-gray-200 rounded mb-2"></div>
-        <div className="flex justify-between">
-          <div className="h-3 bg-gray-200 rounded w-16"></div>
-          <div className="h-3 bg-gray-200 rounded w-16"></div>
-        </div>
-      </div>
-
-      {/* Filter Options Skeletons */}
-      {[...Array(3)].map((_, i) => (
-        <div key={i} className="border-b border-gray-200 p-4">
-          <div className="h-4 bg-gray-200 rounded w-32 mb-3"></div>
-          <div className="space-y-2">
-            {[...Array(4)].map((_, j) => (
-              <div key={j} className="flex items-center gap-2">
-                <div className="h-4 w-4 bg-gray-200 rounded"></div>
-                <div className="h-3 bg-gray-200 rounded w-24"></div>
-              </div>
-            ))}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-};
-
-const CatTagPage = ({ params }) => {
-   let categoryTag = "";
-  if (params?.subcategory) {
-    categoryTag = params.subcategory;
-  } else if (params?.slug) {
-    categoryTag = params.slug;
-  } else if (params?.value) {
-    if (typeof params.value === 'string') {
-      try {
-        const parsed = JSON.parse(params.value);
-        categoryTag = parsed?.categorytag || "";
-      } catch (e) {
-        categoryTag = params.value;
-      }
-    } else if (typeof params.value === 'object') {
-      categoryTag = params.value.categorytag || "";
-    }
-  }
-  
+const SearchPage = ({ params }) => {
+  const p = React.use(params);
+  const categoryTag = p.categorytag || "";
 
   const dispatch = useDispatch();
-  const searchParams = useSearchParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const sort = searchParams.get("sort") || "relevance";
 
   const {
-    loading,
-    query,
-    total,
-    limit,
     products,
-    totalPages,
+    total,
     filters,
-    sort: reduxSort,
     loadingMore,
+    loadingFilters,
+    filtersLoaded,
     page: currentPage,
-  } = useSelector((state) => state.searchNew);
+    limit,
+  } = useSelector((state) => state.catTagProdact);
 
-  // Refs to prevent multiple initializations
   const initialSearchDone = useRef(false);
-  const filtersInitialized = useRef(false);
   const searchTimeoutRef = useRef(null);
+  const filtersTimeoutRef = useRef(null);
 
-  // Track current subcategory to detect changes
-  const currentSubcatRef = useRef(categoryTag);
-
-  // State to show skeleton during subcategory transition
-  const [isSubcatTransition, setIsSubcatTransition] = useState(false);
-
-  // State for selected filters and sort
-  const [selectedFilters, setSelectedFilters] = useState({});
+  const [selectedFilters, setSelectedFilters] = useState({
+    priceRange: null,
+  });
   const [expandedFilters, setExpandedFilters] = useState({});
-  const [tempPriceRange, setTempPriceRange] = useState([0, 50000]);
+  const [tempPriceRange, setTempPriceRange] = useState([0, 1000]);
 
-  // State for show more/less
-  const [showMoreColors, setShowMoreColors] = useState(false);
-  const [showMoreModels, setShowMoreModels] = useState(false);
-  const [colorSearch, setColorSearch] = useState("");
-  const [modelSearch, setModelSearch] = useState("");
+  const toggleFilterExpand = (name) =>
+    setExpandedFilters((p) => ({ ...p, [name]: !p[name] }));
 
-  // Mobile filter state
-  const [mobileSort, setMobileSort] = useState(sort);
-
-  // Create sort URL function
-  const createSortUrl = (sortValue) => {
-    const params = new URLSearchParams(searchParams);
-    params.set("sort", sortValue);
-    params.delete("page");
-    return `?${params.toString()}`;
-  };
-
-  // Handle sort change
-  const handleSort = (sortValue) => {
-    const url = createSortUrl(sortValue);
-    router.push(url);
-  };
-
-  // Handle mobile sort change
-  const handleMobileSortChange = (sortValue) => {
-    setMobileSort(sortValue);
-    const url = createSortUrl(sortValue);
-    router.push(url);
-  };
-
-  // Build search parameters
-  const buildSearchParams = (page = 1, customFilters = selectedFilters) => {
+  // Build params for products search
+  const buildSearchParams = (page = 1, overrideFilters = null) => {
     const params = {
       categoryTag,
-      page: page,
+      page,
       limit: limit || 20,
-      sort: sort !== "relevance" ? sort : "",
+      filters: overrideFilters || selectedFilters,
+      sort: sort,
     };
-
-    // Add filters if any selected
-    const hasActiveFilters = Object.keys(customFilters).some(
-      (key) => customFilters[key] && customFilters[key].length > 0
-    );
-
-    if (hasActiveFilters || customFilters.priceRange) {
-      params.filters = {};
-
-      Object.keys(customFilters).forEach((key) => {
-        if (key === "priceRange") {
-          if (customFilters[key]) {
-            params.filters.priceRange = {
-              min: customFilters[key].min,
-              max: customFilters[key].max,
-            };
-          }
-        } else if (customFilters[key] && customFilters[key].length > 0) {
-          // Convert filter keys to match backend expectation
-          if (key === "Color") {
-            params.filters.colors = customFilters[key];
-          } else if (key === "Model") {
-            params.filters.models = customFilters[key];
-          } else {
-            params.filters[key] = customFilters[key];
-          }
-        }
-      });
-    }
-
     return params;
   };
 
-  // Debounced search function
+  // Build params for filters only
+  const buildFiltersParams = (overrideFilters = null) => ({
+    categoryTag,
+    filters: overrideFilters || selectedFilters,
+  });
+
+  // Initialize selectedFilters based on filter names from API
+  useEffect(() => {
+    if (filters && filters.length > 0) {
+      const filterNames = filters
+        .filter((f) => f.values && f.values.length > 0)
+        .map((f) => f.name);
+
+      setSelectedFilters((prev) => {
+        const newFilterState = { ...prev };
+        let hasChanges = false;
+
+        filterNames.forEach((name) => {
+          if (!(name in newFilterState)) {
+            newFilterState[name] = [];
+            hasChanges = true;
+          }
+        });
+
+        if (!("priceRange" in newFilterState)) {
+          newFilterState["priceRange"] = null;
+          hasChanges = true;
+        }
+
+        return hasChanges ? newFilterState : prev;
+      });
+    }
+  }, [filters]);
+
+  // Debounced search for products
   const debouncedSearch = useCallback(
     (params) => {
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current);
-      }
-
+      clearTimeout(searchTimeoutRef.current);
       searchTimeoutRef.current = setTimeout(() => {
-        dispatch(searchNewProducts(params));
+        dispatch(CategoryTagProducts(params));
       }, 300);
     },
     [dispatch]
   );
 
-  // Check if subcategory has changed
+  // Debounced filters fetch
+  const debouncedFetchFilters = useCallback(
+    (params) => {
+      clearTimeout(filtersTimeoutRef.current);
+      filtersTimeoutRef.current = setTimeout(() => {
+        dispatch(getCategoryTagFilters(params));
+      }, 150);
+    },
+    [dispatch]
+  );
+
+  /* ---------- INITIAL SEARCH ---------- */
   useEffect(() => {
-    if (currentSubcatRef.current !== categoryTag) {
-      setIsSubcatTransition(true);
-      currentSubcatRef.current = categoryTag;
-    }
-  }, [categoryTag]);
+    if (initialSearchDone.current) return;
 
-  // Initial search when component mounts or category changes
-  useEffect(() => {
-    if (initialSearchDone.current && !isSubcatTransition) return;
-
-    const initialParams = buildSearchParams(1);
-    dispatch(searchNewProducts(initialParams));
-    initialSearchDone.current = true;
-
-    // Reset transition state after a short delay
-    if (isSubcatTransition) {
-      setTimeout(() => {
-        setIsSubcatTransition(false);
-      }, 100);
-    }
-  }, [categoryTag, limit, dispatch, sort, isSubcatTransition]);
-
-  // Initialize selected filters when filters are loaded from API
-  useEffect(() => {
-    if (filters && filters.length > 0 && !filtersInitialized.current) {
-      const initialFilters = {};
-      filters.forEach((filter) => {
-        initialFilters[filter.name] = [];
-      });
-      setSelectedFilters(initialFilters);
-      filtersInitialized.current = true;
-    }
-  }, [filters]);
-
-  // Handle search when filters change with debouncing
-  useEffect(() => {
-    if (!filtersInitialized.current || !initialSearchDone.current) {
-      return;
-    }
+    // Reset filters loaded flag on initial load
+    dispatch(resetFiltersLoaded());
 
     const params = buildSearchParams(1);
-    debouncedSearch(params);
-  }, [selectedFilters, categoryTag, limit, debouncedSearch, sort]);
 
-  // Reset refs when category changes
+    // Fetch products first
+    dispatch(CategoryTagProducts(params));
+
+    // Then fetch filters
+    dispatch(getCategoryTagFilters(buildFiltersParams()));
+
+    initialSearchDone.current = true;
+  }, [categoryTag, dispatch]);
+
+  /* ---------- FILTER / SORT CHANGE ---------- */
   useEffect(() => {
-    if (currentSubcatRef.current !== categoryTag) {
-      initialSearchDone.current = false;
-      filtersInitialized.current = false;
-      setSelectedFilters({});
-    }
-  }, [categoryTag]);
+    if (!initialSearchDone.current) return;
 
-  // Update mobile sort when URL sort changes
+    const productParams = buildSearchParams(1);
+    const filterParams = buildFiltersParams();
+
+    // Fetch products with debounce
+    debouncedSearch(productParams);
+
+    // Also update filters based on current selection
+    debouncedFetchFilters(filterParams);
+  }, [
+    selectedFilters,
+    sort,
+    debouncedSearch,
+    debouncedFetchFilters,
+    initialSearchDone,
+  ]);
+
+  /* ---------- INFINITE SCROLL FIX ---------- */
   useEffect(() => {
-    setMobileSort(sort);
-  }, [sort]);
+    const handleScroll = () => {
+      // Don't trigger if already loading
+      if (loadingMore) return;
 
-  // Handle load more
-  const handleLoadMore = useCallback(() => {
-    if (loadingMore || products.length >= total) return;
+      // Don't trigger if no products or already loaded all
+      if (products.length === 0 || products.length >= total) return;
 
-    const nextPage = currentPage + 1;
-    const params = buildSearchParams(nextPage);
-    dispatch(loadMoreProducts(params));
-  }, [loadingMore, products.length, total, currentPage, dispatch]);
+      const scrollTop = document.documentElement.scrollTop;
+      const scrollHeight = document.documentElement.scrollHeight;
+      const clientHeight = document.documentElement.clientHeight;
 
-  // Infinite scroll callback
-  const loadMoreCallback = useCallback(() => {
-    if (!loadingMore && products.length < total && currentPage < totalPages) {
-      handleLoadMore();
-    }
+      // When user reaches 300px from bottom, load more
+      const isNearBottom = scrollTop + clientHeight >= scrollHeight - 300;
+
+      if (isNearBottom) {
+        const nextPage = currentPage + 1;
+        console.log(
+          `Loading more: Page ${nextPage}, Products: ${products.length}/${total}`
+        );
+
+        const params = buildSearchParams(nextPage);
+        dispatch(loadMoreCategoryTagProducts(params));
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, [
     loadingMore,
     products.length,
     total,
     currentPage,
-    totalPages,
-    handleLoadMore,
+    dispatch,
+    selectedFilters,
+    sort,
   ]);
 
-  // Use the infinite scroll hook
-  const [isFetching, setIsFetching] = useInfiniteScroll(loadMoreCallback, 300);
+  const handleSort = (value) => {
+    const p = new URLSearchParams(searchParams.toString());
 
-  // Reset isFetching when loadingMore changes
-  useEffect(() => {
-    if (!loadingMore && isFetching) {
-      setIsFetching(false);
+    if (value === "relevance") {
+      p.delete("sort");
+    } else {
+      p.set("sort", value);
     }
-  }, [loadingMore, isFetching, setIsFetching]);
 
-  // Handle filter changes
-  const handleFilterChange = (filterName, value) => {
+    router.push(`?${p.toString()}`, { scroll: false });
+
+    // Force a search with the new sort parameter
+    if (initialSearchDone.current) {
+      const params = buildSearchParams(1);
+      params.sort = value;
+      debouncedSearch(params);
+    }
+  };
+
+  const handleFilterChange = (filter, value) => {
+    const key = filter.apiKey || filter.name;
+
     setSelectedFilters((prev) => {
-      const currentValues = prev[filterName] || [];
-      const newValues = currentValues.includes(value)
-        ? currentValues.filter((item) => item !== value)
-        : [...currentValues, value];
+      const curr = prev[key] || [];
+      return {
+        ...prev,
+        [key]: curr.includes(value)
+          ? curr.filter((v) => v !== value)
+          : [...curr, value],
+      };
+    });
+  };
 
+  const removeSelected = (name, value) => {
+    setSelectedFilters((prev) => {
       const newFilters = {
         ...prev,
-        [filterName]: newValues,
+        [name]: prev[name]?.filter((v) => v !== value),
       };
 
-      // Trigger search with new filters
-      const searchParams = buildSearchParams(1, newFilters);
-      debouncedSearch(searchParams);
+      // Update filters after removal
+      const filterParams = buildFiltersParams(newFilters);
+      debouncedFetchFilters(filterParams);
 
       return newFilters;
     });
   };
 
-  // Remove selected filter
-  const removeSelected = (filterName, value) => {
-    setSelectedFilters((prev) => {
-      const currentValues = prev[filterName] || [];
-      const newValues = currentValues.filter((item) => item !== value);
-
-      const newFilters = {
-        ...prev,
-        [filterName]: newValues,
-      };
-
-      // Trigger search with updated filters
-      const searchParams = buildSearchParams(1, newFilters);
-      debouncedSearch(searchParams);
-
-      return newFilters;
-    });
-  };
-
-  // Clear all filters
   const clearAllFilters = () => {
-    const resetFilters = {};
-    if (filters) {
+    const clearedFilters = { priceRange: null };
+
+    // Initialize all filter categories from current filters to empty arrays
+    if (filters && filters.length > 0) {
       filters.forEach((filter) => {
-        resetFilters[filter.name] = [];
+        if (filter.values && filter.values.length > 0) {
+          clearedFilters[filter.name] = [];
+        }
+      });
+    } else {
+      // If filters not loaded yet, use current selectedFilters structure
+      Object.keys(selectedFilters).forEach((key) => {
+        if (key !== "priceRange") {
+          clearedFilters[key] = [];
+        }
       });
     }
-    setSelectedFilters(resetFilters);
-    
-    // Trigger search with cleared filters
-    const searchParams = buildSearchParams(1, resetFilters);
-    debouncedSearch(searchParams);
+
+    setSelectedFilters(clearedFilters);
+    setTempPriceRange([0, 1000]);
+
+    // Fetch updated filters after clearing
+    debouncedFetchFilters(buildFiltersParams(clearedFilters));
   };
 
-  // Toggle filter expansion
-  const toggleFilterExpand = (filterName) => {
-    setExpandedFilters((prev) => ({
-      ...prev,
-      [filterName]: !prev[filterName],
-    }));
-  };
-
-  // Check if any filter is selected
-  const hasSelectedFilters = Object.keys(selectedFilters).some(
-    (key) =>
-      (selectedFilters[key] && selectedFilters[key].length > 0) ||
-      (key === "priceRange" && selectedFilters[key])
+  /* ---------- Calculate hasSelectedFilters ---------- */
+  const hasSelectedFilters = Object.entries(selectedFilters).some(
+    ([key, value]) => {
+      if (key === "priceRange") {
+        return value && (value.min !== 0 || value.max !== 1000);
+      }
+      return Array.isArray(value) && value.length > 0;
+    }
   );
 
-  // Handle mobile filter changes
-  const handleMobileFilterChange = (newFilters) => {
-    setSelectedFilters(newFilters);
-  };
+  // Filter out empty filter values
+  const validFilters = React.useMemo(() => {
+    return (filters || []).filter(
+      (filter) => filter.values && filter.values.length > 0
+    );
+  }, [filters]);
 
-  // Check if any filter is active (for active filters display)
-  const hasActiveFilters = Object.keys(selectedFilters).some(
-    (key) =>
-      (selectedFilters[key] && selectedFilters[key].length > 0) ||
-      (key === "priceRange" && selectedFilters[key])
-  );
-
-  // Extract specific filters for enhanced UI
-  const colorFilter = filters?.find(
-    (filter) => filter.name === "Color" || filter.name === "Option 1"
-  );
-  const modelFilter = filters?.find((filter) => filter.name === "Model");
-  const connectorFilter = filters?.find(
-    (filter) => filter.name === "Connector Type"
-  );
-
-  // Process colors - split and remove duplicates
-  const availableColors = colorFilter
-    ? processFilterValues(colorFilter.value)
-    : [];
-
-  // Process models - split and remove duplicates
-  const availableModels = modelFilter
-    ? processFilterValues(modelFilter.value)
-    : [];
-
-  // Active filters for display
-  const activeFilters = [
-    ...(selectedFilters.Color || []).map((color) => ({
-      id: `color-${color}`,
-      value: color,
-      type: "Color",
-    })),
-    ...(selectedFilters.Model || []).map((model) => ({
-      id: `model-${model}`,
-      value: model,
-      type: "Model",
-    })),
-    ...(selectedFilters.priceRange
-      ? [
-          {
-            id: "price",
-            value: `₹${selectedFilters.priceRange.min} – ₹${selectedFilters.priceRange.max}`,
-            type: "Price",
-          },
-        ]
-      : []),
-  ];
-
-  // Combined loading state
-  const isLoading = loading && !loadingMore;
-  const showSkeleton = isLoading || isSubcatTransition;
+  // Show filters only when they're loaded or loading
+  const shouldShowFilters = filtersLoaded || loadingFilters;
 
   return (
     <div className="min-h-screen bg-gray-100 pt-4">
       <div className="max-w-[1600px] mx-auto flex">
         {/* ---------------- LEFT FILTER ---------------- */}
-        {showSkeleton ? (
-          <FilterSkeleton />
-        ) : (
-          <div className="hidden lg:block w-[270px] bg-gray-50 border border-gray-300 text-gray-600">
-            {/* HEADER */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-300 text-sm font-semibold text-gray-800">
-              <span>Filters</span>
-              {hasSelectedFilters && (
-                <button
-                  onClick={clearAllFilters}
-                  className="text-blue-600 text-xs font-medium"
-                >
-                  CLEAR ALL
-                </button>
-              )}
-            </div>
-
-            {/* SELECTED FILTERS */}
+        <div className="hidden lg:block w-[270px] bg-gray-50 border border-gray-300 text-gray-600">
+          {/* HEADER */}
+          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-300 text-sm font-semibold text-gray-800">
+            <span>Filters</span>
             {hasSelectedFilters && (
-              <div className="px-4 py-2 flex flex-wrap gap-2 border-b border-gray-300 bg-gray-100">
-                {Object.entries(selectedFilters).map(([key, values]) =>
-                  Array.isArray(values)
-                    ? values.map((v) => (
-                        <div
-                          key={`${key}-${v}`}
-                          className="flex items-center gap-1 bg-gray-200 text-gray-700 text-[11px] px-2 py-[3px] rounded"
-                        >
-                          <FaTimes
-                            size={8}
-                            className="cursor-pointer"
-                            onClick={() => removeSelected(key, v)}
-                          />
-                          <span>{v}</span>
-                        </div>
-                      ))
-                    : null
-                )}
-
-                {selectedFilters.priceRange && (
-                  <div className="flex items-center gap-1 bg-gray-200 text-gray-700 text-[11px] px-2 py-[3px] rounded">
-                    <FaTimes
-                      size={8}
-                      className="cursor-pointer"
-                      onClick={() =>
-                        setSelectedFilters((p) => ({
-                          ...p,
-                          priceRange: null,
-                        }))
-                      }
-                    />
-                    <span>
-                      ₹{selectedFilters.priceRange.min} – ₹
-                      {selectedFilters.priceRange.max}
-                    </span>
-                  </div>
-                )}
-              </div>
+              <button
+                onClick={clearAllFilters}
+                className="text-blue-600 text-xs font-medium"
+              >
+                CLEAR ALL
+              </button>
             )}
+          </div>
 
-            {/* PRICE */}
+          {/* Show loading indicator for filters */}
+          {loadingFilters && validFilters.length === 0 && (
+            <div className="px-4 py-3 border-b border-gray-200">
+              <div className="animate-pulse space-y-2">
+                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+                <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+              </div>
+            </div>
+          )}
+
+          {/* SELECTED FILTERS */}
+          {hasSelectedFilters && shouldShowFilters && (
+            <div className="px-4 py-2 flex flex-wrap gap-2 border-b border-gray-300 bg-gray-100">
+              {Object.entries(selectedFilters).map(([key, values]) => {
+                if (key === "priceRange") {
+                  if (values && (values.min !== 0 || values.max !== 1000)) {
+                    return (
+                      <div
+                        key={`price-${values.min}-${values.max}`}
+                        className="flex items-center gap-1 bg-gray-200 text-gray-700 text-[11px] px-2 py-[3px] rounded"
+                      >
+                        <FaTimes
+                          size={8}
+                          className="cursor-pointer"
+                          onClick={() => {
+                            setSelectedFilters((p) => ({
+                              ...p,
+                              priceRange: null,
+                            }));
+
+                            const filterParams = buildFiltersParams({
+                              ...selectedFilters,
+                              priceRange: null,
+                            });
+                            debouncedFetchFilters(filterParams);
+                          }}
+                        />
+                        <span>
+                          ₹{values.min} – ₹{values.max}
+                        </span>
+                      </div>
+                    );
+                  }
+                  return null;
+                }
+
+                if (Array.isArray(values) && values.length > 0) {
+                  return values.map((v) => (
+                    <div
+                      key={`${key}-${v}`}
+                      className="flex items-center gap-1 bg-gray-200 text-gray-700 text-[11px] px-2 py-[3px] rounded"
+                    >
+                      <FaTimes
+                        size={8}
+                        className="cursor-pointer"
+                        onClick={() => removeSelected(key, v)}
+                      />
+                      <span>{v}</span>
+                    </div>
+                  ));
+                }
+                return null;
+              })}
+            </div>
+          )}
+
+          {/* PRICE */}
+          {shouldShowFilters && (
             <div className="px-4 py-4 border-b border-gray-200">
               <p className="text-xs font-semibold mb-2 text-gray-800">PRICE</p>
               <div className="w-[85%] mx-auto">
@@ -539,35 +423,33 @@ const CatTagPage = ({ params }) => {
                   onChange={(e, v) => setTempPriceRange(v)}
                   onChangeCommitted={(e, v) => {
                     const range = { min: v[0], max: v[1] };
-
-                    setSelectedFilters((p) => ({
-                      ...p,
+                    const newFilters = {
+                      ...selectedFilters,
                       priceRange: range,
-                    }));
+                    };
 
-                    debouncedSearch(
-                      buildSearchParams(1, {
-                        ...selectedFilters,
-                        priceRange: range,
-                      })
-                    );
+                    setSelectedFilters(newFilters);
+
+                    // Fetch products with new price range
+                    debouncedSearch(buildSearchParams(1, newFilters));
+
+                    // Also update filters
+                    debouncedFetchFilters(buildFiltersParams(newFilters));
                   }}
                 />
               </div>
             </div>
+          )}
 
-            {/* DYNAMIC FILTERS */}
-            {filters?.map((filter) => {
-              const values = processFilterValues(filter.value);
-              if (!values.length) return null;
-
-              // Skip Color and Model filters for enhanced UI
-              if (filter.name === "Color" || filter.name === "Model" || filter.name === "Option 1") {
-                return null;
-              }
+          {/* DYNAMIC FILTERS */}
+          {shouldShowFilters && validFilters.length > 0 ? (
+            validFilters.map((filter) => {
+              const values = filter.values || [];
+              if (!values || values.length === 0) return null;
 
               const expanded = expandedFilters[filter.name];
               const visible = expanded ? values : values.slice(0, 4);
+              const currentSelections = selectedFilters[filter.name] || [];
 
               return (
                 <div
@@ -575,255 +457,116 @@ const CatTagPage = ({ params }) => {
                   className="px-4 py-4 border-b border-gray-200"
                 >
                   <p className="text-xs font-semibold mb-1 text-gray-800">
-                    {filter.name.toUpperCase()}
+                    {(filter.name === "ProductType"
+                      ? "PRODUCT TYPE"
+                      : filter.name
+                    ).toUpperCase()}
                   </p>
 
                   {visible.map((v) => (
                     <label
                       key={v}
-                      className="flex gap-2 text-sm mb-1 text-gray-600"
+                      className="flex gap-2 text-sm mb-1 text-gray-600 cursor-pointer"
                     >
                       <input
                         type="checkbox"
-                        checked={selectedFilters[filter.name]?.includes(v)}
-                        onChange={() => handleFilterChange(filter.name, v)}
+                        checked={(
+                          selectedFilters[filter.apiKey || filter.name] || []
+                        ).includes(v)}
+                        onChange={() => handleFilterChange(filter, v)}
                       />
-                      {v}
+
+                      <span className="truncate">{v}</span>
                     </label>
                   ))}
 
                   {values.length > 4 && (
                     <button
-                      className="text-sm text-blue-600 mt-1"
+                      className="text-sm text-blue-600 mt-1 hover:text-blue-800"
                       onClick={() => toggleFilterExpand(filter.name)}
                     >
-                      {expanded ? "Show Less" : `View ${values.length - 4} More`}
+                      {expanded
+                        ? "Show Less"
+                        : `View ${values.length - 4} More`}
                     </button>
                   )}
                 </div>
               );
-            })}
-
-            {/* Enhanced Color Filter */}
-            {availableColors.length > 0 && (
-              <div className="px-4 py-4 border-b border-gray-200">
-                <p className="text-xs font-semibold mb-1 text-gray-800">
-                  COLOR
-                </p>
-                <div className="relative mb-3">
-                  <FaSearch
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                    size={14}
-                  />
-                  <input
-                    type="text"
-                    placeholder="Search Color"
-                    value={colorSearch}
-                    onChange={(e) => setColorSearch(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border-b border-gray-300 hover:border-blue-500 outline-none focus:outline-none text-sm"
-                  />
-                </div>
-
-                <div className="space-y-1 max-h-48 overflow-y-auto no-scrollbar">
-                  {availableColors
-                    .filter((color) =>
-                      color.toLowerCase().includes(colorSearch.toLowerCase())
-                    )
-                    .slice(0, showMoreColors ? undefined : 6)
-                    .map((color, index) => (
-                      <label
-                        key={index}
-                        className="flex gap-2 text-sm mb-1 text-gray-600"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedFilters.Color?.includes(color) || false}
-                          onChange={() => handleFilterChange("Color", color)}
-                        />
-                        {color}
-                      </label>
-                    ))}
-                </div>
-
-                {availableColors.length > 6 && (
-                  <button
-                    onClick={() => setShowMoreColors(!showMoreColors)}
-                    className="text-sm text-blue-600 mt-1"
-                  >
-                    {showMoreColors ? "Show Less" : `View ${availableColors.length - 6} More`}
-                  </button>
-                )}
-              </div>
-            )}
-
-            {/* Enhanced Model Filter */}
-            {availableModels.length > 0 && (
-              <div className="px-4 py-4 border-b border-gray-200">
-                <p className="text-xs font-semibold mb-1 text-gray-800">
-                  MODEL
-                </p>
-                <div className="relative mb-3">
-                  <FaSearch
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                    size={14}
-                  />
-                  <input
-                    type="text"
-                    placeholder="Search Model"
-                    value={modelSearch}
-                    onChange={(e) => setModelSearch(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border-b border-gray-300 hover:border-blue-500 outline-none focus:outline-none text-sm"
-                  />
-                </div>
-
-                <div className="space-y-1 max-h-48 overflow-y-auto no-scrollbar">
-                  {availableModels
-                    .filter((model) =>
-                      model.toLowerCase().includes(modelSearch.toLowerCase())
-                    )
-                    .slice(0, showMoreModels ? undefined : 6)
-                    .map((model, index) => (
-                      <label
-                        key={index}
-                        className="flex gap-2 text-sm mb-1 text-gray-600"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedFilters.Model?.includes(model) || false}
-                          onChange={() => handleFilterChange("Model", model)}
-                        />
-                        {model}
-                      </label>
-                    ))}
-                </div>
-
-                {availableModels.length > 6 && (
-                  <button
-                    onClick={() => setShowMoreModels(!showMoreModels)}
-                    className="text-sm text-blue-600 mt-1"
-                  >
-                    {showMoreModels ? "Show Less" : `View ${availableModels.length - 6} More`}
-                  </button>
-                )}
-              </div>
-            )}
-
-            {/* Connector Type Filter */}
-            {connectorFilter && connectorFilter.value && (
-              <div className="px-4 py-4 border-b border-gray-200">
-                <p className="text-xs font-semibold mb-1 text-gray-800">
-                  CONNECTOR TYPE
-                </p>
-                <div className="text-sm text-gray-600 p-2 bg-gray-50 rounded">
-                  {connectorFilter.value}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
+            })
+          ) : shouldShowFilters && !loadingFilters && filters?.length === 0 ? (
+            <div className="px-4 py-4 text-sm text-gray-500 text-center">
+              No filters available
+            </div>
+          ) : null}
+        </div>
 
         {/* ---------------- PRODUCTS ---------------- */}
         <div className="flex-1 px-4">
-          {/* Sort Bar - Show skeleton or actual sort buttons */}
-          {showSkeleton ? (
-            <div className="bg-white border border-gray-300 px-4 py-2 mb-3">
-              <div className="flex gap-3 flex-wrap">
-                {[...Array(4)].map((_, i) => (
-                  <div
-                    key={i}
-                    className="h-8 w-24 bg-gray-200 rounded-full animate-pulse"
-                  ></div>
-                ))}
-              </div>
+          <div className="hidden lg:flex bg-white border border-gray-300 px-4 py-2 mb-3 items-center text-sm">
+            <div className="flex gap-3 flex-wrap">
+              {SORTS.map((s) => {
+                const isActive = sort === s.value;
+                return (
+                  <button
+                    key={s.value}
+                    onClick={() => handleSort(s.value)}
+                    className={`px-3 py-1 rounded-full border transition-all duration-200 ${
+                      isActive
+                        ? "border-yellow-600 text-yellow-700 bg-yellow-50"
+                        : "border-yellow-600 text-gray-700 hover:bg-yellow-50"
+                    }`}
+                  >
+                    {s.label}
+                  </button>
+                );
+              })}
             </div>
-          ) : (
-            <div className=" hidden lg:flex bg-white border border-gray-300 px-4 py-2 mb-3  items-center text-sm">
-              <div className="flex gap-3 flex-wrap">
-                {SORTS.map((s) => {
-                  const isActive = sort === s.value;
-                  return (
-                    <button
-                      key={s.value}
-                      onClick={() => handleSort(s.value)}
-                      className={`px-3 py-1 rounded-full border transition-all duration-200 ${
-                        isActive
-                          ? "border-yellow-600 text-yellow-700 bg-yellow-50"
-                          : "border-yellow-600 text-gray-700 hover:bg-yellow-50"
-                      }`}
-                    >
-                      {s.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+          </div>
 
-          {/* Products Grid - Show skeleton or actual products */}
-          {showSkeleton ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-              {[...Array(10)].map((_, index) => (
-                <ProductSkeleton key={index} />
-              ))}
-            </div>
-          ) : products && products.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-              {products.map((p) => (
-                <NewSingleProductCard key={p._id} product={p} />
-              ))}
-            </div>
-          ) : (
-            <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-              <h2 className="text-xl font-semibold text-gray-600 mb-4">
-                No products found for the selected filters.
-              </h2>
-              <p className="text-gray-500">
-                Try adjusting your search terms or browse other categories.
-              </p>
-            </div>
-          )}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            {products.map((p) => (
+              <NewSingleProductCard key={p._id} product={p} />
+            ))}
+          </div>
 
-          {/* Loading More Indicator */}
+          {/* LOADING INDICATOR */}
           {loadingMore && (
-            <div className="text-center py-8">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <p className="mt-2 text-gray-600">Loading more products...</p>
+            <div className="flex justify-center my-8">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
             </div>
           )}
 
-          {/* Load More Button */}
-          {!loadingMore &&
-            !showSkeleton &&
-            products &&
-            products.length < total && (
-              <div className="text-center mt-8">
-                <button
-                  onClick={handleLoadMore}
-                  className="bg-white border border-gray-300 hover:bg-gray-50 text-gray-800 font-medium py-2 px-6 rounded-lg transition-colors"
-                >
-                  Load More Products
-                </button>
-              </div>
-            )}
+          {/* END OF RESULTS */}
+          {products.length > 0 && products.length >= total && (
+            <div className="text-center py-8 text-gray-500">
+              You've reached the end
+            </div>
+          )}
+
+          {/* NO PRODUCTS FOUND */}
+          {products.length === 0 && !loadingMore && (
+            <div className="text-center py-12 text-gray-500">
+              No products found
+            </div>
+          )}
         </div>
       </div>
 
       {/* MOBILE FILTER */}
-      {!showSkeleton && (
-        <NewFilter
-          filters={filters}
-          loading={loading}
-          selectedFilters={selectedFilters}
-          onFilterChange={handleMobileFilterChange}
-          sort={mobileSort}
-          onSortChange={handleMobileSortChange}
-          priceRange={tempPriceRange}
-          onPriceRangeChange={setTempPriceRange}
-          onClearAllFilters={clearAllFilters}
-        />
-      )}
+      <NewFilter
+        filters={validFilters}
+        loadingFilters={loadingFilters}
+        selectedFilters={selectedFilters}
+        sort={sort}
+        onFilterChange={(newFilters) => {
+          setSelectedFilters(newFilters);
+          const filterParams = buildFiltersParams(newFilters);
+          debouncedFetchFilters(filterParams);
+        }}
+        onSortChange={handleSort}
+      />
     </div>
   );
 };
 
-export default CatTagPage;
+export default SearchPage;

@@ -2,7 +2,7 @@
 import { fetchRelatedProducts } from "@/redux/product/RelatedProductsSlice";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import NewSingleProductCard from "./NewSingleProductCard";
+import RelatedSingleProductCard from "./RelatedHotProductCard";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function RelatedProducts() {
@@ -217,7 +217,7 @@ export default function RelatedProducts() {
               // Responsive widths: Smaller on mobile, larger on desktop
               className="w-[180px] sm:w-[200px] md:w-[220px] lg:w-[250px] flex-shrink-0"
             >
-              <NewSingleProductCard product={product} />
+              <RelatedSingleProductCard product={product} />
             </div>
           ))}
         </div>

@@ -3,37 +3,36 @@ import React, { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  MdHome,
-  MdOutlineAccountCircle,
-  MdOutlineAppRegistration,
-  MdOutlineShoppingCart,
-} from "react-icons/md";
-import { IoClose, IoLogoGooglePlaystore, IoSearch } from "react-icons/io5";
-import { GiHamburgerMenu } from "react-icons/gi";
-import {
-  FaAngleRight,
-  FaClipboardList,
-  FaExchangeAlt,
-  FaTags,
-} from "react-icons/fa";
-import {
-  AiOutlineAppstore,
-  AiOutlineFileProtect,
-  AiOutlineFileText,
-  AiOutlineHome,
-  AiOutlineInfoCircle,
-  AiOutlineLink,
-  AiOutlinePhone,
-  AiOutlineQuestionCircle,
-  AiOutlineReload,
-  AiOutlineStop,
-  AiOutlineUserSwitch,
-  AiTwotoneShop,
-} from "react-icons/ai";
-import { LuHeart, LuLogOut } from "react-icons/lu";
 import { signout } from "@/redux/athentication/Athentication";
 import Cartheader from "./Home/Cartheader";
+
+// Lucide React imports
+import {
+  Home,
+  User,
+  UserPlus,
+  ShoppingCart,
+  X,
+  Search,
+  Menu,
+  Play,
+  ChevronRight,
+  List,
+  Tag,
+  Grid3x3,
+  Shield,
+  FileText,
+  Info,
+  Link as LinkIcon,
+  Phone,
+  HelpCircle,
+  RotateCcw,
+  Ban,
+  Users,
+  Store,
+  Heart,
+  LogOut,
+} from "lucide-react";
 
 const HomeMobileHeader = () => {
   const router = useRouter();
@@ -76,89 +75,89 @@ const HomeMobileHeader = () => {
   };
 
   const sideMenu = [
-    { label: "Home", icon: <AiOutlineHome />, path: "/" },
-    { label: "Categories", icon: <AiOutlineAppstore />, path: "/category" },
+    { label: "Home", icon: <Home />, path: "/" },
+    { label: "Categories", icon: <Grid3x3 />, path: "/category" },
     ...(isAuth
       ? [
-          { label: "Wishlist", icon: <LuHeart />, path: "/accounts/wishlist" },
+          { label: "Wishlist", icon: <Heart />, path: "/accounts/wishlist" },
           {
             label: "Orders",
-            icon: <FaClipboardList />,
+            icon: <List />,
             path: "/accounts/orders",
           },
-          { label: "Coupons", icon: <FaTags />, path: "/accounts/coupons" },
+          { label: "Coupons", icon: <Tag />, path: "/accounts/coupons" },
           {
             label: "My Account",
-            icon: <MdOutlineAccountCircle />,
+            icon: <User />,
             path: "/accounts",
           },
           {
             label: "Seller",
-            icon: <AiTwotoneShop />,
+            icon: <Store />,
             path: "https://seller.ewshopping.com/",
           },
-          { label: "Logout", icon: <LuLogOut />, onClick: handleLogout },
+          { label: "Logout", icon: <LogOut />, onClick: handleLogout },
         ]
       : [
           {
             label: "Sign In",
-            icon: <MdOutlineAccountCircle />,
+            icon: <User />,
             path: "/login",
           },
           {
             label: "Register",
-            icon: <MdOutlineAppRegistration />,
+            icon: <UserPlus />,
             path: "/register-page",
           },
         ]),
     {
       label: "Privacy Policy",
-      icon: <AiOutlineFileProtect />,
+      icon: <Shield />,
       path: "/privacypolicy",
     },
     {
       label: "About Us",
-      icon: <AiOutlineInfoCircle />,
+      icon: <Info />,
       path: "/aboutus",
     },
     {
       label: "Terms & Conditions",
-      icon: <AiOutlineFileText />,
+      icon: <FileText />,
       path: "/termsandcondition",
     },
     {
       label: "Refund Policy",
-      icon: <AiOutlineReload />,
+      icon: <RotateCcw />,
       path: "/refundpolicy",
     },
     {
       label: "FAQ",
-      icon: <AiOutlineQuestionCircle />,
+      icon: <HelpCircle />,
       path: "/faq",
     },
     {
       label: "Contact Us",
-      icon: <AiOutlinePhone />,
+      icon: <Phone />,
       path: "/contactus",
     },
     {
       label: "Cancellation Policy",
-      icon: <AiOutlineStop />,
+      icon: <Ban />,
       path: "/cancellationpolicy",
     },
     {
       label: "Exchange Policy",
-      icon: <FaExchangeAlt />,
+      icon: <RotateCcw />, // Using RotateCcw for exchange as closest match
       path: "/exchangepolicy",
     },
     {
       label: "Career",
-      icon: <AiOutlineUserSwitch />,
+      icon: <Users />,
       path: "/carrer",
     },
     {
       label: "Affiliate",
-      icon: <AiOutlineLink />,
+      icon: <LinkIcon />,
       path: "/affilliate",
     },
   ];
@@ -171,7 +170,7 @@ const HomeMobileHeader = () => {
     return (
       <div className="flex items-center gap-2 w-full px-2 -mt-4">
         <div className="relative">
-          <MdHome className="text-lg text-white shrink-0" />
+          <Home className="size-5 text-white shrink-0" />
         </div>
         <div
           className="flex items-center justify-between flex-1 min-w-0 cursor-pointer select-none"
@@ -182,12 +181,12 @@ const HomeMobileHeader = () => {
               <span className="text-white truncate text-[12px] flex flex-row items-center select-none">
                 {current_address.HNo}, {current_address.Area},{" "}
                 {current_address.City}{" "}
-                <FaAngleRight className="ml-1 text-white" />
+                <ChevronRight className="ml-1 text-white size-4" />
               </span>
             </div>
           ) : (
             <span className="text-white font-medium text-sm flex flex-row items-center select-none">
-              Set delivery location <FaAngleRight className="ml-1 text-white" />
+              Set delivery location <ChevronRight className="ml-1 text-white size-4" />
             </span>
           )}
         </div>
@@ -211,7 +210,7 @@ const HomeMobileHeader = () => {
                 aria-label="Menu"
                 onClick={handleClickMenu}
               >
-                <GiHamburgerMenu className="text-xl" />
+                <Menu className="size-5" />
               </button>
             </div>
 
@@ -234,14 +233,14 @@ const HomeMobileHeader = () => {
               rel="noopener noreferrer"
               className="bg-white/20 rounded-lg p-2 hover:bg-white/30 transition-all duration-300"
             >
-              <IoLogoGooglePlaystore className="text-xl text-white" />
+              <Play className="size-5 text-white" />
             </a>
 
             <div
               className="flex flex-row items-center relative text-center p-2 bg-white/20 rounded-lg hover:bg-white/30 transition-all duration-300 cursor-pointer"
               onClick={() => router.push("/cart")}
             >
-              <MdOutlineShoppingCart className="text-xl text-white" />
+              <ShoppingCart className="size-5 text-white" />
               <span
                 className={`absolute -top-2 -right-1 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center ${
                   isMounted && CartItems.length > 0
@@ -272,7 +271,7 @@ const HomeMobileHeader = () => {
           onClick={() => router.push("/searchmobile")}
         >
           <div className="flex flex-row gap-2 items-center rounded-xl w-full bg-white px-4 cursor-pointer hover:bg-gray-50 transition-all duration-300 border border-gray-300 shadow-sm hover:shadow-md">
-            <IoSearch size={20} className="text-gray-600" />
+            <Search size={20} className="text-gray-600" />
             <input
               type="search"
               placeholder="Search for products and more..."
@@ -302,7 +301,7 @@ const HomeMobileHeader = () => {
               onClick={() => setActiveModal(null)}
               aria-label="Close menu"
             >
-              <IoClose size={24} />
+              <X size={24} />
             </button>
 
             {/* Logo & Profile */}
@@ -328,7 +327,7 @@ const HomeMobileHeader = () => {
                     className="flex items-center gap-3 px-3 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-all duration-300 border border-transparent hover:border-gray-200"
                     onClick={() => setActiveModal(null)}
                   >
-                    <div className="text-gray-500 text-lg">{item.icon}</div>
+                    <div className="text-gray-500 size-5">{item.icon}</div>
                     <span className="text-sm font-medium">{item.label}</span>
                   </Link>
                 ) : (
@@ -340,7 +339,7 @@ const HomeMobileHeader = () => {
                     }}
                     className="flex items-center gap-3 px-3 py-3 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-all duration-300 border border-transparent hover:border-gray-200 text-left"
                   >
-                    <div className="text-gray-500 text-lg">{item.icon}</div>
+                    <div className="text-gray-500 size-5">{item.icon}</div>
                     <span className="font-medium">{item.label}</span>
                   </button>
                 )
