@@ -9,7 +9,7 @@ export const fetchBrandsByPromotion = createAsyncThunk(
   async (promotionType, { rejectWithValue }) => {
     try {
       
-      const response = await axios.get(`${Baseurl}/api/v1/newbrands/brands/promotion/${promotionType}`);
+      const response = await axios.get(`${Baseurl}/api/v1/newbrands/promotion/${promotionType}`);
       
       if (response.data.success) {
         return response.data;

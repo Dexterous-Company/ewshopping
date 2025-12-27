@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
-import { FaExpand, FaHeart } from "react-icons/fa";
+import { FaExpand, FaHeart, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { FiZoomIn } from "react-icons/fi";
 import { useSelector, useDispatch } from "react-redux";
 import Image from "next/image";
@@ -13,9 +13,6 @@ import {
   removeFromWishlistServer,
 } from "@/redux/wishlist/wishlistSlice";
 import { useRouter } from "next/navigation";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Pagination, Navigation } from "swiper/modules";
-
 import toast from "react-hot-toast";
 
 const ProductImagesSkeleton = () => {
@@ -72,7 +69,8 @@ const ProductImages = ({
   const [isMobile, setIsMobile] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const thumbnailContainerRef = useRef(null);
-  const swiperRef = useRef(null);
+  const [touchStartX, setTouchStartX] = useState(0);
+  const [touchEndX, setTouchEndX] = useState(0);
 
   useEffect(() => {
     const checkIfMobile = () => {
@@ -104,6 +102,8 @@ const ProductImages = ({
   const mainImage =
     allImages[selectedImageIndex] || "https://via.placeholder.com/300";
 
+  const router = useRouter();
+
   const handleBuyNow = async () => {
     const cartItem = CartItems.find(
       (item) => item.AttributeId === currentVariant._id
@@ -134,8 +134,6 @@ const ProductImages = ({
       setIsWishlisted(isInWishlist);
     }
   }, [wishlistItems, currentVariant, productData]);
-
-  const router = useRouter();
 
   const handleWishlistToggle = async () => {
     if (!loginData?._id) {
@@ -227,23 +225,9 @@ const ProductImages = ({
     dispatch(decrementCart(cartItem));
   };
 
-  const handleSlideChange = (swiper) => {
-    setSelectedImageIndex(swiper.activeIndex);
-    // ✅ update parent when mobile swiper changes
-    const newImage =
-      selectedVariantImages[swiper.activeIndex] ||
-      currentVariant?.thumbnail ||
-      productData?.thumbnail?.[0] ||
-      "https://via.placeholder.com/300";
-    setselectedImage(newImage);
-  };
-
   const handleThumbnailClick = (index, src) => {
     setSelectedImageIndex(index);
     setselectedImage(src);
-    if (swiperRef.current && swiperRef.current.swiper) {
-      swiperRef.current.swiper.slideTo(index);
-    }
   };
 
   const handleMouseMove = (e) => {
@@ -256,6 +240,54 @@ const ProductImages = ({
     const yPercent = (y / rect.height) * 100;
     setCursorPosition({ x, y });
     setMagnifierPosition({ x: xPercent, y: yPercent });
+  };
+
+  // Touch handlers for mobile swipe
+  const handleTouchStart = (e) => {
+    setTouchStartX(e.touches[0].clientX);
+  };
+
+  const handleTouchMove = (e) => {
+    setTouchEndX(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStartX || !touchEndX) return;
+    
+    const distance = touchStartX - touchEndX;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe && selectedImageIndex < allImages.length - 1) {
+      setSelectedImageIndex(selectedImageIndex + 1);
+      const newImage = allImages[selectedImageIndex + 1];
+      setselectedImage(newImage);
+    } else if (isRightSwipe && selectedImageIndex > 0) {
+      setSelectedImageIndex(selectedImageIndex - 1);
+      const newImage = allImages[selectedImageIndex - 1];
+      setselectedImage(newImage);
+    }
+
+    setTouchStartX(0);
+    setTouchEndX(0);
+  };
+
+  const goToNextSlide = () => {
+    if (selectedImageIndex < allImages.length - 1) {
+      const newIndex = selectedImageIndex + 1;
+      setSelectedImageIndex(newIndex);
+      const newImage = allImages[newIndex];
+      setselectedImage(newImage);
+    }
+  };
+
+  const goToPrevSlide = () => {
+    if (selectedImageIndex > 0) {
+      const newIndex = selectedImageIndex - 1;
+      setSelectedImageIndex(newIndex);
+      const newImage = allImages[newIndex];
+      setselectedImage(newImage);
+    }
   };
 
   if (
@@ -305,21 +337,22 @@ const ProductImages = ({
           <div className="relative flex-1 group">
             {isMobile ? (
               <div className="relative w-full bg-gray-50">
-                <Swiper
-                  ref={swiperRef}
-                  initialSlide={selectedImageIndex}
-                  onSlideChange={handleSlideChange}
-                  pagination={{
-                    dynamicBullets: true,
-                    clickable: true,
-                  }}
-                  modules={[Pagination, Navigation]}
-                  className="h-full w-full"
-                  spaceBetween={10}
+                {/* Mobile Image Slider */}
+                <div 
+                  className="relative w-full overflow-hidden"
+                  onTouchStart={handleTouchStart}
+                  onTouchMove={handleTouchMove}
+                  onTouchEnd={handleTouchEnd}
                 >
-                  {allImages.map((src, index) => (
-                    <SwiperSlide key={index}>
-                      <div className="relative h-full w-full aspect-square">
+                  <div 
+                    className="flex transition-transform duration-300 ease-in-out"
+                    style={{ transform: `translateX(-${selectedImageIndex * 100}%)` }}
+                  >
+                    {allImages.map((src, index) => (
+                      <div
+                        key={index}
+                        className="w-full flex-shrink-0 relative aspect-square"
+                      >
                         <img
                           src={getValidImageSrc(src)}
                           alt={`Product image ${index + 1}`}
@@ -327,9 +360,49 @@ const ProductImages = ({
                           onClick={() => setMobileImageHigh(true)}
                         />
                       </div>
-                    </SwiperSlide>
-                  ))}
-                </Swiper>
+                    ))}
+                  </div>
+                  
+                  {/* Navigation Arrows */}
+                  {allImages.length > 1 && (
+                    <>
+                      {selectedImageIndex > 0 && (
+                        <button
+                          onClick={goToPrevSlide}
+                          className="absolute left-2 top-1/2 transform -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all duration-200"
+                        >
+                          <FaChevronLeft size={20} />
+                        </button>
+                      )}
+                      {selectedImageIndex < allImages.length - 1 && (
+                        <button
+                          onClick={goToNextSlide}
+                          className="absolute right-2 top-1/2 transform -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all duration-200"
+                        >
+                          <FaChevronRight size={20} />
+                        </button>
+                      )}
+                    </>
+                  )}
+                  
+                  {/* Pagination Dots */}
+                  {allImages.length > 1 && (
+                    <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10 flex space-x-2">
+                      {allImages.map((_, index) => (
+                        <button
+                          key={index}
+                          className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                            index === selectedImageIndex
+                              ? "bg-black w-6"
+                              : "bg-gray-400"
+                          }`}
+                          onClick={() => handleThumbnailClick(index, allImages[index])}
+                          aria-label={`Go to image ${index + 1}`}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             ) : (
               <div

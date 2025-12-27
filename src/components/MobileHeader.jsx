@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { IoSearch } from "react-icons/io5";
-import { MdHome, MdOutlineShoppingCart } from "react-icons/md";
 import { useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+
+// Lucide React imports
+import { Search, Home, ShoppingCart, ChevronLeft } from "lucide-react";
 
 const MobileHeader = () => {
   const { CartItems = [] } = useSelector((state) => state.cart) || {};
@@ -22,7 +23,7 @@ const MobileHeader = () => {
           href={"/"}
           className="flex flex-row items-center text-center p-3 rounded-xl bg-white/20 hover:bg-white/30 transition-all duration-200 border border-white/30 backdrop-blur-sm"
         >
-          <MdHome className="text-xl text-white" />
+          <Home className="size-5 text-white" />
         </Link>
 
         {/* Search Bar */}
@@ -32,20 +33,7 @@ const MobileHeader = () => {
             className="rounded-lg hover:bg-white/30 w-8 h-8 flex items-center justify-center transition-colors"
             aria-label="Go back"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 text-white"
-              fill="none"
-              viewBox="0 0 26 26"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
+            <ChevronLeft className="size-5 text-white" />
           </button>
 
           <Link
@@ -58,7 +46,7 @@ const MobileHeader = () => {
               className="w-full outline-0 text-sm bg-transparent text-white placeholder-gray-500 font-medium"
               readOnly
             />
-            <IoSearch className="text-xl text-white mr-2" />
+            <Search className="size-5 text-white mr-2" />
           </Link>
         </div>
 
@@ -68,7 +56,7 @@ const MobileHeader = () => {
           className="flex flex-row items-center relative text-center p-3 rounded-xl bg-white/20 hover:bg-white/30 transition-all duration-200 border border-white/30 backdrop-blur-sm"
         >
           <div className="relative">
-            <MdOutlineShoppingCart className="text-xl text-white" />
+            <ShoppingCart className="size-5 text-white" />
             <span
               className={`absolute -top-2 -right-2 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center border border-white/50 ${
                 isMounted && CartItems.length > 0

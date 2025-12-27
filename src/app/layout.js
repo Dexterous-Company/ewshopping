@@ -1,9 +1,6 @@
 // app/layout.js
 import MainLayout from "@/components/MainLayout";
 import "./globals.css";
-import "swiper/css";
-import "swiper/css/pagination";
-import "swiper/css/navigation";
 import ReduxLayout from "@/components/layout/ReduxLayout";
 import { ReduxProvider } from "@/components/layout/redux-provider";
 import { Toaster } from "react-hot-toast";
@@ -51,7 +48,7 @@ export const metadata = {
     siteName: 'EwShopping',
     images: [
       {
-        url: '/og-image.png',
+        url: '',
         width: 1200,
         height: 630,
         alt: 'EwShopping',
@@ -67,13 +64,13 @@ export const metadata = {
   },
   icons: {
     icon: [
-      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
-      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon.png', sizes: '32x32', type: 'image/png' },
     ],
     apple: [
-      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+      { url: '/favicon.png', sizes: '180x180', type: 'image/png' },
     ],
-    shortcut: ['/favicon.ico'],
+    shortcut: ['/favicon.png'],
   },
   manifest: "/manifest.json",
   other: {
@@ -106,7 +103,7 @@ export default function RootLayout({ children }) {
           crossOrigin="anonymous"
         />
       </head>
-      <body>
+      <body suppressHydrationWarning>
         {/* Google Tag Manager - Lazy loaded */}
         <Script
           id="google-tag-manager"

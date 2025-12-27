@@ -2,32 +2,28 @@
 import React, { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import Cartheader from "../Home/Cartheader";
-import { FaRegHeart } from "react-icons/fa";
-import { PiGridFourLight } from "react-icons/pi";
-import { FaRegUser, FaShop } from "react-icons/fa6";
-import { AiOutlineHome } from "react-icons/ai";
-import { BsCart3 } from "react-icons/bs";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchUserWishlist } from "@/redux/wishlist/wishlistSlice";
 import Image from "next/image";
-
-import {
-  FaFacebookF,
-  FaTwitter,
-  FaPinterestP,
-  FaLinkedinIn,
-  FaInstagram,
-  FaYoutube,
-  FaPhoneAlt,
-  FaEnvelope,
-  FaMapMarkerAlt,
-} from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import { signout } from "@/redux/athentication/Athentication";
-import { LuUser } from "react-icons/lu";
-import { CiHeart, CiShop } from "react-icons/ci";
-import { IoMdHeartEmpty } from "react-icons/io";
-import { MdOutlineShoppingCart } from "react-icons/md";
+
+// Lucide React imports
+import {
+  User,
+  Store,
+  Home,
+  ShoppingCart,
+  Facebook,
+  Twitter,
+  Linkedin,
+  Instagram,
+  Youtube,
+  Phone,
+  Mail,
+  MapPin,
+  Heart as HeartOutline,
+} from "lucide-react";
 
 const Footer = () => {
   const { CartItems } = useSelector((state) => state.cart);
@@ -40,21 +36,17 @@ const Footer = () => {
   const router = useRouter();
 
   const socialLinks = [
-    { icon: <FaFacebookF />, url: "https://www.facebook.com/ewshopping" },
-    { icon: <FaTwitter />, url: "https://x.com/ewshoppingindia" },
+    { icon: <Facebook size={18} />, url: "https://www.facebook.com/ewshopping" },
+    { icon: <Twitter size={18} />, url: "https://x.com/ewshoppingindia" },
     {
-      icon: <FaPinterestP />,
-      url: "https://in.pinterest.com/EWShoppingPortal/",
-    },
-    {
-      icon: <FaLinkedinIn />,
+      icon: <Linkedin size={18} />,
       url: "https://www.linkedin.com/company/ew-shopping",
     },
     {
-      icon: <FaInstagram />,
+      icon: <Instagram size={18} />,
       url: "https://www.instagram.com/ewshoppingofficial/",
     },
-    { icon: <FaYoutube />, url: "https://www.youtube.com/@EWShopping" },
+    { icon: <Youtube size={18} />, url: "https://www.youtube.com/@EWShopping" },
   ];
 
   const CART_ITEMS = [
@@ -206,11 +198,11 @@ const Footer = () => {
             </h4>
             <div className="space-y-4">
               <div className="flex gap-3 items-center text-gray-300">
-                <FaMapMarkerAlt className="text-blue-400 flex-shrink-0 mt-1" />
+                <MapPin className="text-blue-400 flex-shrink-0 mt-1 size-4" />
                 <span>Ewshopping, Rajendra Place, New Delhi, Pin - 110008</span>
               </div>
               <div className="flex gap-3 items-center">
-                <FaPhoneAlt className="text-blue-400 flex-shrink-0" />
+                <Phone className="text-blue-400 flex-shrink-0 size-4" />
                 <Link
                   href="tel:8447282606"
                   className="text-gray-300 hover:text-white transition-colors"
@@ -219,7 +211,7 @@ const Footer = () => {
                 </Link>
               </div>
               <div className="flex gap-3 items-center">
-                <FaEnvelope className="text-blue-400 flex-shrink-0" />
+                <Mail className="text-blue-400 flex-shrink-0 size-4" />
                 <Link
                   href="mailto:info@ewshopping.com"
                   className="text-gray-300 hover:text-white transition-colors"
@@ -293,7 +285,7 @@ const Footer = () => {
           className="flex flex-col items-center gap-1 text-center group flex-1"
         >
           <div className="relative p-2 group-hover:bg-gray-800 rounded-lg transition-colors">
-            <AiOutlineHome className="text-xl text-white group-hover:text-blue-400 transition-colors" />
+            <Home className="size-5 text-white group-hover:text-blue-400 transition-colors" />
           </div>
           <span className="text-xs text-white font-medium group-hover:text-blue-400 transition-colors">
             Home
@@ -306,7 +298,7 @@ const Footer = () => {
           className="flex flex-col items-center gap-1 text-center group flex-1"
         >
           <div className="relative p-2 group-hover:bg-gray-800 rounded-lg transition-colors">
-            <FaShop className="text-xl text-white group-hover:text-blue-400 transition-colors" />
+            <Store className="size-5 text-white group-hover:text-blue-400 transition-colors" />
           </div>
           <span className="text-xs text-white font-medium group-hover:text-blue-400 transition-colors">
             Shop
@@ -319,7 +311,7 @@ const Footer = () => {
           className="flex flex-col items-center gap-1 text-center group flex-1"
         >
           <div className="relative p-2 group-hover:bg-gray-800 rounded-lg transition-colors">
-            <LuUser className="text-lg text-white group-hover:text-blue-400 transition-colors" />
+            <User className="size-5 text-white group-hover:text-blue-400 transition-colors" />
           </div>
           <span className="text-xs text-white font-medium group-hover:text-blue-400 transition-colors">
             Account
@@ -332,7 +324,7 @@ const Footer = () => {
           className="flex flex-col items-center gap-1 text-center group relative flex-1"
         >
           <div className="relative p-2 group-hover:bg-gray-800 rounded-lg transition-colors">
-            <IoMdHeartEmpty className="text-xl text-white group-hover:text-blue-400 transition-colors" />
+            <HeartOutline className="size-5 text-white group-hover:text-blue-400 transition-colors" />
             <span
               className={`absolute -top-1 -right-1 text-xs rounded-full h-4 w-4 flex items-center justify-center ${
                 isMounted && wishlistItems.length > 0
@@ -358,7 +350,7 @@ const Footer = () => {
           onClick={() => router.push("/cart")}
         >
           <div className="relative p-2 group-hover:bg-gray-800 rounded-lg transition-colors">
-            <MdOutlineShoppingCart className="text-xl text-white group-hover:text-blue-400 transition-colors" />
+            <ShoppingCart className="size-5 text-white group-hover:text-blue-400 transition-colors" />
             <span
               className={`absolute -top-1 -right-1 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center ${
                 isMounted && CartItems.length > 0

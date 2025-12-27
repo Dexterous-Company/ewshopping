@@ -26,9 +26,9 @@ const SearchHeader = ({ querySearch, setQuerySearch, onBack, onKeyDown }) => {
         <div className="flex-1 relative">
           <form onSubmit={handleSearch}>
             <div className="flex items-center rounded-xl bg-gray-100 px-4 py-3 border border-gray-200 transition-all duration-300 focus-within:bg-white focus-within:border-blue-500 focus-within:shadow-md">
-              <FaAngleLeft 
-                className="text-gray-500 mr-3 cursor-pointer hover:text-gray-700 transition-colors" 
-                size={20} 
+              <FaAngleLeft
+                className="text-gray-500 mr-3 cursor-pointer hover:text-gray-700 transition-colors"
+                size={20}
                 onClick={onBack}
               />
               <input
@@ -67,14 +67,16 @@ const SuggestionItem = ({ suggestion, onClick, isHighlighted }) => {
     type: "suggestion",
     productCount: suggestion.keywordCount,
     originalTag: {
-      slugUrl: suggestion.CategoryTagUrl
-    }
+      slugUrl: suggestion.CategoryTagUrl,
+    },
   };
 
   return (
     <div
       className={`flex items-center p-4 border-b border-gray-100 cursor-pointer transition-all duration-300 group ${
-        isHighlighted ? "bg-blue-50 border-l-4 border-l-blue-500 shadow-sm" : "hover:bg-gray-50 hover:shadow-sm"
+        isHighlighted
+          ? "bg-blue-50 border-l-4 border-l-blue-500 shadow-sm"
+          : "hover:bg-gray-50 hover:shadow-sm"
       }`}
       onClick={() => onClick(mappedSuggestion)}
     >
@@ -89,7 +91,10 @@ const SuggestionItem = ({ suggestion, onClick, isHighlighted }) => {
         </div>
       ) : (
         <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center mr-4 border border-gray-200 group-hover:border-gray-300 transition-all duration-300 shadow-sm group-hover:shadow-md">
-          <IoSearch className="text-gray-500 group-hover:text-gray-700 transition-colors" size={20} />
+          <IoSearch
+            className="text-gray-500 group-hover:text-gray-700 transition-colors"
+            size={20}
+          />
         </div>
       )}
       <div className="flex-1 min-w-0">
@@ -99,7 +104,8 @@ const SuggestionItem = ({ suggestion, onClick, isHighlighted }) => {
         {mappedSuggestion.category && (
           <p className="text-xs text-gray-600 mt-1 group-hover:text-gray-700 transition-colors">
             in {mappedSuggestion.category}
-            {mappedSuggestion.subCategory && ` › ${mappedSuggestion.subCategory}`}
+            {mappedSuggestion.subCategory &&
+              ` › ${mappedSuggestion.subCategory}`}
           </p>
         )}
         {mappedSuggestion.score && (
@@ -119,7 +125,9 @@ const RecentSearchItem = ({ item, onSelect, onRemove, isHighlighted }) => {
   return (
     <div
       className={`flex flex-col items-center p-3 relative group flex-shrink-0 transition-all duration-300 ${
-        isHighlighted ? "bg-blue-50 rounded-lg shadow-md scale-105" : "hover:bg-white hover:shadow-lg hover:scale-105"
+        isHighlighted
+          ? "bg-blue-50 rounded-lg shadow-md scale-105"
+          : "hover:bg-white hover:shadow-lg hover:scale-105"
       }`}
       style={{ minWidth: "90px" }}
     >
@@ -140,7 +148,10 @@ const RecentSearchItem = ({ item, onSelect, onRemove, isHighlighted }) => {
           </div>
         ) : (
           <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center mb-2 border border-gray-200 group-hover:border-blue-300 transition-all duration-300 shadow-md group-hover:shadow-lg">
-            <LuHistory className="text-gray-500 group-hover:text-blue-600 transition-colors" size={24} />
+            <LuHistory
+              className="text-gray-500 group-hover:text-blue-600 transition-colors"
+              size={24}
+            />
           </div>
         )}
 
@@ -162,7 +173,10 @@ const RecentSearchItem = ({ item, onSelect, onRemove, isHighlighted }) => {
         }}
         className="absolute -top-1 -right-1 bg-gray-300 hover:bg-red-400 rounded-full p-1 opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-md hover:shadow-lg hover:scale-110"
       >
-        <IoClose size={12} className="text-gray-700 hover:text-white transition-colors" />
+        <IoClose
+          size={12}
+          className="text-gray-700 hover:text-white transition-colors"
+        />
       </button>
     </div>
   );
@@ -232,15 +246,18 @@ const TrendingSearches = ({ trending, onSelect, highlightedIndex }) => {
             key={index}
             onClick={() => onSelect(item)}
             className={`bg-white rounded-lg border border-gray-200 overflow-hidden cursor-pointer transition-all duration-300 group ${
-              index === highlightedIndex 
-                ? "ring-2 ring-blue-500 shadow-lg scale-105" 
+              index === highlightedIndex
+                ? "ring-2 ring-blue-500 shadow-lg scale-105"
                 : "hover:shadow-xl hover:scale-105 hover:border-blue-300"
             }`}
           >
             <div className="p-3">
               <div className="flex justify-center mb-2">
                 <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center group-hover:from-blue-200 group-hover:to-blue-300 transition-all duration-300 shadow-sm group-hover:shadow-md">
-                  <IoTrendingUp className="text-blue-600 group-hover:text-blue-700 transition-colors" size={18} />
+                  <IoTrendingUp
+                    className="text-blue-600 group-hover:text-blue-700 transition-colors"
+                    size={18}
+                  />
                 </div>
               </div>
               <p className="text-sm font-medium text-gray-800 truncate text-center group-hover:text-blue-600 transition-colors">
@@ -276,8 +293,8 @@ const TopCategoryHandler = ({ category, onSelect, highlightedIndex }) => {
             key={item._id || index}
             onClick={() => onSelect(item)}
             className={`bg-white rounded-lg border border-gray-200 overflow-hidden cursor-pointer transition-all duration-300 group ${
-              index === highlightedIndex 
-                ? "ring-2 ring-blue-500 shadow-xl scale-105" 
+              index === highlightedIndex
+                ? "ring-2 ring-blue-500 shadow-xl scale-105"
                 : "hover:shadow-2xl hover:scale-105 hover:border-blue-300"
             }`}
           >
@@ -296,7 +313,10 @@ const TopCategoryHandler = ({ category, onSelect, highlightedIndex }) => {
               ) : (
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center group-hover:from-blue-200 group-hover:to-blue-300 transition-all duration-300 shadow-sm group-hover:shadow-md">
-                    <IoSearch className="text-blue-600 group-hover:text-blue-700 transition-colors" size={18} />
+                    <IoSearch
+                      className="text-blue-600 group-hover:text-blue-700 transition-colors"
+                      size={18}
+                    />
                   </div>
                 </div>
               )}
@@ -357,13 +377,14 @@ const SearchPage = () => {
           },
         }
       );
-      
+
       clearTimeout(timeoutId);
-      
+
       if (response.ok) {
         const data = await response.json();
         // Handle both response formats
-        const suggestionsData = data.data?.suggestions || data.suggestions || [];
+        const suggestionsData =
+          data.data?.suggestions || data.suggestions || [];
         setSuggestions(suggestionsData);
         setShowSuggestions(suggestionsData.length > 0);
 
@@ -389,7 +410,7 @@ const SearchPage = () => {
 
   const handleInputChange = (value) => {
     setQuerySearch(value);
-    setHighlightedIndex(-1);
+    setHighlightedIndex(-1); // Reset to -1 instead of 0
     setActiveSection("");
 
     if (debounceTimeout) {
@@ -406,7 +427,6 @@ const SearchPage = () => {
       setShowSuggestions(false);
     }
   };
-
   const navigateToSearch = (searchTerm, isSuggestion = false) => {
     let searchData;
     let categoryTag = "all";
@@ -497,12 +517,12 @@ const SearchPage = () => {
     const generateTrendingSearches = () => {
       const trendingKeywords = [
         "iPhone 16",
-        "samsung mobile phone", 
+        "samsung mobile phone",
         "womens ethnic wear",
         "t-shirts",
       ];
-      
-      return trendingKeywords.map(keyword => ({
+
+      return trendingKeywords.map((keyword) => ({
         name: keyword,
       }));
     };
@@ -535,117 +555,209 @@ const SearchPage = () => {
   };
 
   const handleKeyDown = (e) => {
+    // Helper: ENTER always goes to /search/all
+    const goToAllSearch = (keyword) => {
+      if (!keyword) return;
+
+      router.push(`/search/all/${encodeURIComponent(keyword)}`);
+      setShowSuggestions(false);
+      setHighlightedIndex(-1);
+      setActiveSection("");
+    };
+
     switch (e.key) {
-      case "ArrowDown":
-        e.preventDefault();
-        if (showSuggestions && suggestions.length > 0) {
-          setHighlightedIndex((prev) =>
-            prev < suggestions.length - 1 ? prev + 1 : 0
-          );
-          setActiveSection("suggestions");
-        } else if (recentSearches.length > 0 && !querySearch) {
-          setHighlightedIndex((prev) =>
-            prev < recentSearches.length - 1 ? prev + 1 : 0
-          );
-          setActiveSection("recent");
-        } else if (trendingSearches.length > 0 && !querySearch) {
-          setHighlightedIndex((prev) =>
-            prev < trendingSearches.length - 1 ? prev + 1 : 0
-          );
-          setActiveSection("trending");
-        } else if (topCatagory.length > 0 && !querySearch) {
-          setHighlightedIndex((prev) =>
-            prev < topCatagory.length - 1 ? prev + 1 : 0
-          );
-          setActiveSection("category");
-        }
-        break;
-      case "ArrowUp":
-        e.preventDefault();
-        if (showSuggestions && suggestions.length > 0) {
-          setHighlightedIndex((prev) =>
-            prev > 0 ? prev - 1 : suggestions.length - 1
-          );
-          setActiveSection("suggestions");
-        } else if (recentSearches.length > 0 && !querySearch) {
-          setHighlightedIndex((prev) =>
-            prev > 0 ? prev - 1 : recentSearches.length - 1
-          );
-          setActiveSection("recent");
-        } else if (trendingSearches.length > 0 && !querySearch) {
-          setHighlightedIndex((prev) =>
-            prev > 0 ? prev - 1 : trendingSearches.length - 1
-          );
-          setActiveSection("trending");
-        } else if (topCatagory.length > 0 && !querySearch) {
-          setHighlightedIndex((prev) =>
-            prev > 0 ? prev - 1 : topCatagory.length - 1
-          );
-          setActiveSection("category");
-        }
-        break;
       case "Enter":
         e.preventDefault();
-        if (highlightedIndex >= 0) {
+
+        // Only navigate to highlighted item if user explicitly selected it
+        if (highlightedIndex >= 0 && activeSection) {
           if (
             activeSection === "suggestions" &&
             suggestions[highlightedIndex]
           ) {
-            // Map API suggestion to expected format before navigating
-            const apiSuggestion = suggestions[highlightedIndex];
-            const mappedSuggestion = {
-              name: apiSuggestion.keyword,
-              category: apiSuggestion.CategoryTag,
-              subCategory: apiSuggestion.subCategory,
-              mobileImage: apiSuggestion.image,
-              score: apiSuggestion.score,
-              type: "suggestion",
-              productCount: apiSuggestion.keywordCount,
-              originalTag: {
-                slugUrl: apiSuggestion.CategoryTagUrl
-              }
-            };
-            handleSuggestionClick(mappedSuggestion);
+            // Get the keyword from suggestion object
+            const keyword =
+              suggestions[highlightedIndex].keyword ||
+              suggestions[highlightedIndex].name;
+            goToAllSearch(keyword);
           } else if (
             activeSection === "recent" &&
             recentSearches[highlightedIndex]
           ) {
-            navigateToSearch(recentSearches[highlightedIndex], true);
+            const keyword =
+              typeof recentSearches[highlightedIndex] === "string"
+                ? recentSearches[highlightedIndex]
+                : recentSearches[highlightedIndex].name;
+            goToAllSearch(keyword);
           } else if (
             activeSection === "trending" &&
             trendingSearches[highlightedIndex]
           ) {
-            navigateToSearch(trendingSearches[highlightedIndex], true);
+            const keyword =
+              typeof trendingSearches[highlightedIndex] === "string"
+                ? trendingSearches[highlightedIndex]
+                : trendingSearches[highlightedIndex].name;
+            goToAllSearch(keyword);
           } else if (
             activeSection === "category" &&
             topCatagory[highlightedIndex]
           ) {
-            navigateToSearch(topCatagory[highlightedIndex], true);
+            const keyword =
+              typeof topCatagory[highlightedIndex] === "string"
+                ? topCatagory[highlightedIndex]
+                : topCatagory[highlightedIndex].name;
+            goToAllSearch(keyword);
           }
-        } else if (querySearch.trim()) {
-          const matchedSuggestion = suggestions.find(
-            (s) => s.keyword.toLowerCase() === querySearch.toLowerCase()
-          );
+        } else {
+          // If no highlighted item, just use the typed query
+          goToAllSearch(querySearch.trim());
+        }
 
-          if (matchedSuggestion) {
-            const mappedSuggestion = {
-              name: matchedSuggestion.keyword,
-              category: matchedSuggestion.CategoryTag,
-              subCategory: matchedSuggestion.subCategory,
-              mobileImage: matchedSuggestion.image,
-              score: matchedSuggestion.score,
-              type: "suggestion",
-              productCount: matchedSuggestion.keywordCount,
-              originalTag: {
-                slugUrl: matchedSuggestion.CategoryTagUrl
+        break;
+
+      case "ArrowDown":
+        e.preventDefault();
+        if (!showSuggestions && suggestions.length > 0) {
+          // First down arrow - show suggestions and highlight first item
+          setShowSuggestions(true);
+          setHighlightedIndex(0);
+          setActiveSection("suggestions");
+        } else if (showSuggestions) {
+          let newIndex = highlightedIndex + 1;
+          let newSection = activeSection;
+
+          // Calculate which section to navigate to
+          if (activeSection === "suggestions") {
+            if (newIndex < suggestions.length + 1) {
+              // +1 for "View all results"
+              setHighlightedIndex(newIndex);
+            } else {
+              // Move to recent searches if available
+              if (recentSearches.length > 0) {
+                setHighlightedIndex(0);
+                setActiveSection("recent");
+              } else if (trendingSearches.length > 0) {
+                setHighlightedIndex(0);
+                setActiveSection("trending");
+              } else if (topCatagory.length > 0) {
+                setHighlightedIndex(0);
+                setActiveSection("category");
+              } else {
+                setHighlightedIndex(0);
+                setActiveSection("suggestions");
               }
-            };
-            navigateToSearch(mappedSuggestion, true);
-          } else {
-            navigateToSearch(querySearch, false);
+            }
+          } else if (activeSection === "recent") {
+            if (newIndex < recentSearches.length) {
+              setHighlightedIndex(newIndex);
+            } else {
+              // Move to trending
+              if (trendingSearches.length > 0) {
+                setHighlightedIndex(0);
+                setActiveSection("trending");
+              } else if (topCatagory.length > 0) {
+                setHighlightedIndex(0);
+                setActiveSection("category");
+              } else {
+                // Loop back to suggestions
+                setHighlightedIndex(0);
+                setActiveSection("suggestions");
+              }
+            }
+          } else if (activeSection === "trending") {
+            if (newIndex < trendingSearches.length) {
+              setHighlightedIndex(newIndex);
+            } else {
+              // Move to category
+              if (topCatagory.length > 0) {
+                setHighlightedIndex(0);
+                setActiveSection("category");
+              } else {
+                // Loop back to suggestions
+                setHighlightedIndex(0);
+                setActiveSection("suggestions");
+              }
+            }
+          } else if (activeSection === "category") {
+            if (newIndex < topCatagory.length) {
+              setHighlightedIndex(newIndex);
+            } else {
+              // Loop back to suggestions
+              setHighlightedIndex(0);
+              setActiveSection("suggestions");
+            }
           }
         }
         break;
+
+      case "ArrowUp":
+        e.preventDefault();
+        if (showSuggestions) {
+          let newIndex = highlightedIndex - 1;
+          let newSection = activeSection;
+
+          if (activeSection === "suggestions") {
+            if (newIndex >= 0) {
+              setHighlightedIndex(newIndex);
+            } else {
+              // Move to category (last section) if available
+              if (topCatagory.length > 0) {
+                setHighlightedIndex(topCatagory.length - 1);
+                setActiveSection("category");
+              } else if (trendingSearches.length > 0) {
+                setHighlightedIndex(trendingSearches.length - 1);
+                setActiveSection("trending");
+              } else if (recentSearches.length > 0) {
+                setHighlightedIndex(recentSearches.length - 1);
+                setActiveSection("recent");
+              } else {
+                setHighlightedIndex(suggestions.length);
+                setActiveSection("suggestions");
+              }
+            }
+          } else if (activeSection === "recent") {
+            if (newIndex >= 0) {
+              setHighlightedIndex(newIndex);
+            } else {
+              // Move to suggestions
+              setHighlightedIndex(suggestions.length + 1 - 1); // Last item in suggestions
+              setActiveSection("suggestions");
+            }
+          } else if (activeSection === "trending") {
+            if (newIndex >= 0) {
+              setHighlightedIndex(newIndex);
+            } else {
+              // Move to recent
+              if (recentSearches.length > 0) {
+                setHighlightedIndex(recentSearches.length - 1);
+                setActiveSection("recent");
+              } else {
+                // Move to suggestions
+                setHighlightedIndex(suggestions.length + 1 - 1);
+                setActiveSection("suggestions");
+              }
+            }
+          } else if (activeSection === "category") {
+            if (newIndex >= 0) {
+              setHighlightedIndex(newIndex);
+            } else {
+              // Move to trending
+              if (trendingSearches.length > 0) {
+                setHighlightedIndex(trendingSearches.length - 1);
+                setActiveSection("trending");
+              } else if (recentSearches.length > 0) {
+                setHighlightedIndex(recentSearches.length - 1);
+                setActiveSection("recent");
+              } else {
+                // Move to suggestions
+                setHighlightedIndex(suggestions.length + 1 - 1);
+                setActiveSection("suggestions");
+              }
+            }
+          }
+        }
+        break;
+
       case "Escape":
         setShowSuggestions(false);
         setHighlightedIndex(-1);
@@ -654,6 +766,7 @@ const SearchPage = () => {
     }
   };
 
+  
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (!e.target.closest(".search-container")) {
@@ -752,7 +865,8 @@ const SearchPage = () => {
                   }`}
                   onClick={() => {
                     const matchedSuggestion = suggestions.find(
-                      (s) => s.keyword.toLowerCase() === querySearch.toLowerCase()
+                      (s) =>
+                        s.keyword.toLowerCase() === querySearch.toLowerCase()
                     );
                     if (matchedSuggestion) {
                       const mappedSuggestion = {
@@ -764,8 +878,8 @@ const SearchPage = () => {
                         type: "suggestion",
                         productCount: matchedSuggestion.keywordCount,
                         originalTag: {
-                          slugUrl: matchedSuggestion.CategoryTagUrl
-                        }
+                          slugUrl: matchedSuggestion.CategoryTagUrl,
+                        },
                       };
                       navigateToSearch(mappedSuggestion, true);
                     } else {

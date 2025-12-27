@@ -5,9 +5,8 @@ import ProductDetails from "./ProductDetails";
 import { useDispatch, useSelector } from "react-redux";
 import SkeletonLoader from "./SkeletonLoader";
 import { fetchReviews } from "@/redux/reviews/reviewSlice";
-import { Pagination } from "swiper/modules";
-import { Swiper, SwiperSlide } from "swiper/react";
 import Image from "next/image";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const colorOptions = [
   {
@@ -35,7 +34,7 @@ export default function wwProductLayout() {
 
   const [mobileImageHigh, setMobileImageHigh] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const swiperRef = useRef(null);
+  const sliderRef = useRef(null);
   const productData = product?.[0] || {};
   const variants = productData?.simpleAttributes || [];
   const currentVariant = variants[selectedVariant] || {};
@@ -49,14 +48,28 @@ export default function wwProductLayout() {
     return src && src.trim() !== "" ? src : "https://via.placeholder.com/300";
   };
 
-  const handleSlideChange = (swiper) => {
-    setSelectedImageIndex(swiper.activeIndex);
+  const handleSlideChange = (index) => {
+    setSelectedImageIndex(index);
   };
+
+  const goToNextSlide = () => {
+    if (selectedImageIndex < selectedVariantImages.length - 1) {
+      setSelectedImageIndex(selectedImageIndex + 1);
+    }
+  };
+
+  const goToPrevSlide = () => {
+    if (selectedImageIndex > 0) {
+      setSelectedImageIndex(selectedImageIndex - 1);
+    }
+  };
+
   if (status === "loading") {
-    <SkeletonLoader />;
+    return <SkeletonLoader />;
   }
+  
   if (status === "failed") {
-    <div>Error: {error}</div>;
+    return <div>Error: {error}</div>;
   }
 
   const [isScrolled, setIsScrolled] = useState(false);
@@ -195,7 +208,7 @@ export default function wwProductLayout() {
         document.removeEventListener("touchend", handleDragEnd);
       };
     }
-  }, [isDragging, handleDrag, handleDragEnd]);
+  }, [isDragging]);
 
   const [scroll, setScroll] = useState(null);
   useEffect(() => {
@@ -210,6 +223,38 @@ export default function wwProductLayout() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // Touch swipe for mobile
+  const [touchStart, setTouchStart] = useState(0);
+  const [touchEnd, setTouchEnd] = useState(0);
+
+  const handleTouchStart = (e) => {
+    if (!mobileImageHigh) return;
+    setTouchStart(e.touches[0].clientX);
+  };
+
+  const handleTouchMove = (e) => {
+    if (!mobileImageHigh) return;
+    setTouchEnd(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!mobileImageHigh) return;
+    const threshold = 50;
+    const diff = touchStart - touchEnd;
+
+    if (Math.abs(diff) > threshold) {
+      if (diff > 0) {
+        // Swipe left
+        goToNextSlide();
+      } else {
+        // Swipe right
+        goToPrevSlide();
+      }
+    }
+    setTouchStart(0);
+    setTouchEnd(0);
+  };
 
   return (
     <>
@@ -254,6 +299,9 @@ export default function wwProductLayout() {
         <div
           className="fixed inset-0 z-[999999] bg-white transition-opacity duration-300 ease-in-out opacity-100"
           style={{ animation: "fadeIn 0.3s" }}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
         >
           {/* Cross button */}
           <button
@@ -267,66 +315,88 @@ export default function wwProductLayout() {
             ✕
           </button>
 
-          <Swiper
-            ref={swiperRef}
-            initialSlide={selectedImageIndex}
-            onSlideChange={handleSlideChange}
-            pagination={{ dynamicBullets: true }}
-            modules={[Pagination]}
-            className="h-full w-full"
+          {/* Previous Button */}
+          {selectedImageIndex > 0 && (
+            <button
+              className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all duration-200"
+              onClick={goToPrevSlide}
+            >
+              <ChevronLeft size={24} />
+            </button>
+          )}
+
+          {/* Next Button */}
+          {selectedImageIndex < selectedVariantImages.length - 1 && (
+            <button
+              className="absolute right-4 top-1/2 transform -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all duration-200"
+              onClick={goToNextSlide}
+            >
+              <ChevronRight size={24} />
+            </button>
+          )}
+
+          {/* Image Container */}
+          <div
+            ref={imageContainerRef}
+            className="relative h-full w-full overflow-hidden"
           >
-            {selectedVariantImages.map((src, index) => (
-              <SwiperSlide key={index}>
-                <div
-                  ref={imageContainerRef}
-                  className="relative h-full w-full overflow-hidden"
-                >
-                  <div
-                    className="h-full w-full transition-transform duration-300 ease-in-out"
-                    style={{
-                      transformOrigin: isZoomed
-                        ? `${zoomPosition.x}% ${zoomPosition.y}%`
-                        : "center",
-                      transform: isZoomed
-                        ? `scale(2) translate(${dragPosition.x}px, ${dragPosition.y}px)`
-                        : "scale(1)",
-                      cursor: isZoomed
-                        ? isDragging
-                          ? "grabbing"
-                          : "grab"
-                        : "zoom-in",
-                    }}
-                    onClick={(e) => {
-                      if (e.detail === 2) {
-                        handleZoom(e, e.currentTarget);
-                      }
-                    }}
-                    onTouchEnd={(e) => {
-                      const now = Date.now();
-                      if (
-                        lastTapRef.current &&
-                        now - lastTapRef.current < 300
-                      ) {
-                        handleZoom(e.changedTouches[0], e.currentTarget);
-                      }
-                      lastTapRef.current = now;
-                    }}
-                    onMouseDown={handleDragStart}
-                    onTouchStart={handleDragStart}
-                  >
-                    <Image
-                      src={getValidImageSrc(src || productData?.thumbnail?.[0])}
-                      alt={`Product image ${index + 1}`}
-                      fill
-                      className="object-contain select-none transition-transform duration-300 ease-in-out"
-                      priority={index === 0}
-                      draggable={false}
-                    />
-                  </div>
-                </div>
-              </SwiperSlide>
-            ))}
-          </Swiper>
+            <div
+              className="h-full w-full transition-transform duration-300 ease-in-out"
+              style={{
+                transformOrigin: isZoomed
+                  ? `${zoomPosition.x}% ${zoomPosition.y}%`
+                  : "center",
+                transform: isZoomed
+                  ? `scale(2) translate(${dragPosition.x}px, ${dragPosition.y}px)`
+                  : "scale(1)",
+                cursor: isZoomed
+                  ? isDragging
+                    ? "grabbing"
+                    : "grab"
+                  : "zoom-in",
+              }}
+              onClick={(e) => {
+                if (e.detail === 2) {
+                  handleZoom(e, e.currentTarget);
+                }
+              }}
+              onTouchEnd={(e) => {
+                const now = Date.now();
+                if (lastTapRef.current && now - lastTapRef.current < 300) {
+                  handleZoom(e.changedTouches[0], e.currentTarget);
+                }
+                lastTapRef.current = now;
+              }}
+              onMouseDown={handleDragStart}
+              onTouchStart={handleDragStart}
+            >
+              <Image
+                src={getValidImageSrc(selectedVariantImages[selectedImageIndex] || productData?.thumbnail?.[0])}
+                alt={`Product image ${selectedImageIndex + 1}`}
+                fill
+                className="object-contain select-none transition-transform duration-300 ease-in-out"
+                priority={selectedImageIndex === 0}
+                draggable={false}
+              />
+            </div>
+          </div>
+
+          {/* Pagination Dots */}
+          {selectedVariantImages.length > 1 && (
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10 flex space-x-2">
+              {selectedVariantImages.map((_, index) => (
+                <button
+                  key={index}
+                  className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                    index === selectedImageIndex
+                      ? "bg-black w-6"
+                      : "bg-gray-400"
+                  }`}
+                  onClick={() => handleSlideChange(index)}
+                />
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -334,21 +404,21 @@ export default function wwProductLayout() {
       {showMagnifier && selectedImage && (
         <div
           className={`
-      fixed
-      top-1/2
-      right-0
-      translate-x-1/2
-      md:top-1/4
-      md:right-1/3
-      flex
-      justify-center
-      overflow-hidden
-      z-[999]
-      w-[150px] h-[150px]    
-      sm:w-[250px] sm:h-[250px]
-      md:w-[200px] md:h-[200px]
-      lg:w-[350px] lg:h-[250px]
-    `}
+            fixed
+            top-1/2
+            right-0
+            translate-x-1/2
+            md:top-1/4
+            md:right-1/3
+            flex
+            justify-center
+            overflow-hidden
+            z-[999]
+            w-[150px] h-[150px]    
+            sm:w-[250px] sm:h-[250px]
+            md:w-[200px] md:h-[200px]
+            lg:w-[350px] lg:h-[250px]
+          `}
           style={{
             backgroundImage: `url(${getValidImageSrc(selectedImage)})`,
             backgroundRepeat: "no-repeat",

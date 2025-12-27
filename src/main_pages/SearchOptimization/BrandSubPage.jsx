@@ -1,13 +1,16 @@
 "use client";
-import { searchNewProducts, loadMoreProducts } from "@/redux/serach/brandSlice";
+import {
+  fetchBrandSubProducts,
+  fetchBrandSubFilters,
+  loadMoreBrandSubProducts,
+} from "@/redux/serach/brandSlice";
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { FaTimes, FaSearch } from "react-icons/fa";
 import NewSingleProductCard from "@/main_pages/ProductPages.jsx/NewSingleProductCard";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import Slider from "@mui/material/Slider";
 import { styled } from "@mui/material/styles";
-import useInfiniteScroll from "@/hooks/useInfiniteScroll";
 import NewFilter from "@/components/searchMobile/NewFilter";
 
 // Custom styled price slider
@@ -42,13 +45,16 @@ const SORTS = [
   { value: "newest", label: "Newest First" },
 ];
 
-// Process filter values - split and remove duplicates
-const processFilterValues = (value) => {
-  if (!value) return [];
-  return [...new Set(value.split(", "))].filter((item) => item.trim());
+// Updated: Process filter values - now directly use the values array
+const getFilterValues = (filter) => {
+  if (!filter || !filter.values) return [];
+  // Clean up the values (remove any special characters like ‎)
+  return filter.values
+    .map((value) => value.replace(/[^\x20-\x7E]/g, "").trim())
+    .filter((value) => value);
 };
 
-// Skeleton Loader Components (keep your existing skeleton components)
+// Skeleton Loader Components
 const FilterSkeleton = () => {
   return (
     <div className="w-80 bg-white border border-gray-200 rounded-lg h-screen sticky top-24 hidden lg:block">
@@ -130,27 +136,35 @@ const BrandSubPage = ({ params }) => {
   const brand = p?.brand || "";
   const subCategory = p?.subCat || "";
   const dispatch = useDispatch();
-  const searchParams = useSearchParams();
   const router = useRouter();
+  const pathname = usePathname();
+
+  // Get search params - SIMPLIFIED APPROACH
+  const searchParams = useSearchParams();
   const sort = searchParams.get("sort") || "relevance";
+  const page = searchParams.get("page") || "1";
 
-  const {
-    loading,
-    query,
-    total,
-    limit,
-    products,
-    totalPages,
-    filters,
-    sort: reduxSort,
-    loadingMore,
-    page: currentPage,
-  } = useSelector((state) => state.brandData);
+  // Get data from Redux store
+  const products = useSelector((state) => state.brandSub.products);
+  console.log("products-->", products);
 
-  // Refs to prevent multiple initializations
-  const initialSearchDone = useRef(false);
+  const filters = useSelector((state) => state.brandSub.filters);
+  console.log("filters from Redux-->", filters);
+
+  const total = useSelector((state) => state.brandSub.total);
+  const currentPage = useSelector((state) => state.brandSub.page);
+  const loading = useSelector((state) => state.brandSub.loading);
+  const loadingMore = useSelector((state) => state.brandSub.loadingMore);
+  const loadingFilters = useSelector((state) => state.brandSub.loadingFilters);
+  const filtersLoaded = useSelector((state) => state.brandSub.filtersLoaded);
+  const error = useSelector((state) => state.brandSub.error);
+
+  // Refs
+  const initialLoadDone = useRef(false);
   const filtersInitialized = useRef(false);
-  const searchTimeoutRef = useRef(null);
+  const prevSortRef = useRef(sort);
+  const prevPageRef = useRef(page);
+  const sentinelRef = useRef(null);
 
   // State for selected filters and sort
   const [selectedFilters, setSelectedFilters] = useState({});
@@ -158,72 +172,120 @@ const BrandSubPage = ({ params }) => {
   const [tempPriceRange, setTempPriceRange] = useState([0, 50000]);
   const [mobileSort, setMobileSort] = useState(sort);
 
-  // Build search parameters
-  const buildSearchParams = (page = 1, customFilters = selectedFilters) => {
+  // Build search parameters for products
+  const buildProductParams = useCallback(
+    (pageNum = 1, customFilters = selectedFilters, customSort = sort) => {
+      const params = {
+        brand,
+        subCategory,
+        page: pageNum,
+        limit: 20,
+        sort: customSort !== "relevance" ? customSort : "",
+      };
+
+      // Add filters if any selected
+      const hasActiveFilters = Object.keys(customFilters).some(
+        (key) => customFilters[key] && customFilters[key].length > 0
+      );
+
+      if (hasActiveFilters || customFilters.priceRange) {
+        params.filters = {};
+
+        Object.keys(customFilters).forEach((key) => {
+          if (key === "priceRange") {
+            if (customFilters[key]) {
+              params.filters.priceRange = {
+                min: customFilters[key].min,
+                max: customFilters[key].max,
+              };
+            }
+          } else if (customFilters[key] && customFilters[key].length > 0) {
+            params.filters[key] = customFilters[key];
+          }
+        });
+      }
+
+      console.log("Building product params:", params);
+      return params;
+    },
+    [brand, subCategory, sort, selectedFilters]
+  );
+
+  // Build filters parameters
+  const buildFilterParams = (customFilters = {}) => {
     const params = {
       brand,
       subCategory,
-      page: page,
-      limit: limit || 20,
-      sort: sort !== "relevance" ? sort : "",
     };
 
-    // Add filters if any selected
-    const hasActiveFilters = Object.keys(customFilters).some(
-      (key) => customFilters[key] && customFilters[key].length > 0
-    );
-
-    if (hasActiveFilters || customFilters.priceRange) {
-      params.filters = {};
-
-      Object.keys(customFilters).forEach((key) => {
-        if (key === "priceRange") {
-          if (customFilters[key]) {
-            params.filters.priceRange = {
-              min: customFilters[key].min,
-              max: customFilters[key].max,
-            };
-          }
-        } else if (customFilters[key] && customFilters[key].length > 0) {
-          // Convert filter keys to match backend expectation
-          if (key === "Color") {
-            params.filters.colors = customFilters[key];
-          } else if (key === "Model") {
-            params.filters.models = customFilters[key];
-          } else {
-            params.filters[key] = customFilters[key];
-          }
-        }
-      });
+    // Include existing filters if any
+    if (Object.keys(customFilters).length > 0) {
+      params.filters = customFilters;
     }
 
     return params;
   };
 
-  // Debounced search function
-  const debouncedSearch = useCallback(
-    (params) => {
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current);
-      }
-
-      searchTimeoutRef.current = setTimeout(() => {
-        dispatch(searchNewProducts(params));
-      }, 300);
+  // Fetch products function
+  const fetchProducts = useCallback(
+    (pageNum = 1, customSort = sort) => {
+      const productParams = buildProductParams(
+        pageNum,
+        selectedFilters,
+        customSort
+      );
+      console.log("Fetching products:", productParams);
+      dispatch(fetchBrandSubProducts(productParams));
     },
-    [dispatch]
+    [buildProductParams, selectedFilters, dispatch, sort]
   );
 
-  // Handle sort change
+  // Fetch filters function
+  const fetchFilters = useCallback(() => {
+    const filterParams = buildFilterParams(selectedFilters);
+    console.log("Fetching filters:", filterParams);
+    dispatch(fetchBrandSubFilters(filterParams));
+  }, [selectedFilters, dispatch]);
+
+  // Update URL function
+  const updateURL = useCallback(
+    (updates) => {
+      const currentParams = new URLSearchParams(searchParams.toString());
+
+      Object.entries(updates).forEach(([key, value]) => {
+        if (value === null || value === undefined || value === "") {
+          currentParams.delete(key);
+        } else {
+          currentParams.set(key, value.toString());
+        }
+      });
+
+      const queryString = currentParams.toString();
+      const newUrl = queryString ? `${pathname}?${queryString}` : pathname;
+
+      console.log("Updating URL to:", newUrl);
+      router.replace(newUrl, { scroll: false });
+    },
+    [searchParams, pathname, router]
+  );
+
+  // Handle sort change - SIMPLE AND DIRECT
   const handleSort = (sortValue) => {
-    const params = new URLSearchParams(searchParams);
-    params.set("sort", sortValue);
-    params.delete("page");
-    router.push(`?${params.toString()}`);
+    console.log("Sort button clicked:", sortValue);
+
+    // Update mobile sort state
+    setMobileSort(sortValue);
+
+    // Update URL immediately
+    updateURL({ sort: sortValue, page: "1" });
+
+    // Fetch products immediately with new sort
+    fetchProducts(1, sortValue);
   };
 
   // Handle filter changes
   const handleFilterChange = (filterName, value) => {
+    console.log("Filter changed:", filterName, value);
     setSelectedFilters((prev) => {
       const currentValues = prev[filterName] || [];
       const newValues = currentValues.includes(value)
@@ -235,12 +297,32 @@ const BrandSubPage = ({ params }) => {
         [filterName]: newValues,
       };
 
-      // Trigger search with new filters
-      const searchParams = buildSearchParams(1, newFilters);
-      debouncedSearch(searchParams);
+      // Fetch products with new filters
+      fetchProducts(1, sort);
+
+      // Fetch updated filters
+      const filterParams = buildFilterParams(newFilters);
+      dispatch(fetchBrandSubFilters(filterParams));
 
       return newFilters;
     });
+  };
+
+  // Handle price range filter
+  const handlePriceRangeChange = (range) => {
+    const newFilters = {
+      ...selectedFilters,
+      priceRange: { min: range[0], max: range[1] },
+    };
+
+    setSelectedFilters(newFilters);
+
+    // Fetch products with new price filter
+    fetchProducts(1, sort);
+
+    // Fetch updated filters
+    const filterParams = buildFilterParams(newFilters);
+    dispatch(fetchBrandSubFilters(filterParams));
   };
 
   // Remove selected filter
@@ -254,9 +336,12 @@ const BrandSubPage = ({ params }) => {
         [filterName]: newValues,
       };
 
-      // Trigger search with updated filters
-      const searchParams = buildSearchParams(1, newFilters);
-      debouncedSearch(searchParams);
+      // Fetch products with updated filters
+      fetchProducts(1, sort);
+
+      // Fetch updated filters
+      const filterParams = buildFilterParams(newFilters);
+      dispatch(fetchBrandSubFilters(filterParams));
 
       return newFilters;
     });
@@ -264,17 +349,15 @@ const BrandSubPage = ({ params }) => {
 
   // Clear all filters
   const clearAllFilters = () => {
-    const resetFilters = {};
-    if (filters) {
-      filters.forEach((filter) => {
-        resetFilters[filter.name] = [];
-      });
-    }
-    setSelectedFilters(resetFilters);
-    
-    // Trigger search with cleared filters
-    const searchParams = buildSearchParams(1, resetFilters);
-    debouncedSearch(searchParams);
+    setSelectedFilters({});
+    setTempPriceRange([0, 50000]);
+
+    // Fetch products with cleared filters
+    fetchProducts(1, sort);
+
+    // Fetch fresh filters
+    const filterParams = buildFilterParams({});
+    dispatch(fetchBrandSubFilters(filterParams));
   };
 
   // Toggle filter expansion
@@ -292,18 +375,66 @@ const BrandSubPage = ({ params }) => {
       (key === "priceRange" && selectedFilters[key])
   );
 
-  // Initial search when component mounts or category changes
+  // Initial load when component mounts
   useEffect(() => {
-    if (initialSearchDone.current) return;
+    if (initialLoadDone.current) return;
 
-    const initialParams = buildSearchParams(1);
-    dispatch(searchNewProducts(initialParams));
-    initialSearchDone.current = true;
-  }, [brand, subCategory, limit, dispatch]);
+    console.log("Initial load triggered for:", brand, subCategory);
 
-  // Initialize selected filters when filters are loaded from API
+    // Fetch initial products
+    fetchProducts(1, sort);
+
+    // Fetch initial filters
+    const filterParams = buildFilterParams();
+    console.log("Initial filter params:", filterParams);
+    dispatch(fetchBrandSubFilters(filterParams));
+
+    initialLoadDone.current = true;
+    prevSortRef.current = sort;
+    prevPageRef.current = page;
+  }, [brand, subCategory, dispatch]);
+
+  // Effect to handle URL parameter changes
+  useEffect(() => {
+    console.log("URL params changed - sort:", sort, "page:", page);
+
+    // Skip if initial load hasn't happened yet
+    if (!initialLoadDone.current) return;
+
+    const pageNum = parseInt(page) || 1;
+
+    // Check if sort has changed
+    if (sort !== prevSortRef.current) {
+      console.log("Sort changed from", prevSortRef.current, "to", sort);
+      prevSortRef.current = sort;
+      setMobileSort(sort);
+
+      // Always fetch products when sort changes
+      fetchProducts(1, sort);
+      return;
+    }
+
+    // Check if page has changed
+    if (pageNum !== parseInt(prevPageRef.current)) {
+      console.log("Page changed from", prevPageRef.current, "to", pageNum);
+      prevPageRef.current = page;
+
+      if (pageNum === 1) {
+        // Fetch fresh products for page 1
+        fetchProducts(1, sort);
+      } else if (pageNum > currentPage) {
+        // Load more products
+        console.log("Loading more products for page:", pageNum);
+        const params = buildProductParams(pageNum, selectedFilters, sort);
+        dispatch(loadMoreBrandSubProducts(params));
+      }
+    }
+  }, [sort, page, currentPage, selectedFilters, dispatch]);
+
+  // Initialize selected filters when filters are loaded
   useEffect(() => {
     if (filters && filters.length > 0 && !filtersInitialized.current) {
+      console.log("Filters loaded, initializing:", filters);
       const initialFilters = {};
       filters.forEach((filter) => {
         initialFilters[filter.name] = [];
@@ -313,66 +444,84 @@ const BrandSubPage = ({ params }) => {
     }
   }, [filters]);
 
-  // Update mobile sort when URL sort changes
-  useEffect(() => {
-    setMobileSort(sort);
-  }, [sort]);
-
   // Reset refs when category changes
   useEffect(() => {
-    initialSearchDone.current = false;
+    initialLoadDone.current = false;
     filtersInitialized.current = false;
     setSelectedFilters({});
+    setExpandedFilters({});
+    setTempPriceRange([0, 50000]);
+    prevSortRef.current = "relevance";
+    prevPageRef.current = "1";
   }, [brand, subCategory]);
 
-  // Handle load more
+  // Handle load more button click - FIXED VERSION
   const handleLoadMore = useCallback(() => {
     if (loadingMore || products.length >= total) return;
 
     const nextPage = currentPage + 1;
-    const params = buildSearchParams(nextPage);
-    dispatch(loadMoreProducts(params));
-  }, [loadingMore, products.length, total, currentPage, dispatch]);
+    console.log("Load more triggered, next page:", nextPage);
 
-  // Use the infinite scroll hook
-  const [isFetching, setIsFetching] = useInfiniteScroll(handleLoadMore, 300);
+    // Update URL with new page
+    updateURL({ page: nextPage.toString() });
+
+    // Dispatch load more action
+    const params = buildProductParams(nextPage, selectedFilters, sort);
+    dispatch(loadMoreBrandSubProducts(params));
+  }, [
+    loadingMore,
+    products.length,
+    total,
+    currentPage,
+    updateURL,
+    selectedFilters,
+    sort,
+    dispatch,
+    buildProductParams,
+  ]);
+
+  // Simple manual infinite scroll implementation
+  useEffect(() => {
+    const handleScroll = () => {
+      if (loadingMore || products.length >= total) return;
+
+      const scrollTop = window.scrollY || document.documentElement.scrollTop;
+      const scrollHeight = document.documentElement.scrollHeight;
+      const clientHeight = document.documentElement.clientHeight;
+
+      // Load more when user is 300px from bottom
+      if (scrollTop + clientHeight >= scrollHeight - 300) {
+        handleLoadMore();
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [loadingMore, products.length, total, handleLoadMore]);
 
   // Reset isFetching when loadingMore changes
   useEffect(() => {
-    if (!loadingMore && isFetching) {
-      setIsFetching(false);
-    }
-  }, [loadingMore, isFetching, setIsFetching]);
+    // Reset any loading states when load completes
+  }, [loadingMore]);
 
   // Handle mobile sort change
   const handleMobileSortChange = (sortValue) => {
-    setMobileSort(sortValue);
-    const params = new URLSearchParams(searchParams);
-    params.set("sort", sortValue);
-    params.delete("page");
-    router.push(`?${params.toString()}`);
+    console.log("Mobile sort changed to:", sortValue);
+    handleSort(sortValue);
   };
 
-  // Combined loading state
+  // Combined loading states
   const isLoading = loading && !loadingMore;
+  const isLoadingFilters = loadingFilters && !filtersLoaded;
 
-  // Initial loading skeleton
+  // Show loading skeleton for initial load
   if (isLoading && products.length === 0) {
     return (
       <div className="min-h-screen bg-gray-100 pt-4">
         <div className="max-w-[1600px] mx-auto flex">
           {/* Filters Sidebar Skeleton */}
-          <div className="hidden lg:block w-[270px] bg-gray-50 border border-gray-300">
-            <div className="animate-pulse">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="border-b border-gray-200 p-4">
-                  <div className="h-4 w-32 bg-gray-200 rounded mb-3"></div>
-                  {[...Array(4)].map((_, j) => (
-                    <div key={j} className="h-3 w-24 bg-gray-200 rounded mb-2"></div>
-                  ))}
-                </div>
-              ))}
-            </div>
+          <div className="hidden lg:block w-[270px]">
+            <FilterSkeleton />
           </div>
 
           {/* Products Section Skeleton */}
@@ -405,14 +554,14 @@ const BrandSubPage = ({ params }) => {
     <div className="min-h-screen bg-gray-100 pt-4">
       <div className="max-w-[1600px] mx-auto flex">
         {/* ---------------- LEFT FILTER ---------------- */}
-        <div className="hidden lg:block w-[270px] bg-gray-50 border border-gray-300 text-gray-600">
+        <div className="hidden lg:block w-[270px] bg-white border border-gray-300 text-gray-600">
           {/* HEADER */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-300 text-sm font-semibold text-gray-800">
             <span>Filters</span>
             {hasSelectedFilters && (
               <button
                 onClick={clearAllFilters}
-                className="text-blue-600 text-xs font-medium"
+                className="text-blue-600 text-xs font-medium hover:text-blue-700"
               >
                 CLEAR ALL
               </button>
@@ -421,19 +570,16 @@ const BrandSubPage = ({ params }) => {
 
           {/* SELECTED FILTERS */}
           {hasSelectedFilters && (
-            <div className="px-4 py-2 flex flex-wrap gap-2 border-b border-gray-300 bg-gray-100">
+            <div className="px-4 py-2 flex flex-wrap gap-2 border-b border-gray-300 bg-gray-50">
               {Object.entries(selectedFilters).map(([key, values]) =>
                 Array.isArray(values)
                   ? values.map((v) => (
                       <div
                         key={`${key}-${v}`}
-                        className="flex items-center gap-1 bg-gray-200 text-gray-700 text-[11px] px-2 py-[3px] rounded"
+                        className="flex items-center gap-1 bg-blue-50 text-blue-700 text-[11px] px-2 py-[3px] rounded hover:bg-blue-100 transition-colors cursor-pointer"
+                        onClick={() => removeSelected(key, v)}
                       >
-                        <FaTimes
-                          size={8}
-                          className="cursor-pointer"
-                          onClick={() => removeSelected(key, v)}
-                        />
+                        <FaTimes size={8} className="hover:text-red-600" />
                         <span>{v}</span>
                       </div>
                     ))
@@ -441,17 +587,18 @@ const BrandSubPage = ({ params }) => {
               )}
 
               {selectedFilters.priceRange && (
-                <div className="flex items-center gap-1 bg-gray-200 text-gray-700 text-[11px] px-2 py-[3px] rounded">
-                  <FaTimes
-                    size={8}
-                    className="cursor-pointer"
-                    onClick={() =>
-                      setSelectedFilters((p) => ({
-                        ...p,
-                        priceRange: null,
-                      }))
-                    }
-                  />
+                <div
+                  className="flex items-center gap-1 bg-blue-50 text-blue-700 text-[11px] px-2 py-[3px] rounded hover:bg-blue-100 transition-colors cursor-pointer"
+                  onClick={() => {
+                    setSelectedFilters((p) => ({
+                      ...p,
+                      priceRange: null,
+                    }));
+                    setTempPriceRange([0, 50000]);
+                    fetchProducts(1, sort);
+                  }}
+                >
+                  <FaTimes size={8} className="hover:text-red-600" />
                   <span>
                     ₹{selectedFilters.priceRange.min} – ₹
                     {selectedFilters.priceRange.max}
@@ -461,7 +608,7 @@ const BrandSubPage = ({ params }) => {
             </div>
           )}
 
-          {/* PRICE */}
+          {/* PRICE FILTER */}
           <div className="px-4 py-4 border-b border-gray-200">
             <p className="text-xs font-semibold mb-2 text-gray-800">PRICE</p>
             <div className="w-[85%] mx-auto">
@@ -469,71 +616,115 @@ const BrandSubPage = ({ params }) => {
                 value={tempPriceRange}
                 onChange={(e, v) => setTempPriceRange(v)}
                 onChangeCommitted={(e, v) => {
-                  const range = { min: v[0], max: v[1] };
-
-                  setSelectedFilters((p) => ({
-                    ...p,
-                    priceRange: range,
-                  }));
-
-                  debouncedSearch(
-                    buildSearchParams(1, {
-                      ...selectedFilters,
-                      priceRange: range,
-                    })
-                  );
+                  handlePriceRangeChange(v);
                 }}
+                min={0}
+                max={50000}
+                step={100}
+                valueLabelDisplay="auto"
+                valueLabelFormat={(value) => `₹${value}`}
               />
+            </div>
+            <div className="flex justify-between text-xs text-gray-600 mt-2">
+              <span>₹{tempPriceRange[0]}</span>
+              <span>₹{tempPriceRange[1]}</span>
             </div>
           </div>
 
           {/* DYNAMIC FILTERS */}
-          {filters?.map((filter) => {
-            const values = processFilterValues(filter.value);
-            if (!values.length) return null;
-
-            const expanded = expandedFilters[filter.name];
-            const visible = expanded ? values : values.slice(0, 4);
-
-            return (
-              <div
-                key={filter.name}
-                className="px-4 py-4 border-b border-gray-200"
-              >
-                <p className="text-xs font-semibold mb-1 text-gray-800">
-                  {filter.name.toUpperCase()}
-                </p>
-
-                {visible.map((v) => (
-                  <label
-                    key={v}
-                    className="flex gap-2 text-sm mb-1 text-gray-600"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedFilters[filter.name]?.includes(v)}
-                      onChange={() => handleFilterChange(filter.name, v)}
-                    />
-                    {v}
-                  </label>
+          {isLoadingFilters ? (
+            <div className="px-4 py-2">
+              <div className="animate-pulse">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="mb-4">
+                    <div className="h-4 w-32 bg-gray-200 rounded mb-2"></div>
+                    {[...Array(4)].map((_, j) => (
+                      <div
+                        key={j}
+                        className="h-3 w-24 bg-gray-200 rounded mb-1"
+                      ></div>
+                    ))}
+                  </div>
                 ))}
-
-                {values.length > 4 && (
-                  <button
-                    className="text-sm text-blue-600 mt-1"
-                    onClick={() => toggleFilterExpand(filter.name)}
-                  >
-                    {expanded ? "Show Less" : `View ${values.length - 4} More`}
-                  </button>
-                )}
               </div>
-            );
-          })}
+            </div>
+          ) : filters && filters.length > 0 ? (
+            filters.map((filter) => {
+              const values = getFilterValues(filter);
+              if (!values.length) return null;
+
+              const expanded = expandedFilters[filter.name];
+              const visible = expanded ? values : values.slice(0, 4);
+              const selectedCount = selectedFilters[filter.name]?.length || 0;
+
+              return (
+                <div
+                  key={filter.name}
+                  className="px-4 py-4 border-b border-gray-200"
+                >
+                  <div className="flex justify-between items-center mb-1">
+                    <p className="text-xs font-semibold text-gray-800">
+                      {filter.name.toUpperCase()}
+                    </p>
+                    {selectedCount > 0 && (
+                      <span className="text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full">
+                        {selectedCount}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="max-h-60 overflow-y-auto">
+                    {visible.map((v) => (
+                      <label
+                        key={v}
+                        className="flex items-center gap-2 text-sm mb-1 text-gray-600 hover:text-gray-800 cursor-pointer"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedFilters[filter.name]?.includes(v)}
+                          onChange={() => handleFilterChange(filter.name, v)}
+                          className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                        />
+                        <span className="truncate">{v}</span>
+                      </label>
+                    ))}
+                  </div>
+
+                  {values.length > 4 && (
+                    <button
+                      className="text-sm text-blue-600 hover:text-blue-700 mt-1 font-medium"
+                      onClick={() => toggleFilterExpand(filter.name)}
+                    >
+                      {expanded
+                        ? "Show Less"
+                        : `View ${values.length - 4} More`}
+                    </button>
+                  )}
+                </div>
+              );
+            })
+          ) : (
+            filtersLoaded && (
+              <div className="px-4 py-4 text-center text-gray-500">
+                No filters available for this category
+              </div>
+            )
+          )}
+
+          {/* FILTERS COUNT */}
+          {filtersLoaded && filters.length > 0 && (
+            <div className="px-4 py-3 border-t border-gray-200 bg-gray-50">
+              <p className="text-xs text-gray-600">
+                {filters.length} filters available
+              </p>
+            </div>
+          )}
         </div>
 
         {/* ---------------- PRODUCTS ---------------- */}
         <div className="flex-1 px-4">
-          <div className=" hidden lg:flex bg-white border border-gray-300 px-4 py-2 mb-3  items-center text-sm">
+          {/* Sort Options */}
+          <div className="hidden lg:flex bg-white border border-gray-300 px-4 py-2 mb-3 items-center text-sm">
             <div className="flex gap-3 flex-wrap">
               {SORTS.map((s) => {
                 const isActive = sort === s.value;
@@ -544,7 +735,7 @@ const BrandSubPage = ({ params }) => {
                     className={`px-3 py-1 rounded-full border transition-all duration-200 ${
                       isActive
                         ? "border-yellow-600 text-yellow-700 bg-yellow-50"
-                        : "border-yellow-600 text-gray-700 hover:bg-yellow-50"
+                        : "border-gray-300 text-gray-700 hover:border-yellow-600 hover:bg-yellow-50"
                     }`}
                   >
                     {s.label}
@@ -554,53 +745,109 @@ const BrandSubPage = ({ params }) => {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {products.map((p) => (
-              <NewSingleProductCard key={p._id} product={p} />
-            ))}
-          </div>
+          {/* Products Grid */}
+          {products.length > 0 ? (
+            <>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                {products.map((p) => (
+                  <NewSingleProductCard key={p._id} product={p} />
+                ))}
+              </div>
 
-          {/* Loading More Indicator */}
-          {loadingMore && (
-            <div className="text-center py-8">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <p className="mt-2 text-gray-600">Loading more products...</p>
-            </div>
+              {/* Loading More Indicator */}
+              {loadingMore && (
+                <div className="text-center py-8">
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  <p className="mt-2 text-gray-600">Loading more products...</p>
+                </div>
+              )}
+
+              {/* Infinite Scroll Sentinel (hidden element for Intersection Observer) */}
+              <div
+                ref={sentinelRef}
+                id="scroll-sentinel"
+                className="h-1 w-full"
+                style={{ visibility: "hidden" }}
+              />
+
+              {/* Load More Button (Manual fallback) */}
+              {!loadingMore && products.length < total && (
+                <div className="text-center mt-8">
+                  <button
+                    onClick={handleLoadMore}
+                    disabled={loadingMore}
+                    className="bg-white border border-gray-300 hover:bg-gray-50 text-gray-800 font-medium py-2 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Load More Products
+                  </button>
+                </div>
+              )}
+            </>
+          ) : (
+            !loading && (
+              <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
+                <h2 className="text-xl font-semibold text-gray-600 mb-4">
+                  No products found for the selected filters.
+                </h2>
+                <p className="text-gray-500 mb-6">
+                  Try adjusting your search terms or browse other categories.
+                </p>
+                {hasSelectedFilters && (
+                  <button
+                    onClick={clearAllFilters}
+                    className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    Clear All Filters
+                  </button>
+                )}
+              </div>
+            )
           )}
 
-          {/* Load More Button */}
-          {!loadingMore && products && products.length < total && (
-            <div className="text-center mt-8">
+          {/* Error Display */}
+          {error && !loading && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+              <h3 className="text-lg font-semibold text-red-600 mb-2">
+                Error Loading Products
+              </h3>
+              <p className="text-red-500">{error}</p>
               <button
-                onClick={handleLoadMore}
-                className="bg-white border border-gray-300 hover:bg-gray-50 text-gray-800 font-medium py-2 px-6 rounded-lg transition-colors"
+                onClick={() => {
+                  fetchProducts(1, sort);
+                }}
+                className="mt-4 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
               >
-                Load More Products
+                Try Again
               </button>
-            </div>
-          )}
-
-          {/* No Products Found */}
-          {!loading && products.length === 0 && (
-            <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-              <h2 className="text-xl font-semibold text-gray-600 mb-4">
-                No products found for the selected filters.
-              </h2>
-              <p className="text-gray-500">
-                Try adjusting your search terms or browse other categories.
-              </p>
             </div>
           )}
         </div>
       </div>
-
-      {/* MOBILE FILTER */}
+    
+      {/* MOBILE FILTER COMPONENT */}
       <NewFilter
         filters={filters}
+        loadingFilters={loadingFilters}
         selectedFilters={selectedFilters}
         sort={mobileSort}
-        onFilterChange={setSelectedFilters}
+        productPriceRange={{ min: 0, max: 50000 }}
+        tempPriceRange={tempPriceRange}
+        onFilterChange={(newFilters) => {
+          console.log("Mobile filter change:", newFilters);
+
+          // Update the selected filters state
+          setSelectedFilters(newFilters);
+
+          // Fetch products with new filters
+          const productParams = buildProductParams(1, newFilters, sort);
+          dispatch(fetchBrandSubProducts(productParams));
+
+          // Fetch updated filters
+          const filterParams = buildFilterParams(newFilters);
+          dispatch(fetchBrandSubFilters(filterParams));
+        }}
         onSortChange={handleMobileSortChange}
+        onTempPriceRangeChange={setTempPriceRange}
       />
     </div>
   );
