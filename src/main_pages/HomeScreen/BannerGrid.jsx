@@ -9,8 +9,6 @@ import BannerGridSkeleton from "./BannerGridSkeleton";
 const BannerGrid = () => {
   const {
     cardPromotions = [],
-    loading,
-    error,
   } = useSelector((state) => state.cPromotion);
 
   const allPromotions = [...cardPromotions, ...cardPromotions];
@@ -41,9 +39,9 @@ const BannerGrid = () => {
   }
 
   return (
-    <div className="relative px-2 overflow-hidden" ref={containerRef}>
+    <div className="relative px-2 overflow-x-auto overflow-y-hidden" ref={containerRef}>
       <div className="block">
-        <div className="flex flex-row scroller-inner gap-3 sm:gap-4">
+        <div className="flex flex-row gap-3 sm:gap-4 whitespace-nowrap">
           {allPromotions.map((promotion, index) => {
             const altText =
               promotion.mainTitle || promotion.title || "Promotional banner";
@@ -77,7 +75,7 @@ const BannerGrid = () => {
                     fetchPriority="high"
                   />
 
-                  <div className="absolute inset-0 flex flex-col items-start justify-center p-1 sm:p-4 md:p-6 text-left z-10 text-black bg-gradient-to-r from-white/10 via-transparent to-transparent">
+                  <div className="absolute inset-0 flex flex-col items-start justify-center p-1 sm:p-4 md:p-4 text-left z-10 text-black bg-gradient-to-r from-white/10 via-transparent to-transparent">
                     <h3
                       className="text-xs sm:text-sm md:text-lg lg:text-2xl font-bold mb-1 sm:mb-2 md:mb-3 
                         transition-all duration-500 group-hover:translate-x-[-8px]

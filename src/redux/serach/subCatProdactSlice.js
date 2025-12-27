@@ -3,14 +3,17 @@ import axios from "axios";
 const Baseurl = process.env.NEXT_PUBLIC_API_URL;
 
 // Async thunk for search
-export const searchNewProducts = createAsyncThunk(
-  "searchNew/searchNewProducts",
+export const SubCatProdact = createAsyncThunk(
+  "searchNew/SubCatProdact",
   async (params, { rejectWithValue }) => {
     try {
-      const response = await axios.post(`${Baseurl}/api/v1/search/products`, {
-        ...params,
-        sort: params.sort || "relevance",
-      });
+      const response = await axios.post(
+        `${Baseurl}/api/v1/search/getSubCatProducts`,
+        {
+          ...params,
+          sort: params.sort || "relevance",
+        }
+      );
       return response.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
@@ -19,11 +22,14 @@ export const searchNewProducts = createAsyncThunk(
 );
 
 // Async thunk for fetching filters only
-export const getFilters = createAsyncThunk(
-  "searchNew/getFilters",
+export const getSubCatFilters = createAsyncThunk(
+  "searchNew/getSubCatFilters",
   async (params, { rejectWithValue }) => {
     try {
-      const response = await axios.post(`${Baseurl}/api/v1/search/filters`, params);
+      const response = await axios.post(
+        `${Baseurl}/api/v1/search/getSubCatFilters`,
+        params
+      );
       return response.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
@@ -32,12 +38,12 @@ export const getFilters = createAsyncThunk(
 );
 
 // Async thunk for loading more products
-export const loadMoreProducts = createAsyncThunk(
-  "searchNew/loadMoreProducts",
+export const loadMoreSubCatProducts = createAsyncThunk(
+  "searchNew/loadMoreSubCatProducts",
   async (params, { rejectWithValue }) => {
     try {
       const response = await axios.post(
-        `${Baseurl}/api/v1/search/products`,
+        `${Baseurl}/api/v1/search/getSubCatProducts`,
         params
       );
       return response.data;
@@ -65,7 +71,7 @@ const initialState = {
   sort: "",
 };
 
-const newSearchSlice = createSlice({
+const subCatFiltersSlice = createSlice({
   name: "searchNew",
   initialState,
   reducers: {
@@ -96,11 +102,11 @@ const newSearchSlice = createSlice({
   extraReducers: (builder) => {
     builder
       // Initial search
-      .addCase(searchNewProducts.pending, (state) => {
+      .addCase(SubCatProdact.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(searchNewProducts.fulfilled, (state, action) => {
+      .addCase(SubCatProdact.fulfilled, (state, action) => {
         state.loading = false;
         state.success = action.payload.success;
         state.query = action.payload.query || "";
@@ -111,59 +117,92 @@ const newSearchSlice = createSlice({
         state.count = action.payload.count || 0;
         state.products = action.payload.products || [];
         state.sort = action.meta.arg?.sort || "relevance";
-        
+
         // Only update filters if they exist in the response AND filters haven't been loaded yet
         if (action.payload.filters && action.payload.filters.length > 0) {
           state.filters = action.payload.filters;
         } else if (!state.filtersLoaded) {
           state.filters = state.filters || [];
         }
-        
+
         state.error = null;
       })
-      .addCase(searchNewProducts.rejected, (state, action) => {
+      .addCase(SubCatProdact.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload?.message || action.error.message;
         state.products = [];
         state.success = false;
       })
       // Get filters only
-      .addCase(getFilters.pending, (state) => {
+      .addCase(getSubCatFilters.pending, (state) => {
         state.loadingFilters = true;
         state.error = null;
       })
-      .addCase(getFilters.fulfilled, (state, action) => {
+      .addCase(getSubCatFilters.fulfilled, (state, action) => {
         state.loadingFilters = false;
-        // Always update filters from getFilters endpoint
-        if (action.payload.filters && action.payload.filters.length > 0) {
-          state.filters = action.payload.filters;
-          state.filtersLoaded = true;
-        } else {
-          state.filters = [];
-          state.filtersLoaded = true;
-        }
         state.success = action.payload.success;
-        state.error = null;
+
+        const raw = action.payload.filters || {};
+        const normalized = [];
+
+        // ✅ BRAND FILTER
+        if (Array.isArray(raw.brand) && raw.brand.length > 0) {
+          normalized.push({
+            name: "brand",
+            values: raw.brand,
+            tag: "static",
+          });
+        }
+
+        // ✅ CATEGORY TAG FILTER (VISIBLE)
+        if (Array.isArray(raw.CategoryTag) && raw.CategoryTag.length > 0) {
+          normalized.push({
+            name: "CategoryTag",
+            values: raw.CategoryTag,
+            tag: "static",
+          });
+        }
+
+        // ❌ CategoryTagUrl intentionally NOT added
+
+        // ✅ ATTRIBUTE FILTERS
+        if (Array.isArray(raw.attributes)) {
+          raw.attributes.forEach((attr) => {
+            if (attr.values && attr.values.length > 0) {
+              normalized.push(attr);
+            }
+          });
+        }
+        if (Array.isArray(raw.CategoryTag) && raw.CategoryTag.length > 0) {
+          normalized.push({
+            name: "ProductType", // 👈 UI key
+            apiKey: "CategoryTag", // 👈 REAL backend key
+            values: raw.CategoryTag,
+            tag: "static",
+          });
+        }
+        state.filters = normalized;
+        state.filtersLoaded = true;
       })
-      .addCase(getFilters.rejected, (state, action) => {
+      .addCase(getSubCatFilters.rejected, (state, action) => {
         state.loadingFilters = false;
         state.error = action.payload?.message || action.error.message;
         state.filtersLoaded = true;
       })
       // Loading more products - FIXED
-      .addCase(loadMoreProducts.pending, (state) => {
+      .addCase(loadMoreSubCatProducts.pending, (state) => {
         state.loadingMore = true;
         state.error = null;
       })
-      .addCase(loadMoreProducts.fulfilled, (state, action) => {
+      .addCase(loadMoreSubCatProducts.fulfilled, (state, action) => {
         state.loadingMore = false;
         state.success = action.payload.success;
         state.query = action.payload.query || state.query;
         state.total = action.payload.total || state.total;
-        
+
         // CRITICAL FIX: Increment page number
         state.page = state.page + 1;
-        
+
         state.limit = action.payload.limit || state.limit;
         state.totalPages = action.payload.totalPages || state.totalPages;
         state.count = action.payload.count || state.count;
@@ -173,10 +212,12 @@ const newSearchSlice = createSlice({
         ];
         // Don't update filters on loadMore - keep existing filters
         state.error = null;
-        
-        console.log(`Loaded more: Now page ${state.page}, ${state.products.length} products`);
+
+        console.log(
+          `Loaded more: Now page ${state.page}, ${state.products.length} products`
+        );
       })
-      .addCase(loadMoreProducts.rejected, (state, action) => {
+      .addCase(loadMoreSubCatProducts.rejected, (state, action) => {
         state.loadingMore = false;
         state.error = action.payload?.message || action.error.message;
       });
@@ -190,13 +231,14 @@ export const {
   setPage,
   resetFetching,
   resetFiltersLoaded,
-} = newSearchSlice.actions;
+} = subCatFiltersSlice.actions;
 
 // Selectors
 export const selectSearchProducts = (state) => state.searchNew.products;
 export const selectSearchLoading = (state) => state.searchNew.loading;
 export const selectSearchLoadingMore = (state) => state.searchNew.loadingMore;
-export const selectSearchLoadingFilters = (state) => state.searchNew.loadingFilters;
+export const selectSearchLoadingFilters = (state) =>
+  state.searchNew.loadingFilters;
 export const selectSearchError = (state) => state.searchNew.error;
 export const selectSearchQuery = (state) => state.searchNew.query;
 export const selectSearchFilters = (state) => state.searchNew.filters;
@@ -213,4 +255,4 @@ export const selectSortOption = (state) => state.searchNew.sort;
 export const selectSearchSuccess = (state) => state.searchNew.success;
 export const selectFiltersLoaded = (state) => state.searchNew.filtersLoaded;
 
-export default newSearchSlice.reducer;
+export default subCatFiltersSlice.reducer;

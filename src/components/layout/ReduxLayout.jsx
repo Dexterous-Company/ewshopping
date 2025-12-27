@@ -26,7 +26,6 @@ export default function ReduxLayout({ children }) {
       dispatch(getSubCategoryPromotions());
       dispatch(getCategoryPromotionThree());
     };
-
     // Initial load
     loadData();
 

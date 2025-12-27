@@ -1,154 +1,224 @@
+// File: /redux/serach/brandSlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
+
 const Baseurl = process.env.NEXT_PUBLIC_API_URL;
 
-// Async thunk for search
-export const searchNewProducts = createAsyncThunk(
-  "brandNew/searchNewProducts",
+/* ======================================================
+   ALL API THUNKS - INCLUDING LOAD MORE
+====================================================== */
+export const fetchBrandSubProducts = createAsyncThunk(
+  "brandSub/fetchProducts",
   async (params, { rejectWithValue }) => {
     try {
-      
-      const response = await axios.post(`${Baseurl}/api/v1/product/getDataUsingBrandAndSubCat`, params);
-      
-      return response.data;
+      const res = await axios.post(
+        `${Baseurl}/api/v1/product/getBrandSubCategoryProducts`,
+        params
+      );
+      return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
     }
   }
 );
 
-// Async thunk for loading more products
-export const loadMoreProducts = createAsyncThunk(
-  "brandNew/loadMoreProducts",
+export const fetchBrandSubFilters = createAsyncThunk(
+  "brandSub/fetchFilters",
   async (params, { rejectWithValue }) => {
     try {
-      const response = await axios.post(`${Baseurl}/api/v1/product/getDataUsingBrandAndSubCat`, params);
-      return response.data;
+      const res = await axios.post(
+        `${Baseurl}/api/v1/product/getBrandSubCategoryFilters`,
+        params
+      );
+      return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
     }
   }
 );
 
+// ADD THIS MISSING EXPORT
+export const loadMoreBrandSubProducts = createAsyncThunk(
+  "brandSub/loadMore",
+  async (params, { rejectWithValue }) => {
+    try {
+      const res = await axios.post(
+        `${Baseurl}/api/v1/product/getBrandSubCategoryProducts`,
+        params
+      );
+      return res.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data || err.message);
+    }
+  }
+);
+
+/* ======================================================
+   INITIAL STATE
+====================================================== */
 const initialState = {
   success: false,
-  query: "",
+  products: [],
   total: 0,
   page: 1,
   limit: 20,
   totalPages: 1,
-  count: 0,
-  products: [],
-  filtersCount: 0,
   filters: [],
+  filtersCount: 0,
+  filtersLoaded: false,
   loading: false,
   loadingMore: false,
+  loadingFilters: false,
   error: null,
-  sort: "",
 };
 
-const newBrandSlice = createSlice({
-  name: "brandNew",
+/* ======================================================
+   SLICE
+====================================================== */
+const brandSubSlice = createSlice({
+  name: "brandSub",
   initialState,
+
   reducers: {
-    setSearchQuery: (state, action) => {
-      state.query = action.payload;
-      state.page = 1;
+    clearBrandSub: () => initialState,
+    resetFiltersLoaded: (state) => {
+      state.filtersLoaded = false;
     },
-    setSortOption: (state, action) => {
-      state.sort = action.payload;
-      state.page = 1;
+    updateSelectedFilters: (state, action) => {
+      state.selectedFilters = action.payload;
     },
-    clearSearch: (state) => {
-      return initialState;
-    },
-    setPage: (state, action) => {
-      state.page = action.payload;
-    },
-    resetFetching: (state) => {
-      state.loading = false;
-      state.loadingMore = false;
+    clearSelectedFilters: (state) => {
+      if (state.selectedFilters) {
+        Object.keys(state.selectedFilters).forEach((key) => {
+          state.selectedFilters[key] = [];
+        });
+      }
     },
   },
+
   extraReducers: (builder) => {
     builder
-      // Initial search
-      .addCase(searchNewProducts.pending, (state) => {
+      /* ---------------- FETCH PRODUCTS ---------------- */
+      .addCase(fetchBrandSubProducts.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(searchNewProducts.fulfilled, (state, action) => {
+      .addCase(fetchBrandSubProducts.fulfilled, (state, action) => {
+        console.log("slice", action.payload);
         state.loading = false;
         state.success = action.payload.success;
-        state.query = action.payload.query;
-        state.total = action.payload.total;
-        state.page = action.payload.page;
-        state.limit = action.payload.limit;
-        state.totalPages = action.payload.totalPages;
-        state.count = action.payload.count;
+
         state.products = action.payload.products || [];
-        state.filtersCount = action.payload.filtersCount;
-        state.filters = action.payload.filters || [];
+        console.log("slice products", action.payload.products);
+        state.total = action.payload.total || 0;
+        state.page = action.payload.page || 1;
+        state.limit = action.payload.limit || 20;
+        state.totalPages = action.payload.totalPages || 1;
         state.error = null;
       })
-      .addCase(searchNewProducts.rejected, (state, action) => {
+      .addCase(fetchBrandSubProducts.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload?.message || action.error.message;
         state.products = [];
-        state.success = false;
+        state.error = action.payload?.message || action.error.message;
       })
-      // Loading more products
-      .addCase(loadMoreProducts.pending, (state) => {
+
+      /* ---------------- LOAD MORE PRODUCTS ---------------- */
+      .addCase(loadMoreBrandSubProducts.pending, (state) => {
         state.loadingMore = true;
         state.error = null;
       })
-      .addCase(loadMoreProducts.fulfilled, (state, action) => {
+      .addCase(loadMoreBrandSubProducts.fulfilled, (state, action) => {
         state.loadingMore = false;
         state.success = action.payload.success;
-        state.query = action.payload.query;
-        state.total = action.payload.total;
-        state.page = action.payload.page;
-        state.limit = action.payload.limit;
-        state.totalPages = action.payload.totalPages;
-        state.count = action.payload.count;
-        state.products = [...state.products, ...(action.payload.products || [])];
-        state.filtersCount = action.payload.filtersCount;
-        state.filters = action.payload.filters || [];
+        state.products = [
+          ...state.products,
+          ...(action.payload.products || []),
+        ];
+        state.page = action.payload.page || state.page + 1;
+        state.total = action.payload.total || state.total;
+        state.totalPages = action.payload.totalPages || state.totalPages;
+      })
+      .addCase(loadMoreBrandSubProducts.rejected, (state, action) => {
+        state.loadingMore = false;
+        state.error = action.payload?.message || action.error.message;
+      })
+
+      /* ---------------- FETCH FILTERS ---------------- */
+      .addCase(fetchBrandSubFilters.pending, (state) => {
+        state.loadingFilters = true;
         state.error = null;
       })
-      .addCase(loadMoreProducts.rejected, (state, action) => {
-        state.loadingMore = false;
+      .addCase(fetchBrandSubFilters.fulfilled, (state, action) => {
+        state.loadingFilters = false;
+        state.filtersLoaded = true;
+
+        // Handle both old and new filter structures
+        const filters = action.payload.filters || [];
+
+        // Transform the filters if needed
+        const transformedFilters = filters.map((filter) => {
+          // If filter already has values array, use it
+          if (filter.values && Array.isArray(filter.values)) {
+            return filter;
+          }
+          // If filter has a value string, convert to values array
+          if (filter.value) {
+            return {
+              ...filter,
+              values: filter.value.split(", ").filter((v) => v.trim()),
+            };
+          }
+          return filter;
+        });
+
+        state.filters = transformedFilters;
+        state.filtersCount = action.payload.filtersCount || 0;
+        state.success = action.payload.success;
+
+        console.log("Filters stored in Redux:", transformedFilters); // Debug log
+      })
+      .addCase(fetchBrandSubFilters.rejected, (state, action) => {
+        state.loadingFilters = false;
+        state.filtersLoaded = true;
         state.error = action.payload?.message || action.error.message;
       });
   },
 });
 
+/* ======================================================
+   EXPORTS
+====================================================== */
 export const {
-  setSearchQuery,
-  setSortOption,
-  clearSearch,
-  setPage,
-  resetFetching,
-} = newBrandSlice.actions;
+  clearBrandSub,
+  resetFiltersLoaded,
+  updateSelectedFilters,
+  clearSelectedFilters,
+} = brandSubSlice.actions;
 
-// Selectors
-export const selectSearchProducts = (state) => state.brandNew.products;
-export const selectSearchLoading = (state) => state.brandNew.loading;
-export const selectSearchLoadingMore = (state) => state.brandNew.loadingMore;
-export const selectSearchError = (state) => state.brandNew.error;
-export const selectSearchQuery = (state) => state.brandNew.query;
-export const selectSearchFilters = (state) => state.brandNew.filters;
-export const selectPagination = (state) => ({
-  page: state.brandNew.page,
-  limit: state.brandNew.limit,
-  total: state.brandNew.total,
-  totalPages: state.brandNew.totalPages,
-  count: state.brandNew.count,
-  hasNext: state.brandNew.page < state.brandNew.totalPages,
-  hasPrevious: state.brandNew.page > 1,
+/* ---------------- SELECTORS ---------------- */
+export const selectBrandSubProducts = (state) => state.brandSub.products;
+export const selectBrandSubTotal = (state) => state.brandSub.total;
+export const selectBrandSubPage = (state) => state.brandSub.page;
+export const selectBrandSubLimit = (state) => state.brandSub.limit;
+export const selectBrandSubTotalPages = (state) => state.brandSub.totalPages;
+export const selectBrandSubFilters = (state) => state.brandSub.filters;
+export const selectBrandSubFiltersCount = (state) =>
+  state.brandSub.filtersCount;
+export const selectBrandSubFiltersLoaded = (state) =>
+  state.brandSub.filtersLoaded;
+export const selectBrandSubLoading = (state) => state.brandSub.loading;
+export const selectBrandSubLoadingMore = (state) => state.brandSub.loadingMore;
+export const selectBrandSubLoadingFilters = (state) =>
+  state.brandSub.loadingFilters;
+export const selectBrandSubError = (state) => state.brandSub.error;
+export const selectBrandSubSuccess = (state) => state.brandSub.success;
+
+export const selectBrandSubPagination = (state) => ({
+  page: state.brandSub.page,
+  limit: state.brandSub.limit,
+  total: state.brandSub.total,
+  totalPages: state.brandSub.totalPages,
+  hasNext: state.brandSub.page < state.brandSub.totalPages,
 });
-export const selectSortOption = (state) => state.brandNew.sort;
-export const selectSearchSuccess = (state) => state.brandNew.success;
-export const selectFiltersCount = (state) => state.brandNew.filtersCount;
 
-export default newBrandSlice.reducer;
+export default brandSubSlice.reducer;

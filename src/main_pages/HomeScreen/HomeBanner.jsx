@@ -1,83 +1,128 @@
 "use client";
 
-import React, { useEffect } from "react";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay } from "swiper/modules";
+import React, { memo, useEffect, useRef, useState, useCallback } from "react";
 import Image from "next/image";
 import { useDispatch, useSelector } from "react-redux";
 import { getBanners } from "@/redux/header/BannerSlice";
 import { useRouter } from "next/navigation";
 
+const AUTO_PLAY_DELAY = 3500;
+
 const HomeBanner = () => {
   const dispatch = useDispatch();
-  const { banners, status, error } = useSelector((state) => state.banner);
-  useEffect(() => {
-    dispatch(getBanners());
-  }, [dispatch]);
-
-  if (status === "loading") {
-    return (
-      <div className="w-[98%] mb-5 sm:mb-0 h-auto mx-auto">
-        <div className="w-full h-[120px] sm:h-[180px] md:h-[250px] lg:h-[200px] bg-gray-200 animate-pulse rounded-md" />
-      </div>
-    );
-  }
-
-  if (status === "failed") {
-    return (
-      <div className="w-[98%] mb-5 sm:mb-0 h-auto mx-auto text-red-500">
-        Error loading banners: {error}
-      </div>
-    );
-  }
   const router = useRouter();
-  const handleClick = (e, banner) => {
-    e.preventDefault();
-    if (banner) {
-      router.push(`/banner/${encodeURIComponent(banner.name)}`);
-    }
+  const { banners, status } = useSelector((state) => state.banner);
+
+  const [index, setIndex] = useState(0);
+  const intervalRef = useRef(null);
+  const startX = useRef(0);
+
+  /* ------------------------------------
+     FETCH ONCE
+  ------------------------------------ */
+  useEffect(() => {
+    if (status === "idle") dispatch(getBanners());
+  }, [dispatch, status]);
+
+  /* ------------------------------------
+     AUTOPLAY
+  ------------------------------------ */
+  useEffect(() => {
+    if (!banners?.length) return;
+
+    intervalRef.current = setInterval(() => {
+      setIndex((prev) => (prev + 1) % banners.length);
+    }, AUTO_PLAY_DELAY);
+
+    return () => clearInterval(intervalRef.current);
+  }, [banners]);
+
+  /* ------------------------------------
+     TOUCH SUPPORT (MOBILE)
+  ------------------------------------ */
+  const onTouchStart = (e) => {
+    startX.current = e.touches[0].clientX;
   };
 
-  return (
-    <div
-      className="w-[100%]  h-auto sm:px-0 px-2 sm:rounded-none rounded-xl"
-      id="swi_cont"
-    >
-      <Swiper
-        autoplay={{
-          delay: 3000,
-          disableOnInteraction: false,
-          pauseOnMouseEnter: true,
-        }}
-        loop={true}
-        modules={[Autoplay]}
-        className="mySwiper"
-      >
-        {banners?.map((banner, index) => {
-          const isLCP = index === 0; // ✅ define here
+  const onTouchEnd = (e) => {
+    const diff = startX.current - e.changedTouches[0].clientX;
+    if (Math.abs(diff) < 50) return;
 
-          return (
-            <SwiperSlide
-              key={banner._id}
-              onClick={(e) => handleClick(e, banner)}
-            >
-              <div className="relative w-full h-[75px] sm:h-[180px] md:h-[250px] lg:h-[200px]">
-                <Image
-                  src={banner.desktopImage}
-                  alt={banner.name || `Banner ${index + 1}`}
-                  fill
-                  className="object-cover"
-                  priority={isLCP} // ✅ only first image
-                  loading={isLCP ? "eager" : undefined}
-                  sizes="100vw"
-                />
-              </div>
-            </SwiperSlide>
-          );
-        })}
-      </Swiper>
-    </div>
+    setIndex((prev) =>
+      diff > 0
+        ? (prev + 1) % banners.length
+        : (prev - 1 + banners.length) % banners.length
+    );
+  };
+
+  const handleClick = useCallback(
+    (banner) => {
+      router.push(`/banner/${encodeURIComponent(banner.name)}`);
+    },
+    [router]
+  );
+
+  /* ------------------------------------
+     SKELETON
+  ------------------------------------ */
+  if (status === "loading") {
+    return (
+      <div className="w-full  mb-5">
+        <div className="h-[75px] sm:h-[180px] md:h-[250px] lg:h-[200px] bg-gray-200 animate-pulse " />
+      </div>
+    );
+  }
+
+  if (!banners?.length) return null;
+
+  /* ------------------------------------
+     UI
+  ------------------------------------ */
+  return (
+    <section
+      className="relative w-full overflow-hidden "
+      aria-label="Promotional banners"
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
+    >
+      <div
+        className="flex transition-transform duration-700 ease-in-out"
+        style={{ transform: `translateX(-${index * 100}%)` }}
+      >
+        {banners.map((banner, i) => (
+          <div
+            key={banner._id}
+            className="relative min-w-full h-[75px] sm:h-[180px] md:h-[250px] lg:h-[200px] cursor-pointer"
+            onClick={() => handleClick(banner)}
+          >
+            <Image
+              src={banner.desktopImage}
+              alt={banner.name}
+              fill
+              priority={i === 0}
+              loading={i === 0 ? "eager" : "lazy"}
+              sizes="100vw"
+              className="object-cover"
+            />
+          </div>
+        ))}
+      </div>
+
+      {/* DOTS */}
+      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-2">
+        {banners.map((_, i) => (
+          <button
+            key={`dot-${i}`} // ✅ FIX
+            onClick={() => setIndex(i)}
+            aria-label={`Go to slide ${i + 1}`}
+            className={`w-2.5 h-2.5 rounded-full transition ${
+              index === i ? "bg-white" : "bg-white/50"
+            }`}
+          />
+        ))}
+      </div>
+    </section>
   );
 };
 
-export default React.memo(HomeBanner);
+export default memo(HomeBanner);
