@@ -474,7 +474,7 @@ const Wishlist = () => {
                             <div className="relative flex-shrink-0">
                               <img
                                 src={item?.thumbnail}
-                                className="h-40 w-40 rounded-lg object-cover"
+                                className="h-40 w-40 rounded-lg object-contain"
                                 alt={item.ProductName}
                               />
                               {discountPercentage > 0 && (
