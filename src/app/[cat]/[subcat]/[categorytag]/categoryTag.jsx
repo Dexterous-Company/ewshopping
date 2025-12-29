@@ -89,7 +89,6 @@ const SearchPage = ({ params }) => {
   const toggleFilterExpand = (name) =>
     setExpandedFilters((p) => ({ ...p, [name]: !p[name] }));
 
-  // Build params for products search
   const buildSearchParams = (page = 1, overrideFilters = null) => {
     const params = {
       categoryTag,
@@ -101,13 +100,11 @@ const SearchPage = ({ params }) => {
     return params;
   };
 
-  // Build params for filters only
   const buildFiltersParams = (overrideFilters = null) => ({
     categoryTag,
     filters: overrideFilters || selectedFilters,
   });
 
-  // Initialize selectedFilters based on filter names from API
   useEffect(() => {
     if (filters && filters.length > 0) {
       const filterNames = filters
@@ -135,7 +132,6 @@ const SearchPage = ({ params }) => {
     }
   }, [filters]);
 
-  // Debounced search for products
   const debouncedSearch = useCallback(
     (params) => {
       clearTimeout(searchTimeoutRef.current);
@@ -146,7 +142,6 @@ const SearchPage = ({ params }) => {
     [dispatch]
   );
 
-  // Debounced filters fetch
   const debouncedFetchFilters = useCallback(
     (params) => {
       clearTimeout(filtersTimeoutRef.current);
@@ -157,35 +152,28 @@ const SearchPage = ({ params }) => {
     [dispatch]
   );
 
-  /* ---------- INITIAL SEARCH ---------- */
   useEffect(() => {
     if (initialSearchDone.current) return;
 
-    // Reset filters loaded flag on initial load
     dispatch(resetFiltersLoaded());
 
     const params = buildSearchParams(1);
 
-    // Fetch products first
     dispatch(CategoryTagProducts(params));
 
-    // Then fetch filters
     dispatch(getCategoryTagFilters(buildFiltersParams()));
 
     initialSearchDone.current = true;
   }, [categoryTag, dispatch]);
 
-  /* ---------- FILTER / SORT CHANGE ---------- */
   useEffect(() => {
     if (!initialSearchDone.current) return;
 
     const productParams = buildSearchParams(1);
     const filterParams = buildFiltersParams();
 
-    // Fetch products with debounce
     debouncedSearch(productParams);
 
-    // Also update filters based on current selection
     debouncedFetchFilters(filterParams);
   }, [
     selectedFilters,
@@ -195,28 +183,21 @@ const SearchPage = ({ params }) => {
     initialSearchDone,
   ]);
 
-  /* ---------- INFINITE SCROLL FIX ---------- */
   useEffect(() => {
     const handleScroll = () => {
-      // Don't trigger if already loading
       if (loadingMore) return;
 
-      // Don't trigger if no products or already loaded all
       if (products.length === 0 || products.length >= total) return;
 
       const scrollTop = document.documentElement.scrollTop;
       const scrollHeight = document.documentElement.scrollHeight;
       const clientHeight = document.documentElement.clientHeight;
 
-      // When user reaches 300px from bottom, load more
       const isNearBottom = scrollTop + clientHeight >= scrollHeight - 300;
 
       if (isNearBottom) {
         const nextPage = currentPage + 1;
-        console.log(
-          `Loading more: Page ${nextPage}, Products: ${products.length}/${total}`
-        );
-
+        
         const params = buildSearchParams(nextPage);
         dispatch(loadMoreCategoryTagProducts(params));
       }
@@ -245,7 +226,6 @@ const SearchPage = ({ params }) => {
 
     router.push(`?${p.toString()}`, { scroll: false });
 
-    // Force a search with the new sort parameter
     if (initialSearchDone.current) {
       const params = buildSearchParams(1);
       params.sort = value;
@@ -274,7 +254,6 @@ const SearchPage = ({ params }) => {
         [name]: prev[name]?.filter((v) => v !== value),
       };
 
-      // Update filters after removal
       const filterParams = buildFiltersParams(newFilters);
       debouncedFetchFilters(filterParams);
 
@@ -285,7 +264,6 @@ const SearchPage = ({ params }) => {
   const clearAllFilters = () => {
     const clearedFilters = { priceRange: null };
 
-    // Initialize all filter categories from current filters to empty arrays
     if (filters && filters.length > 0) {
       filters.forEach((filter) => {
         if (filter.values && filter.values.length > 0) {
@@ -293,7 +271,6 @@ const SearchPage = ({ params }) => {
         }
       });
     } else {
-      // If filters not loaded yet, use current selectedFilters structure
       Object.keys(selectedFilters).forEach((key) => {
         if (key !== "priceRange") {
           clearedFilters[key] = [];
@@ -304,11 +281,9 @@ const SearchPage = ({ params }) => {
     setSelectedFilters(clearedFilters);
     setTempPriceRange([0, 1000]);
 
-    // Fetch updated filters after clearing
     debouncedFetchFilters(buildFiltersParams(clearedFilters));
   };
 
-  /* ---------- Calculate hasSelectedFilters ---------- */
   const hasSelectedFilters = Object.entries(selectedFilters).some(
     ([key, value]) => {
       if (key === "priceRange") {
@@ -318,22 +293,18 @@ const SearchPage = ({ params }) => {
     }
   );
 
-  // Filter out empty filter values
   const validFilters = React.useMemo(() => {
     return (filters || []).filter(
       (filter) => filter.values && filter.values.length > 0
     );
   }, [filters]);
 
-  // Show filters only when they're loaded or loading
   const shouldShowFilters = filtersLoaded || loadingFilters;
 
   return (
     <div className="min-h-screen bg-gray-100 pt-4">
       <div className="max-w-[1600px] mx-auto flex">
-        {/* ---------------- LEFT FILTER ---------------- */}
         <div className="hidden lg:block w-[270px] bg-gray-50 border border-gray-300 text-gray-600">
-          {/* HEADER */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-300 text-sm font-semibold text-gray-800">
             <span>Filters</span>
             {hasSelectedFilters && (
@@ -346,7 +317,6 @@ const SearchPage = ({ params }) => {
             )}
           </div>
 
-          {/* Show loading indicator for filters */}
           {loadingFilters && validFilters.length === 0 && (
             <div className="px-4 py-3 border-b border-gray-200">
               <div className="animate-pulse space-y-2">
@@ -357,7 +327,6 @@ const SearchPage = ({ params }) => {
             </div>
           )}
 
-          {/* SELECTED FILTERS */}
           {hasSelectedFilters && shouldShowFilters && (
             <div className="px-4 py-2 flex flex-wrap gap-2 border-b border-gray-300 bg-gray-100">
               {Object.entries(selectedFilters).map(([key, values]) => {
@@ -413,7 +382,6 @@ const SearchPage = ({ params }) => {
             </div>
           )}
 
-          {/* PRICE */}
           {shouldShowFilters && (
             <div className="px-4 py-4 border-b border-gray-200">
               <p className="text-xs font-semibold mb-2 text-gray-800">PRICE</p>
@@ -430,10 +398,8 @@ const SearchPage = ({ params }) => {
 
                     setSelectedFilters(newFilters);
 
-                    // Fetch products with new price range
                     debouncedSearch(buildSearchParams(1, newFilters));
 
-                    // Also update filters
                     debouncedFetchFilters(buildFiltersParams(newFilters));
                   }}
                 />
@@ -441,7 +407,6 @@ const SearchPage = ({ params }) => {
             </div>
           )}
 
-          {/* DYNAMIC FILTERS */}
           {shouldShowFilters && validFilters.length > 0 ? (
             validFilters.map((filter) => {
               const values = filter.values || [];
@@ -500,7 +465,6 @@ const SearchPage = ({ params }) => {
           ) : null}
         </div>
 
-        {/* ---------------- PRODUCTS ---------------- */}
         <div className="flex-1 px-4">
           <div className="hidden lg:flex bg-white border border-gray-300 px-4 py-2 mb-3 items-center text-sm">
             <div className="flex gap-3 flex-wrap">
@@ -529,21 +493,18 @@ const SearchPage = ({ params }) => {
             ))}
           </div>
 
-          {/* LOADING INDICATOR */}
           {loadingMore && (
             <div className="flex justify-center my-8">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
             </div>
           )}
 
-          {/* END OF RESULTS */}
           {products.length > 0 && products.length >= total && (
             <div className="text-center py-8 text-gray-500">
               You've reached the end
             </div>
           )}
 
-          {/* NO PRODUCTS FOUND */}
           {products.length === 0 && !loadingMore && (
             <div className="text-center py-12 text-gray-500">
               No products found
@@ -552,7 +513,6 @@ const SearchPage = ({ params }) => {
         </div>
       </div>
 
-      {/* MOBILE FILTER */}
       <NewFilter
         filters={validFilters}
         loadingFilters={loadingFilters}

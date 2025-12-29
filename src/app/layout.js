@@ -7,107 +7,73 @@ import { Toaster } from "react-hot-toast";
 import Script from "next/script";
 import CartHydrationProvider from "@/components/layout/CartHydrationProvider";
 import ScrollToTopEffect from "@/components/ScrollToTopEffect";
-import { Poppins, Manrope } from 'next/font/google';
+import { Poppins, Manrope } from "next/font/google";
+
+/* Fonts */
 const poppins = Poppins({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800'],
-  variable: '--font-poppins',
-  display: 'swap',
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-poppins",
+  display: "swap",
 });
 
 const manrope = Manrope({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800'],
-  variable: '--font-manrope',
-  display: 'swap',
-  preload: false,
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-manrope",
+  display: "swap",
 });
 
+/* Metadata */
 export const metadata = {
   title: "EwShopping",
-  description: "Welcome to EwShopping, your destination for stylish fashion and cutting-edge electronics. Discover quality clothing for all, plus the latest gadgets and tech accessories.",
-  keywords: "fashion, electronics, shopping, clothing, gadgets, tech accessories",
+  description:
+    "Welcome to EwShopping, your destination for stylish fashion and cutting-edge electronics.",
+  keywords:
+    "fashion, electronics, shopping, clothing, gadgets, tech accessories",
   authors: [{ name: "EwShopping" }],
   robots: {
     index: true,
     follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
-    },
   },
   openGraph: {
-    type: 'website',
-    locale: 'en_US',
-    url: 'https://ewshopping.com',
-    title: 'EwShopping',
-    description: 'Your destination for stylish fashion and cutting-edge electronics.',
-    siteName: 'EwShopping',
-    images: [
-      {
-        url: '',
-        width: 1200,
-        height: 630,
-        alt: 'EwShopping',
-      },
-    ],
+    type: "website",
+    locale: "en_US",
+    url: "https://ewshopping.com",
+    title: "EwShopping",
+    description:
+      "Your destination for stylish fashion and cutting-edge electronics.",
+    siteName: "EwShopping",
   },
   twitter: {
-    card: 'summary_large_image',
-    title: 'EwShopping',
-    description: 'Your destination for stylish fashion and cutting-edge electronics.',
-    images: ['/twitter-image.png'],
-    creator: '@ewshopping',
-  },
-  icons: {
-    icon: [
-      { url: '/favicon.png', sizes: '16x16', type: 'image/png' },
-      { url: '/favicon.png', sizes: '32x32', type: 'image/png' },
-    ],
-    apple: [
-      { url: '/favicon.png', sizes: '180x180', type: 'image/png' },
-    ],
-    shortcut: ['/favicon.png'],
+    card: "summary_large_image",
+    title: "EwShopping",
+    description:
+      "Your destination for stylish fashion and cutting-edge electronics.",
   },
   manifest: "/manifest.json",
-  other: {
-    'msapplication-TileColor': '#cfebfe',
-  },
 };
 
 export const viewport = {
-  themeColor: "#cfebfe",
-  width: 'device-width',
+  width: "device-width",
   initialScale: 1,
-  maximumScale: 5,
+  themeColor: "#cfebfe",
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${poppins.variable} ${manrope.variable}`}>
       <head>
-        {/* Preload critical resources */}
+        {/* Preconnect for analytics */}
         <link rel="preconnect" href="https://www.googletagmanager.com" />
-        <link rel="preconnect" href="https://www.google-analytics.com" />
         <link rel="preconnect" href="https://connect.facebook.net" />
-        
-        {/* Preload first font only */}
-        <link
-          rel="preload"
-          href="/fonts/Poppins-Regular.woff2"
-          as="font"
-          type="font/woff2"
-          crossOrigin="anonymous"
-        />
       </head>
+
       <body suppressHydrationWarning>
-        {/* Google Tag Manager - Lazy loaded */}
+        {/* ✅ Google Tag Manager (ONLY THIS – GA IS INSIDE GTM) */}
         <Script
           id="google-tag-manager"
-          strategy="lazyOnload"
+          strategy="afterInteractive"
           dangerouslySetInnerHTML={{
             __html: `
               (function(w,d,s,l,i){
@@ -123,56 +89,23 @@ export default function RootLayout({ children }) {
           }}
         />
 
-        {/* Google Analytics - Lazy loaded */}
-        <Script
-          strategy="lazyOnload"
-          src="https://www.googletagmanager.com/gtag/js?id=G-P107735Y77"
-        />
-        <Script
-          id="google-analytics"
-          strategy="lazyOnload"
-          dangerouslySetInnerHTML={{
-            __html: `
-              window.dataLayer = window.dataLayer || [];
-              function gtag(){dataLayer.push(arguments);}
-              gtag('js', new Date());
-              gtag('config', 'G-P107735Y77', {
-                page_path: window.location.pathname,
-                send_page_view: false
-              });
-            `,
-          }}
-        />
+        {/* ✅ Facebook Pixel – lazy (non-blocking) */}
+        <Script id="meta-pixel" strategy="lazyOnload">
+          {`
+            !function(f,b,e,v,n,t,s)
+            {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+            n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+            if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+            n.queue=[];t=b.createElement(e);t.async=!0;
+            t.src=v;s=b.getElementsByTagName(e)[0];
+            s.parentNode.insertBefore(t,s)}(window, document,'script',
+            'https://connect.facebook.net/en_US/fbevents.js');
+            fbq('init','YOUR_PIXEL_ID');
+            fbq('track','PageView');
+          `}
+        </Script>
 
-        {/* Meta Pixel - Lazy loaded */}
-        <Script
-          id="meta-pixel"
-          strategy="lazyOnload"
-          dangerouslySetInnerHTML={{
-            __html: `
-              !function(f,b,e,v,n,t,s){
-                if(f.fbq)return;
-                n=f.fbq=function(){
-                  n.callMethod? n.callMethod.apply(n,arguments):n.queue.push(arguments)
-                };
-                if(!f._fbq)f._fbq=n;
-                n.push=n;
-                n.loaded=!0;
-                n.version='2.0';
-                n.queue=[];
-                t=b.createElement(e);
-                t.async=!0;
-                t.src=v;
-                s=b.getElementsByTagName(e)[0];
-                s.parentNode.insertBefore(t,s)
-              }(window, document,'script','https://connect.facebook.net/en_US/fbevents.js');
-              fbq('init', '891839062956188');
-              fbq('track', 'PageView');
-            `,
-          }}
-        />
-
-        {/* NoScript Fallbacks */}
+        {/* NoScript fallback */}
         <noscript>
           <iframe
             src="https://www.googletagmanager.com/ns.html?id=GTM-XXXXXX"
@@ -182,16 +115,18 @@ export default function RootLayout({ children }) {
             title="Google Tag Manager"
           />
         </noscript>
+
         <noscript>
           <img
             height="1"
             width="1"
             style={{ display: "none" }}
-            src="https://www.facebook.com/tr?id=891839062956188&ev=PageView&noscript=1"
-            alt="Facebook Pixel Fallback"
+            src="https://www.facebook.com/tr?id=YOUR_PIXEL_ID&ev=PageView&noscript=1"
+            alt=""
           />
         </noscript>
 
+        {/* App Layout */}
         <ReduxProvider>
           <ReduxLayout>
             <MainLayout>
@@ -201,34 +136,10 @@ export default function RootLayout({ children }) {
           </ReduxLayout>
         </ReduxProvider>
 
-        <Toaster
-          position="top-left"
-          toastOptions={{
-            duration: 4000,
-            style: {
-              background: "#363636",
-              color: "#fff",
-              fontSize: '14px',
-              padding: '12px 16px',
-            },
-            success: { 
-              duration: 3000,
-              iconTheme: {
-                primary: '#10b981',
-                secondary: '#ffffff',
-              }
-            },
-            error: { 
-              duration: 2000,
-              iconTheme: {
-                primary: '#ef4444',
-                secondary: '#ffffff',
-              }
-            },
-          }}
-        />
-        
-        {/* Add structured data for SEO */}
+        {/* Toast */}
+        <Toaster position="top-left" />
+
+        {/* Structured Data */}
         <Script
           id="structured-data"
           type="application/ld+json"
@@ -236,15 +147,9 @@ export default function RootLayout({ children }) {
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "WebSite",
-              "name": "EwShopping",
-              "url": "https://ewshopping.com",
-              "description": "Your destination for stylish fashion and cutting-edge electronics.",
-              "potentialAction": {
-                "@type": "SearchAction",
-                "target": "https://ewshopping.com/search?q={search_term_string}",
-                "query-input": "required name=search_term_string"
-              }
-            })
+              name: "EwShopping",
+              url: "https://ewshopping.com",
+            }),
           }}
         />
       </body>

@@ -139,17 +139,15 @@ const BrandSubPage = ({ params }) => {
   const router = useRouter();
   const pathname = usePathname();
 
-  // Get search params - SIMPLIFIED APPROACH
+  
   const searchParams = useSearchParams();
   const sort = searchParams.get("sort") || "relevance";
   const page = searchParams.get("page") || "1";
 
-  // Get data from Redux store
+  
   const products = useSelector((state) => state.brandSub.products);
-  console.log("products-->", products);
 
   const filters = useSelector((state) => state.brandSub.filters);
-  console.log("filters from Redux-->", filters);
 
   const total = useSelector((state) => state.brandSub.total);
   const currentPage = useSelector((state) => state.brandSub.page);
@@ -205,20 +203,17 @@ const BrandSubPage = ({ params }) => {
         });
       }
 
-      console.log("Building product params:", params);
       return params;
     },
     [brand, subCategory, sort, selectedFilters]
   );
 
-  // Build filters parameters
   const buildFilterParams = (customFilters = {}) => {
     const params = {
       brand,
       subCategory,
     };
 
-    // Include existing filters if any
     if (Object.keys(customFilters).length > 0) {
       params.filters = customFilters;
     }
@@ -226,7 +221,6 @@ const BrandSubPage = ({ params }) => {
     return params;
   };
 
-  // Fetch products function
   const fetchProducts = useCallback(
     (pageNum = 1, customSort = sort) => {
       const productParams = buildProductParams(
@@ -234,20 +228,18 @@ const BrandSubPage = ({ params }) => {
         selectedFilters,
         customSort
       );
-      console.log("Fetching products:", productParams);
       dispatch(fetchBrandSubProducts(productParams));
     },
     [buildProductParams, selectedFilters, dispatch, sort]
   );
 
-  // Fetch filters function
+  
   const fetchFilters = useCallback(() => {
     const filterParams = buildFilterParams(selectedFilters);
-    console.log("Fetching filters:", filterParams);
     dispatch(fetchBrandSubFilters(filterParams));
   }, [selectedFilters, dispatch]);
 
-  // Update URL function
+  
   const updateURL = useCallback(
     (updates) => {
       const currentParams = new URLSearchParams(searchParams.toString());
@@ -263,29 +255,26 @@ const BrandSubPage = ({ params }) => {
       const queryString = currentParams.toString();
       const newUrl = queryString ? `${pathname}?${queryString}` : pathname;
 
-      console.log("Updating URL to:", newUrl);
+      
       router.replace(newUrl, { scroll: false });
     },
     [searchParams, pathname, router]
   );
 
-  // Handle sort change - SIMPLE AND DIRECT
   const handleSort = (sortValue) => {
-    console.log("Sort button clicked:", sortValue);
 
-    // Update mobile sort state
+    
     setMobileSort(sortValue);
 
-    // Update URL immediately
+    
     updateURL({ sort: sortValue, page: "1" });
 
-    // Fetch products immediately with new sort
+    
     fetchProducts(1, sortValue);
   };
 
-  // Handle filter changes
+  
   const handleFilterChange = (filterName, value) => {
-    console.log("Filter changed:", filterName, value);
     setSelectedFilters((prev) => {
       const currentValues = prev[filterName] || [];
       const newValues = currentValues.includes(value)
@@ -297,10 +286,10 @@ const BrandSubPage = ({ params }) => {
         [filterName]: newValues,
       };
 
-      // Fetch products with new filters
+      
       fetchProducts(1, sort);
 
-      // Fetch updated filters
+      
       const filterParams = buildFilterParams(newFilters);
       dispatch(fetchBrandSubFilters(filterParams));
 
@@ -308,7 +297,7 @@ const BrandSubPage = ({ params }) => {
     });
   };
 
-  // Handle price range filter
+  
   const handlePriceRangeChange = (range) => {
     const newFilters = {
       ...selectedFilters,
@@ -317,15 +306,15 @@ const BrandSubPage = ({ params }) => {
 
     setSelectedFilters(newFilters);
 
-    // Fetch products with new price filter
+    
     fetchProducts(1, sort);
 
-    // Fetch updated filters
+    
     const filterParams = buildFilterParams(newFilters);
     dispatch(fetchBrandSubFilters(filterParams));
   };
 
-  // Remove selected filter
+  
   const removeSelected = (filterName, value) => {
     setSelectedFilters((prev) => {
       const currentValues = prev[filterName] || [];
@@ -336,10 +325,10 @@ const BrandSubPage = ({ params }) => {
         [filterName]: newValues,
       };
 
-      // Fetch products with updated filters
+      
       fetchProducts(1, sort);
 
-      // Fetch updated filters
+      
       const filterParams = buildFilterParams(newFilters);
       dispatch(fetchBrandSubFilters(filterParams));
 
@@ -368,25 +357,23 @@ const BrandSubPage = ({ params }) => {
     }));
   };
 
-  // Check if any filter is selected
+  
   const hasSelectedFilters = Object.keys(selectedFilters).some(
     (key) =>
       (selectedFilters[key] && selectedFilters[key].length > 0) ||
       (key === "priceRange" && selectedFilters[key])
   );
 
-  // Initial load when component mounts
+  
   useEffect(() => {
     if (initialLoadDone.current) return;
 
-    console.log("Initial load triggered for:", brand, subCategory);
 
-    // Fetch initial products
+    
     fetchProducts(1, sort);
 
-    // Fetch initial filters
+    
     const filterParams = buildFilterParams();
-    console.log("Initial filter params:", filterParams);
     dispatch(fetchBrandSubFilters(filterParams));
 
     initialLoadDone.current = true;
@@ -394,47 +381,34 @@ const BrandSubPage = ({ params }) => {
     prevPageRef.current = page;
   }, [brand, subCategory, dispatch]);
 
-  // Effect to handle URL parameter changes
   useEffect(() => {
-    console.log("URL params changed - sort:", sort, "page:", page);
 
-    // Skip if initial load hasn't happened yet
     if (!initialLoadDone.current) return;
 
     const pageNum = parseInt(page) || 1;
 
-    // Check if sort has changed
     if (sort !== prevSortRef.current) {
-      console.log("Sort changed from", prevSortRef.current, "to", sort);
       prevSortRef.current = sort;
       setMobileSort(sort);
 
-      // Always fetch products when sort changes
       fetchProducts(1, sort);
       return;
     }
 
-    // Check if page has changed
     if (pageNum !== parseInt(prevPageRef.current)) {
-      console.log("Page changed from", prevPageRef.current, "to", pageNum);
       prevPageRef.current = page;
 
       if (pageNum === 1) {
-        // Fetch fresh products for page 1
         fetchProducts(1, sort);
       } else if (pageNum > currentPage) {
-        // Load more products
-        console.log("Loading more products for page:", pageNum);
         const params = buildProductParams(pageNum, selectedFilters, sort);
         dispatch(loadMoreBrandSubProducts(params));
       }
     }
   }, [sort, page, currentPage, selectedFilters, dispatch]);
 
-  // Initialize selected filters when filters are loaded
   useEffect(() => {
     if (filters && filters.length > 0 && !filtersInitialized.current) {
-      console.log("Filters loaded, initializing:", filters);
       const initialFilters = {};
       filters.forEach((filter) => {
         initialFilters[filter.name] = [];
@@ -444,7 +418,6 @@ const BrandSubPage = ({ params }) => {
     }
   }, [filters]);
 
-  // Reset refs when category changes
   useEffect(() => {
     initialLoadDone.current = false;
     filtersInitialized.current = false;
@@ -455,17 +428,13 @@ const BrandSubPage = ({ params }) => {
     prevPageRef.current = "1";
   }, [brand, subCategory]);
 
-  // Handle load more button click - FIXED VERSION
   const handleLoadMore = useCallback(() => {
     if (loadingMore || products.length >= total) return;
 
     const nextPage = currentPage + 1;
-    console.log("Load more triggered, next page:", nextPage);
 
-    // Update URL with new page
     updateURL({ page: nextPage.toString() });
 
-    // Dispatch load more action
     const params = buildProductParams(nextPage, selectedFilters, sort);
     dispatch(loadMoreBrandSubProducts(params));
   }, [
@@ -480,7 +449,6 @@ const BrandSubPage = ({ params }) => {
     buildProductParams,
   ]);
 
-  // Simple manual infinite scroll implementation
   useEffect(() => {
     const handleScroll = () => {
       if (loadingMore || products.length >= total) return;
@@ -489,7 +457,6 @@ const BrandSubPage = ({ params }) => {
       const scrollHeight = document.documentElement.scrollHeight;
       const clientHeight = document.documentElement.clientHeight;
 
-      // Load more when user is 300px from bottom
       if (scrollTop + clientHeight >= scrollHeight - 300) {
         handleLoadMore();
       }
@@ -499,34 +466,25 @@ const BrandSubPage = ({ params }) => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [loadingMore, products.length, total, handleLoadMore]);
 
-  // Reset isFetching when loadingMore changes
   useEffect(() => {
-    // Reset any loading states when load completes
   }, [loadingMore]);
 
-  // Handle mobile sort change
   const handleMobileSortChange = (sortValue) => {
-    console.log("Mobile sort changed to:", sortValue);
     handleSort(sortValue);
   };
 
-  // Combined loading states
   const isLoading = loading && !loadingMore;
   const isLoadingFilters = loadingFilters && !filtersLoaded;
 
-  // Show loading skeleton for initial load
   if (isLoading && products.length === 0) {
     return (
       <div className="min-h-screen bg-gray-100 pt-4">
         <div className="max-w-[1600px] mx-auto flex">
-          {/* Filters Sidebar Skeleton */}
           <div className="hidden lg:block w-[270px]">
             <FilterSkeleton />
           </div>
 
-          {/* Products Section Skeleton */}
           <div className="flex-1 px-4">
-            {/* Sort Options Skeleton */}
             <div className="bg-white border border-gray-300 px-4 py-2 mb-3">
               <div className="flex gap-3 flex-wrap">
                 {[...Array(4)].map((_, i) => (
@@ -538,7 +496,6 @@ const BrandSubPage = ({ params }) => {
               </div>
             </div>
 
-            {/* Products Grid Skeleton */}
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
               {[...Array(10)].map((_, index) => (
                 <ProductCardSkeleton key={index} />
@@ -553,7 +510,6 @@ const BrandSubPage = ({ params }) => {
   return (
     <div className="min-h-screen bg-gray-100 pt-4">
       <div className="max-w-[1600px] mx-auto flex">
-        {/* ---------------- LEFT FILTER ---------------- */}
         <div className="hidden lg:block w-[270px] bg-white border border-gray-300 text-gray-600">
           {/* HEADER */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-300 text-sm font-semibold text-gray-800">
@@ -568,7 +524,6 @@ const BrandSubPage = ({ params }) => {
             )}
           </div>
 
-          {/* SELECTED FILTERS */}
           {hasSelectedFilters && (
             <div className="px-4 py-2 flex flex-wrap gap-2 border-b border-gray-300 bg-gray-50">
               {Object.entries(selectedFilters).map(([key, values]) =>
@@ -711,7 +666,6 @@ const BrandSubPage = ({ params }) => {
             )
           )}
 
-          {/* FILTERS COUNT */}
           {filtersLoaded && filters.length > 0 && (
             <div className="px-4 py-3 border-t border-gray-200 bg-gray-50">
               <p className="text-xs text-gray-600">
@@ -721,9 +675,7 @@ const BrandSubPage = ({ params }) => {
           )}
         </div>
 
-        {/* ---------------- PRODUCTS ---------------- */}
         <div className="flex-1 px-4">
-          {/* Sort Options */}
           <div className="hidden lg:flex bg-white border border-gray-300 px-4 py-2 mb-3 items-center text-sm">
             <div className="flex gap-3 flex-wrap">
               {SORTS.map((s) => {
@@ -745,7 +697,6 @@ const BrandSubPage = ({ params }) => {
             </div>
           </div>
 
-          {/* Products Grid */}
           {products.length > 0 ? (
             <>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
@@ -754,7 +705,6 @@ const BrandSubPage = ({ params }) => {
                 ))}
               </div>
 
-              {/* Loading More Indicator */}
               {loadingMore && (
                 <div className="text-center py-8">
                   <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -762,7 +712,6 @@ const BrandSubPage = ({ params }) => {
                 </div>
               )}
 
-              {/* Infinite Scroll Sentinel (hidden element for Intersection Observer) */}
               <div
                 ref={sentinelRef}
                 id="scroll-sentinel"
@@ -770,7 +719,6 @@ const BrandSubPage = ({ params }) => {
                 style={{ visibility: "hidden" }}
               />
 
-              {/* Load More Button (Manual fallback) */}
               {!loadingMore && products.length < total && (
                 <div className="text-center mt-8">
                   <button
@@ -833,16 +781,12 @@ const BrandSubPage = ({ params }) => {
         productPriceRange={{ min: 0, max: 50000 }}
         tempPriceRange={tempPriceRange}
         onFilterChange={(newFilters) => {
-          console.log("Mobile filter change:", newFilters);
 
-          // Update the selected filters state
           setSelectedFilters(newFilters);
 
-          // Fetch products with new filters
           const productParams = buildProductParams(1, newFilters, sort);
           dispatch(fetchBrandSubProducts(productParams));
 
-          // Fetch updated filters
           const filterParams = buildFilterParams(newFilters);
           dispatch(fetchBrandSubFilters(filterParams));
         }}
