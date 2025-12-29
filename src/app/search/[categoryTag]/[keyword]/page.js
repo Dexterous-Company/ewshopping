@@ -283,14 +283,10 @@ const SearchPage = ({ params }) => {
       const scrollHeight = document.documentElement.scrollHeight;
       const clientHeight = document.documentElement.clientHeight;
 
-      // When user reaches 300px from bottom, load more
       const isNearBottom = scrollTop + clientHeight >= scrollHeight - 300;
 
       if (isNearBottom) {
         const nextPage = currentPage + 1;
-        console.log(
-          `Loading more: Page ${nextPage}, Products: ${products.length}/${total}`
-        );
 
         const params = buildSearchParams(nextPage);
         dispatch(loadMoreProducts(params));
@@ -320,7 +316,6 @@ const SearchPage = ({ params }) => {
 
     router.push(`?${p.toString()}`, { scroll: false });
 
-    // Force a search with the new sort parameter
     if (initialSearchDone.current) {
       const params = buildSearchParams(1);
       params.sort = value;
@@ -338,7 +333,6 @@ const SearchPage = ({ params }) => {
           : [...curr, value],
       };
 
-      // Update filters in backend
       const filterParams = buildFiltersParams(newFilters);
       debouncedFetchFilters(filterParams);
 
@@ -353,7 +347,6 @@ const SearchPage = ({ params }) => {
         [name]: prev[name]?.filter((v) => v !== value),
       };
 
-      // Update filters after removal
       const filterParams = buildFiltersParams(newFilters);
       debouncedFetchFilters(filterParams);
 
@@ -364,7 +357,6 @@ const SearchPage = ({ params }) => {
   const clearAllFilters = () => {
     const clearedFilters = { priceRange: null };
 
-    // Initialize all filter categories from current filters to empty arrays
     if (filters && filters.length > 0) {
       filters.forEach((filter) => {
         if (filter.values && filter.values.length > 0) {
