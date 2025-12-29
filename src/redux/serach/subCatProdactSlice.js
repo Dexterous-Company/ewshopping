@@ -2,7 +2,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 const Baseurl = process.env.NEXT_PUBLIC_API_URL;
 
-// Async thunk for search
+
 export const SubCatProdact = createAsyncThunk(
   "searchNew/SubCatProdact",
   async (params, { rejectWithValue }) => {
@@ -21,7 +21,7 @@ export const SubCatProdact = createAsyncThunk(
   }
 );
 
-// Async thunk for fetching filters only
+
 export const getSubCatFilters = createAsyncThunk(
   "searchNew/getSubCatFilters",
   async (params, { rejectWithValue }) => {
@@ -37,7 +37,7 @@ export const getSubCatFilters = createAsyncThunk(
   }
 );
 
-// Async thunk for loading more products
+
 export const loadMoreSubCatProducts = createAsyncThunk(
   "searchNew/loadMoreSubCatProducts",
   async (params, { rejectWithValue }) => {
@@ -94,14 +94,14 @@ const subCatFiltersSlice = createSlice({
       state.loadingMore = false;
       state.loadingFilters = false;
     },
-    // Add a new reducer to clear only filters flag
+    
     resetFiltersLoaded: (state) => {
       state.filtersLoaded = false;
     },
   },
   extraReducers: (builder) => {
     builder
-      // Initial search
+      
       .addCase(SubCatProdact.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -118,7 +118,6 @@ const subCatFiltersSlice = createSlice({
         state.products = action.payload.products || [];
         state.sort = action.meta.arg?.sort || "relevance";
 
-        // Only update filters if they exist in the response AND filters haven't been loaded yet
         if (action.payload.filters && action.payload.filters.length > 0) {
           state.filters = action.payload.filters;
         } else if (!state.filtersLoaded) {
@@ -133,7 +132,7 @@ const subCatFiltersSlice = createSlice({
         state.products = [];
         state.success = false;
       })
-      // Get filters only
+      
       .addCase(getSubCatFilters.pending, (state) => {
         state.loadingFilters = true;
         state.error = null;
@@ -145,7 +144,6 @@ const subCatFiltersSlice = createSlice({
         const raw = action.payload.filters || {};
         const normalized = [];
 
-        // ✅ BRAND FILTER
         if (Array.isArray(raw.brand) && raw.brand.length > 0) {
           normalized.push({
             name: "brand",
@@ -154,7 +152,6 @@ const subCatFiltersSlice = createSlice({
           });
         }
 
-        // ✅ CATEGORY TAG FILTER (VISIBLE)
         if (Array.isArray(raw.CategoryTag) && raw.CategoryTag.length > 0) {
           normalized.push({
             name: "CategoryTag",
@@ -163,9 +160,6 @@ const subCatFiltersSlice = createSlice({
           });
         }
 
-        // ❌ CategoryTagUrl intentionally NOT added
-
-        // ✅ ATTRIBUTE FILTERS
         if (Array.isArray(raw.attributes)) {
           raw.attributes.forEach((attr) => {
             if (attr.values && attr.values.length > 0) {
@@ -175,8 +169,8 @@ const subCatFiltersSlice = createSlice({
         }
         if (Array.isArray(raw.CategoryTag) && raw.CategoryTag.length > 0) {
           normalized.push({
-            name: "ProductType", // 👈 UI key
-            apiKey: "CategoryTag", // 👈 REAL backend key
+            name: "ProductType", 
+            apiKey: "CategoryTag", 
             values: raw.CategoryTag,
             tag: "static",
           });
@@ -200,7 +194,6 @@ const subCatFiltersSlice = createSlice({
         state.query = action.payload.query || state.query;
         state.total = action.payload.total || state.total;
 
-        // CRITICAL FIX: Increment page number
         state.page = state.page + 1;
 
         state.limit = action.payload.limit || state.limit;
@@ -210,12 +203,9 @@ const subCatFiltersSlice = createSlice({
           ...state.products,
           ...(action.payload.products || []),
         ];
-        // Don't update filters on loadMore - keep existing filters
         state.error = null;
 
-        console.log(
-          `Loaded more: Now page ${state.page}, ${state.products.length} products`
-        );
+        
       })
       .addCase(loadMoreSubCatProducts.rejected, (state, action) => {
         state.loadingMore = false;
@@ -233,7 +223,6 @@ export const {
   resetFiltersLoaded,
 } = subCatFiltersSlice.actions;
 
-// Selectors
 export const selectSearchProducts = (state) => state.searchNew.products;
 export const selectSearchLoading = (state) => state.searchNew.loading;
 export const selectSearchLoadingMore = (state) => state.searchNew.loadingMore;

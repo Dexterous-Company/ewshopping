@@ -17,29 +17,41 @@ const HomeBanner = () => {
   const intervalRef = useRef(null);
   const startX = useRef(0);
 
-  /* ------------------------------------
-     FETCH ONCE
-  ------------------------------------ */
+  /* FETCH */
   useEffect(() => {
     if (status === "idle") dispatch(getBanners());
   }, [dispatch, status]);
 
-  /* ------------------------------------
-     AUTOPLAY
-  ------------------------------------ */
+  /* AUTOPLAY */
   useEffect(() => {
     if (!banners?.length) return;
 
-    intervalRef.current = setInterval(() => {
-      setIndex((prev) => (prev + 1) % banners.length);
-    }, AUTO_PLAY_DELAY);
+    const start = () => {
+      clearInterval(intervalRef.current);
+      intervalRef.current = setInterval(() => {
+        setIndex((p) => (p + 1) % banners.length);
+      }, AUTO_PLAY_DELAY);
+    };
 
-    return () => clearInterval(intervalRef.current);
-  }, [banners]);
+    const stop = () => {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    };
 
-  /* ------------------------------------
-     TOUCH SUPPORT (MOBILE)
-  ------------------------------------ */
+    const handleVisibility = () => {
+      document.hidden ? stop() : start();
+    };
+
+    document.addEventListener("visibilitychange", handleVisibility);
+    start();
+
+    return () => {
+      stop();
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, [banners?.length]); // Added ?. for safety
+
+  /* TOUCH */
   const onTouchStart = (e) => {
     startX.current = e.touches[0].clientX;
   };
@@ -62,22 +74,6 @@ const HomeBanner = () => {
     [router]
   );
 
-  /* ------------------------------------
-     SKELETON
-  ------------------------------------ */
-  if (status === "loading") {
-    return (
-      <div className="w-full  mb-5">
-        <div className="h-[75px] sm:h-[180px] md:h-[250px] lg:h-[200px] bg-gray-200 animate-pulse " />
-      </div>
-    );
-  }
-
-  if (!banners?.length) return null;
-
-  /* ------------------------------------
-     UI
-  ------------------------------------ */
   return (
     <section
       className="relative w-full overflow-hidden "
@@ -85,42 +81,56 @@ const HomeBanner = () => {
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
     >
-      <div
-        className="flex transition-transform duration-700 ease-in-out"
-        style={{ transform: `translateX(-${index * 100}%)` }}
-      >
-        {banners.map((banner, i) => (
+      {/* HEIGHT LOCK — SAME AS REAL SLIDE */}
+      <div className="relative h-[75px] sm:h-[180px] md:h-[250px] lg:h-[200px]">
+        {status === "loading" ? (
+          <div className="w-full h-full bg-gray-200 animate-pulse" />
+        ) : (
           <div
-            key={banner._id}
-            className="relative min-w-full h-[75px] sm:h-[180px] md:h-[250px] lg:h-[200px] cursor-pointer"
-            onClick={() => handleClick(banner)}
+            className="flex transition-transform duration-700 ease-in-out h-full"
+            style={{ transform: `translateX(-${index * 100}%)` }}
           >
-            <Image
-              src={banner.desktopImage}
-              alt={banner.name}
-              fill
-              priority={i === 0}
-              loading={i === 0 ? "eager" : "lazy"}
-              sizes="100vw"
-              className="object-cover"
-            />
+            {banners?.map((banner, i) => (
+              <div
+                key={banner._id || `banner-${i}`} // FIX: Added fallback key
+                className="relative min-w-full h-full cursor-pointer"
+                onClick={() => handleClick(banner)}
+              >
+                <Image
+                  src={banner.desktopImage}
+                  alt={banner.name || `Banner ${i + 1}`}
+                  fill
+                  priority={i === 0}
+                  fetchPriority={i === 0 ? "high" : "auto"}
+                  decoding="async"
+                  sizes="100vw"
+                  className="object-cover"
+                  onError={(e) => {
+                    console.error("Failed to load banner image:", banner.desktopImage);
+                    e.target.style.display = 'none';
+                  }}
+                />
+              </div>
+            ))}
           </div>
-        ))}
+        )}
       </div>
 
       {/* DOTS */}
-      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-2">
-        {banners.map((_, i) => (
-          <button
-            key={`dot-${i}`} // ✅ FIX
-            onClick={() => setIndex(i)}
-            aria-label={`Go to slide ${i + 1}`}
-            className={`w-2.5 h-2.5 rounded-full transition ${
-              index === i ? "bg-white" : "bg-white/50"
-            }`}
-          />
-        ))}
-      </div>
+      {banners?.length > 0 && (
+        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-2">
+          {banners.map((_, i) => (
+            <button
+              key={`dot-${i}`}
+              onClick={() => setIndex(i)}
+              aria-label={`Go to slide ${i + 1}`}
+              className={`w-2.5 h-2.5 rounded-full transition ${
+                index === i ? "bg-white" : "bg-white/50"
+              }`}
+            />
+          ))}
+        </div>
+      )}
     </section>
   );
 };

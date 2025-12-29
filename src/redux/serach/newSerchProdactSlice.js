@@ -2,7 +2,6 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 const Baseurl = process.env.NEXT_PUBLIC_API_URL;
 
-// Async thunk for search
 export const searchNewProducts = createAsyncThunk(
   "searchNew/searchNewProducts",
   async (params, { rejectWithValue }) => {
@@ -18,7 +17,6 @@ export const searchNewProducts = createAsyncThunk(
   }
 );
 
-// Async thunk for fetching filters only
 export const getFilters = createAsyncThunk(
   "searchNew/getFilters",
   async (params, { rejectWithValue }) => {
@@ -31,7 +29,6 @@ export const getFilters = createAsyncThunk(
   }
 );
 
-// Async thunk for loading more products
 export const loadMoreProducts = createAsyncThunk(
   "searchNew/loadMoreProducts",
   async (params, { rejectWithValue }) => {
@@ -112,7 +109,6 @@ const newSearchSlice = createSlice({
         state.products = action.payload.products || [];
         state.sort = action.meta.arg?.sort || "relevance";
         
-        // Only update filters if they exist in the response AND filters haven't been loaded yet
         if (action.payload.filters && action.payload.filters.length > 0) {
           state.filters = action.payload.filters;
         } else if (!state.filtersLoaded) {
@@ -150,7 +146,6 @@ const newSearchSlice = createSlice({
         state.error = action.payload?.message || action.error.message;
         state.filtersLoaded = true;
       })
-      // Loading more products - FIXED
       .addCase(loadMoreProducts.pending, (state) => {
         state.loadingMore = true;
         state.error = null;
@@ -161,7 +156,6 @@ const newSearchSlice = createSlice({
         state.query = action.payload.query || state.query;
         state.total = action.payload.total || state.total;
         
-        // CRITICAL FIX: Increment page number
         state.page = state.page + 1;
         
         state.limit = action.payload.limit || state.limit;
@@ -171,10 +165,8 @@ const newSearchSlice = createSlice({
           ...state.products,
           ...(action.payload.products || []),
         ];
-        // Don't update filters on loadMore - keep existing filters
         state.error = null;
         
-        console.log(`Loaded more: Now page ${state.page}, ${state.products.length} products`);
       })
       .addCase(loadMoreProducts.rejected, (state, action) => {
         state.loadingMore = false;

@@ -23,12 +23,13 @@ const CategoryCarousel = () => {
   const router = useRouter();
 
   const [isMobile, setIsMobile] = useState(false);
-  const [hoveredCategory, setHoveredCategory] = useState(null);
   const hoverTimer = useRef(null);
 
-  const { subCategories = [], status, error } = useSelector(
-    (state) => state.subCat
-  );
+  const {
+    subCategories = [],
+    status,
+    error,
+  } = useSelector((state) => state.subCat);
 
   /* -------------------- INIT -------------------- */
   useEffect(() => {
@@ -46,12 +47,15 @@ const CategoryCarousel = () => {
 
   /* -------------------- SCROLL (DESKTOP ONLY) -------------------- */
   const handleWheel = useCallback((e) => {
-    if (!scrollRef.current) return;
-    if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
-      e.preventDefault();
+  if (!scrollRef.current) return;
+  if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+    e.preventDefault();
+    requestAnimationFrame(() => {
       scrollRef.current.scrollLeft += e.deltaY * 1.5;
-    }
-  }, []);
+    });
+  }
+}, []);
+
 
   useEffect(() => {
     if (!isMobile && scrollRef.current) {
@@ -88,61 +92,54 @@ const CategoryCarousel = () => {
     router.push(`/${cat.categoryUrl}/${cat.slugUrl}`);
   };
 
-  /* -------------------- LOADING -------------------- */
-  if (status === "loading") {
-    return (
-      <div className="flex px-4 py-3 gap-3 overflow-x-auto">
-        {Array.from({ length: 10 }).map((_, i) => (
-          <div
-            key={i}
-            className="min-w-[100px] h-[140px] bg-gray-200 rounded-xl animate-pulse"
-          />
-        ))}
-      </div>
-    );
-  }
-
-  if (status === "failed") {
-    return (
-      <div className="p-4 text-red-600 text-center">
-        Failed to load categories
-      </div>
-    );
-  }
-
   /* -------------------- RENDER -------------------- */
   return (
     <div className="relative bg-gradient-to-br from-amber-100 via-yellow-100 to-amber-100">
       <div
         ref={scrollRef}
         className="flex gap-3 px-2 py-3 overflow-x-auto no-scrollbar scroll-smooth"
+        style={{ minHeight: 130 }}   
       >
-        {subCategories.map((cat, index) => (
-          <div
-            key={cat._id}
-            className="min-w-[80px] sm:min-w-[100px] text-center cursor-pointer group"
-            onMouseEnter={() => handleMouseEnter(cat)}
-            onMouseLeave={handleMouseLeave}
-            onClick={() => handleClick(cat)}
-          >
-            <div className="relative w-[85px] h-[85px] mx-auto rounded-full overflow-hidden border-2 border-white shadow-lg group-hover:scale-105 transition">
-              <Image
-                src={cat.desktopImage || cat.mobileImage}
-                alt={cat.name}
-                fill
-                sizes="85px"
-                className="object-cover"
-                quality={80}
-                loading={index < 4 ? "eager" : "lazy"} // ✅ ONLY FIRST
-                priority={index < 4} // ✅ LCP SAFE
-              />
+        {status === "loading" &&
+          Array.from({ length: 10 }).map((_, i) => (
+            <div key={i} className="min-w-[80px] sm:min-w-[100px] text-center">
+              <div className="w-[85px] h-[85px] mx-auto rounded-full bg-gray-200 animate-pulse" />
+              <div className="h-[12px] w-[60px] mx-auto mt-2 rounded bg-gray-200 animate-pulse" />
             </div>
+          ))}
 
-            <p className="mt-2 text-[12px] font-semibold text-slate-800 truncate">
-              {cat.name}
-            </p>
+        {status === "failed" && (
+          <div className="p-4 text-red-600 text-center w-full">
+            Failed to load categories
           </div>
-        ))}
+        )}
+        {status === "succeeded" &&
+          subCategories.map((cat, index) => (
+            <div
+              key={cat._id}
+              className="min-w-[80px] sm:min-w-[100px] text-center cursor-pointer group"
+              onMouseEnter={() => handleMouseEnter(cat)}
+              onMouseLeave={handleMouseLeave}
+              onClick={() => handleClick(cat)}
+            >
+              <div className="relative w-[85px] h-[85px] mx-auto rounded-full overflow-hidden border-2 border-white shadow-lg group-hover:scale-105 transition">
+                <Image
+                  src={cat.desktopImage || cat.mobileImage}
+                  alt={cat.name}
+                  fill
+                  sizes="85px"
+                  className="object-cover"
+                  priority={index < 4}
+                  fetchPriority={index < 4 ? "high" : "auto"}
+                  decoding="async"
+                />
+              </div>
+
+              <p className="mt-2 text-[12px] h-[16px] font-semibold text-slate-800 truncate">
+                {cat.name}
+              </p>
+            </div>
+          ))}
       </div>
     </div>
   );
