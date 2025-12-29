@@ -34,7 +34,7 @@ import {
   Menu,
   Package,
   ShoppingCart,
-  Download
+  Download,
 } from "lucide-react";
 
 const Baseurl = process.env.NEXT_PUBLIC_API_URL;
@@ -170,9 +170,21 @@ const Header = () => {
             icon: <ClipboardList size={18} />,
             path: "/accounts/orders",
           },
-          { label: "Coupons", icon: <Tag size={18} />, path: "/accounts/coupons" },
-          { label: "Wishlist", icon: <Heart size={18} />, path: "/accounts/wishlist" },
-          { label: "Logout", icon: <LogOut size={18} />, onClick: handleLogout },
+          {
+            label: "Coupons",
+            icon: <Tag size={18} />,
+            path: "/accounts/coupons",
+          },
+          {
+            label: "Wishlist",
+            icon: <Heart size={18} />,
+            path: "/accounts/wishlist",
+          },
+          {
+            label: "Logout",
+            icon: <LogOut size={18} />,
+            onClick: handleLogout,
+          },
         ]
       : [
           { label: "Sign In", icon: <LogIn size={18} />, path: "/login" },
@@ -188,13 +200,21 @@ const Header = () => {
     { label: "Categories", icon: <Grid3x3 size={18} />, path: "/category" },
     ...(isAuth
       ? [
-          { label: "Wishlist", icon: <Heart size={18} />, path: "/accounts/wishlist" },
+          {
+            label: "Wishlist",
+            icon: <Heart size={18} />,
+            path: "/accounts/wishlist",
+          },
           {
             label: "Orders",
             icon: <ClipboardList size={18} />,
             path: "/accounts/orders",
           },
-          { label: "Coupons", icon: <Tag size={18} />, path: "/accounts/coupons" },
+          {
+            label: "Coupons",
+            icon: <Tag size={18} />,
+            path: "/accounts/coupons",
+          },
           {
             label: "My Account",
             icon: <User size={18} />,
@@ -205,7 +225,11 @@ const Header = () => {
             icon: <Store size={18} />,
             path: "https://seller.ewshopping.com/",
           },
-          { label: "Logout", icon: <LogOut size={18} />, onClick: handleLogout },
+          {
+            label: "Logout",
+            icon: <LogOut size={18} />,
+            onClick: handleLogout,
+          },
         ]
       : [
           { label: "Sign In", icon: <LogIn size={18} />, path: "/login" },
@@ -310,7 +334,8 @@ const Header = () => {
             </div>
           ) : (
             <span className="text-white font-medium text-sm flex flex-row items-center select-none bg-blue-600 px-3 py-1 rounded-lg border border-blue-700">
-              Set delivery location <ChevronRight className="ml-1 text-white" size={14} />
+              Set delivery location{" "}
+              <ChevronRight className="ml-1 text-white" size={14} />
             </span>
           )}
         </div>
@@ -423,7 +448,7 @@ const Header = () => {
     const keyword = suggestion.keyword || suggestion.name;
     setSearchQuery(keyword);
     setShowSuggestions(false);
-    
+
     // Use the suggestion's CategoryTagUrl if available, otherwise use "all"
     const categoryTag = suggestion.CategoryTagUrl || "all";
     router.push(`/search/${categoryTag}/${encodeURIComponent(keyword)}`);
@@ -431,7 +456,7 @@ const Header = () => {
 
   const handleKeyDown = (e) => {
     if (e.key !== "Enter") return;
-    
+
     e.preventDefault();
 
     // If user clicked on a suggestion with mouse, highlightedIndex will be set
@@ -568,8 +593,7 @@ const Header = () => {
                       onClick={clearSearch}
                       className="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-200 transition-colors"
                       aria-label="Clear search"
-                    >
-                    </button>
+                    ></button>
                   )}
                 </div>
               </form>
@@ -600,14 +624,15 @@ const Header = () => {
                         >
                           <div className="flex items-center">
                             {suggestion.image && (
-                              <div className="flex items-center justify-center w-10 h-10 mr-3 rounded-lg bg-gray-100">
+                              <div className="relative flex items-center justify-center w-10 h-10 mr-3 rounded-lg bg-gray-100">
                                 <Image
                                   src={suggestion.image}
                                   alt={suggestion.keyword}
-                                  loading="lazy"
-                                  className="rounded-lg object-contain w-full h-full"
+                                  fill
+                                  sizes="40px"
+                                  className="rounded-lg object-contain"
                                   onError={(e) => {
-                                    e.target.style.display = "none";
+                                    e.currentTarget.style.display = "none";
                                   }}
                                 />
                               </div>
@@ -748,7 +773,10 @@ const Header = () => {
              hover:bg-[#ffffff20]"
                 aria-label="Account"
               >
-                <User className="text-xl text-white transition-all duration-200" size={20} />
+                <User
+                  className="text-xl text-white transition-all duration-200"
+                  size={20}
+                />
 
                 <span className="text-sm font-medium hidden lg:block text-white transition-all duration-200">
                   {isAuth ? ` ${loginData?.Name?.split(" ")[0]}` : " Login"}
@@ -804,7 +832,10 @@ const Header = () => {
                hover:bg-[#ffffff20]"
               aria-label="Wishlist"
             >
-              <Heart className="text-xl text-white transition-all duration-200" size={20} />
+              <Heart
+                className="text-xl text-white transition-all duration-200"
+                size={20}
+              />
 
               <span
                 className="absolute -top-1 -right-1 bg-white text-black 
@@ -837,7 +868,10 @@ const Header = () => {
               aria-label="Shopping Cart"
               onClick={() => toggleModal("Cart")}
             >
-              <ShoppingBag className="text-xl text-white transition-all duration-200" size={20} />
+              <ShoppingBag
+                className="text-xl text-white transition-all duration-200"
+                size={20}
+              />
 
               <span
                 className="absolute -top-1 -right-1 bg-white text-black 
@@ -871,7 +905,10 @@ const Header = () => {
                hover:bg-[#ffffff20]"
               aria-label="Seller"
             >
-              <Store className="text-xl text-white transition-all duration-200" size={20} />
+              <Store
+                className="text-xl text-white transition-all duration-200"
+                size={20}
+              />
 
               <span
                 className="text-sm font-medium hidden lg:block text-white 

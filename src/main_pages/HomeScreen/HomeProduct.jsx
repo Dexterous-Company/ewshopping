@@ -85,7 +85,7 @@ export default function HomeProduct({ categoryUrl = "home-decor" }) {
         aria-label={`${categoryName} products`}
       >
         <div
-          className="flex gap-4 py-2 w-full"
+          className="flex  py-2 w-full"
           role="list"
         >
           {/* ================= SKELETON ================= */}
