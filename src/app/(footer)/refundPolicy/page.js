@@ -8,7 +8,7 @@ export const metadata = {
   keywords:
     "secure online refund policy, safe online shopping, EW Shopping refund charges India, refund policy after return accepted, how to get a refund",
   alternates: {
-    canonical: "https://ewshopping.com/refundpolicy"
+    canonical: "https://ewshopping.com/refundPolicy"
   }
 };
 

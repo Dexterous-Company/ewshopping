@@ -90,8 +90,8 @@ const Footer = () => {
           ? [["My Account", "/accounts/profile"]]
           : [["Login", "/login"]]),
         ["About Us", "/aboutus"],
-        ["Privacy Policy", "/privacypolicy"],
-        ["Terms & Conditions", "/termsandcondition"],
+        ["Privacy Policy", "/privacyPolicy"],
+        ["Terms & Conditions", "/termsAndCondition"],
         ["Blogs", "/blog"],
       ],
     },
@@ -107,9 +107,9 @@ const Footer = () => {
       title: "Customer Service",
       links: [
         ["FAQ", "/faq"],
-        ["Contact Us", "/contactus"],
-        ["Cancellation Policy", "/cancellationpolicy"],
-        ["Refund Policy", "/refundpolicy"],
+        ["Contact Us", "/contactUs"],
+        ["Cancellation Policy", "/cancellationPolicy"],
+        ["Refund Policy", "/refundPolicy"],
         ["Career", "/carrer"],
         ["Exchange Policy", "/exchangepolicy"],
         ["Shipping Policy", "/shippingpolicy"],

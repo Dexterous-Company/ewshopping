@@ -8,7 +8,7 @@ export const metadata = {
   keywords:
     "smooth online shopping experience, EW Shopping cancellation policy, Shopping cancellation before shipping, Shopping order cancellation India, cancel my order",
   alternates: {
-    canonical: "https://ewshopping.com/cancellationpolicy"
+    canonical: "https://ewshopping.com/cancellationPolicy"
   }
 };
 
