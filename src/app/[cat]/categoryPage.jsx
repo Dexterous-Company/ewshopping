@@ -6,26 +6,26 @@ import {
   getCategoryFilters,
   resetFiltersLoaded,
 } from "@/redux/serach/catProdactSlice";
-import React, { useEffect, useState, useRef, useCallback, useMemo } from "react";
+import React, {
+  useEffect,
+  useState,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { FaTimes } from "react-icons/fa";
 import NewSingleProductCard from "@/main_pages/ProductPages.jsx/NewSingleProductCard";
 import { useSearchParams, useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 
-
 const Slider = dynamic(() => import("@mui/material/Slider"), {
   ssr: false,
 });
 
-const NewFilter = dynamic(
-  () => import("@/components/searchMobile/NewFilter"),
-  { ssr: false }
-);
-
-
-
-
+const NewFilter = dynamic(() => import("@/components/searchMobile/NewFilter"), {
+  ssr: false,
+});
 
 const SORTS = [
   { label: "Relevance", value: "relevance" },
@@ -64,60 +64,56 @@ const SearchPage = ({ params }) => {
   const [expandedFilters, setExpandedFilters] = useState({});
   const [tempPriceRange, setTempPriceRange] = useState([0, 1000]);
 
-const productPriceRange = useMemo(() => {
-  let min = Infinity;
-  let max = 0;
+  const productPriceRange = useMemo(() => {
+    let min = Infinity;
+    let max = 0;
 
-  for (const p of products || []) {
-    let price =
-      typeof p.price === "number"
-        ? p.price
-        : typeof p.price === "object"
-        ? Number(p.price?.current)
-        : Number(p.price);
+    for (const p of products || []) {
+      let price =
+        typeof p.price === "number"
+          ? p.price
+          : typeof p.price === "object"
+          ? Number(p.price?.current)
+          : Number(p.price);
 
-    if (!isNaN(price) && price > 0) {
-      if (price < min) min = price;
-      if (price > max) max = price;
+      if (!isNaN(price) && price > 0) {
+        if (price < min) min = price;
+        if (price > max) max = price;
+      }
     }
-  }
 
-  if (min === Infinity) {
-    return { min: 0, max: 1000 };
-  }
+    if (min === Infinity) {
+      return { min: 0, max: 1000 };
+    }
 
-  return {
-    min: Math.floor(min),
-    max: Math.ceil(max * 1.1),
-  };
-}, [products]);
+    return {
+      min: Math.floor(min),
+      max: Math.ceil(max * 1.1),
+    };
+  }, [products]);
 
   useEffect(() => {
-    if (productPriceRange.min !== 0 || productPriceRange.max !== 1000) {
-      setTempPriceRange([productPriceRange.min, productPriceRange.max]);
-    }
-  }, [productPriceRange]);
+    setTempPriceRange([productPriceRange.min, productPriceRange.max]);
 
-  useEffect(() => {
-    if (!selectedFilters.priceRange) {
-      setTempPriceRange([productPriceRange.min, productPriceRange.max]);
-    }
-  }, [selectedFilters.priceRange, productPriceRange]);
+    setSelectedFilters((prev) => ({
+      ...prev,
+      priceRange: null,
+    }));
+  }, [category]); // ✅ only category change
 
   const toggleFilterExpand = (name) =>
     setExpandedFilters((p) => ({ ...p, [name]: !p[name] }));
 
   const buildSearchParams = useCallback(
-  (page = 1, overrideFilters = null) => ({
-    category,
-    page,
-    limit: limit || 20,
-    filters: overrideFilters || selectedFilters,
-    sort,
-  }),
-  [category, limit, selectedFilters, sort]
-);
-
+    (page = 1, overrideFilters = null) => ({
+      category,
+      page,
+      limit: limit || 20,
+      filters: overrideFilters || selectedFilters,
+      sort,
+    }),
+    [category, limit, selectedFilters, sort]
+  );
 
   const buildFiltersParams = (overrideFilters = null) => ({
     category,
@@ -202,39 +198,37 @@ const productPriceRange = useMemo(() => {
     initialSearchDone,
   ]);
 
-useEffect(() => {
-  let ticking = false;
+  useEffect(() => {
+    let ticking = false;
 
-  const onScroll = () => {
-    if (ticking || loadingMore) return;
-    ticking = true;
+    const onScroll = () => {
+      if (ticking || loadingMore) return;
+      ticking = true;
 
-    requestAnimationFrame(() => {
-      if (
-        window.innerHeight + window.scrollY >=
-          document.body.offsetHeight - 300 &&
-        products.length < total
-      ) {
-        dispatch(
-          loadMoreCategoryProducts(
-            buildSearchParams(currentPage + 1)
-          )
-        );
-      }
-      ticking = false;
-    });
-  };
+      requestAnimationFrame(() => {
+        if (
+          window.innerHeight + window.scrollY >=
+            document.body.offsetHeight - 300 &&
+          products.length < total
+        ) {
+          dispatch(
+            loadMoreCategoryProducts(buildSearchParams(currentPage + 1))
+          );
+        }
+        ticking = false;
+      });
+    };
 
-  window.addEventListener("scroll", onScroll, { passive: true });
-  return () => window.removeEventListener("scroll", onScroll);
-}, [
-  loadingMore,
-  products.length,
-  total,
-  currentPage,
-  dispatch,
-  buildSearchParams,
-]);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [
+    loadingMore,
+    products.length,
+    total,
+    currentPage,
+    dispatch,
+    buildSearchParams,
+  ]);
 
   const handleSort = (value) => {
     const p = new URLSearchParams(searchParams.toString());
@@ -313,7 +307,11 @@ useEffect(() => {
   const hasSelectedFilters = Object.entries(selectedFilters).some(
     ([key, value]) => {
       if (key === "priceRange") {
-        return value && (value.min !== productPriceRange.min || value.max !== productPriceRange.max);
+        return (
+          value &&
+          (value.min !== productPriceRange.min ||
+            value.max !== productPriceRange.max)
+        );
       }
       return Array.isArray(value) && value.length > 0;
     }
@@ -357,7 +355,11 @@ useEffect(() => {
             <div className="px-4 py-2 flex flex-wrap gap-2 border-b border-gray-300 bg-gray-100">
               {Object.entries(selectedFilters).map(([key, values]) => {
                 if (key === "priceRange") {
-                  if (values && (values.min !== productPriceRange.min || values.max !== productPriceRange.max)) {
+                  if (
+                    values &&
+                    (values.min !== productPriceRange.min ||
+                      values.max !== productPriceRange.max)
+                  ) {
                     return (
                       <div
                         key={`price-${values.min}-${values.max}`}
@@ -416,7 +418,11 @@ useEffect(() => {
                   value={tempPriceRange}
                   min={productPriceRange.min}
                   max={productPriceRange.max}
-                  onChange={(e, v) => setTempPriceRange(v)}
+                  disableSwap
+                  onChange={(e, v) => {
+                    setTempPriceRange(v);
+                  }}
+                  // ✅ UI only
                   onChangeCommitted={(e, v) => {
                     const range = { min: v[0], max: v[1] };
                     const newFilters = {

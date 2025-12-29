@@ -8,7 +8,7 @@ export const metadata = {
   keywords:
     "EW Shopping contact us, Contact EW Shopping customer service, EW Shopping live chat support India, EW Shopping contact form online, Shopping order support contact, Online shopping business enquiries in India, e-commerce contact form",
   alternates: {
-    canonical: "https://ewshopping.com/contactus",
+    canonical: "https://ewshopping.com/contactUs",
   },
 };
 
