@@ -20,18 +20,23 @@ const nextConfig = {
   // ❌ REMOVE custom webpack splitting
   // webpack: (config) => config,
 
-  images: {
-    formats: ["image/avif", "image/webp"],
-    remotePatterns: [
-      { protocol: "https", hostname: "img.freepik.com" },
-      { protocol: "https", hostname: "images.unsplash.com" },
-      { protocol: "https", hostname: "cdn.shopify.com" },
-      { protocol: "https", hostname: "res.cloudinary.com" },
-      { protocol: "https", hostname: "ewshoppingsellerapinew.dexterous.in" },
-      { protocol: "https", hostname: "img-api.maintainic.com" },
-      { protocol: "http", hostname: "localhost" },
-    ],
-  },
+ images: {
+  formats: ["image/avif", "image/webp"],
+  remotePatterns: [
+    { protocol: "https", hostname: "img.freepik.com" },
+    { protocol: "https", hostname: "images.unsplash.com" },
+    { protocol: "https", hostname: "cdn.shopify.com" },
+    { protocol: "https", hostname: "res.cloudinary.com" },
+
+    // ✅ ADD BOTH
+    { protocol: "https", hostname: "ewshoppingsellerapinew.dexterous.in" },
+    { protocol: "http",  hostname: "ewshoppingsellerapinew.dexterous.in" },
+
+    { protocol: "https", hostname: "img-api.maintainic.com" },
+    { protocol: "http", hostname: "localhost" },
+  ],
+},
+
 
   async headers() {
     return [

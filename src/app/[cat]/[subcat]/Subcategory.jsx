@@ -529,4 +529,4 @@ const SearchPage = ({ params }) => {
   );
 };
 
-export default SearchPage;
+export default SearchPage; 

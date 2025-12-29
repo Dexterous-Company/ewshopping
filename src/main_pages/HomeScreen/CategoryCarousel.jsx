@@ -71,7 +71,7 @@ const CategoryCarousel = () => {
 
     clearTimeout(hoverTimer.current);
     hoverTimer.current = setTimeout(() => {
-      setHoveredCategory(category);
+    
 
       if (!hoverCache.current.has(category.slugUrl)) {
         hoverCache.current.add(category.slugUrl);
@@ -83,7 +83,7 @@ const CategoryCarousel = () => {
   const handleMouseLeave = () => {
     clearTimeout(hoverTimer.current);
     hoverTimer.current = setTimeout(() => {
-      setHoveredCategory(null);
+
     }, 250);
   };
 
