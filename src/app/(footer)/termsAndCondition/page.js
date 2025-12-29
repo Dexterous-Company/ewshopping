@@ -8,7 +8,7 @@ export const metadata = {
   keywords:
     "Trusted online shopping site, secure online shopping in 2025, online store terms and conditions India, EW Shopping terms and conditions, online store terms and conditions India, EW Shopping terms & conditions India, Shopping user agreement conditions",
   alternates: {
-    canonical: "https://ewshopping.com/termsandcondition",
+    canonical: "https://ewshopping.com/termsAndCondition",
   },
 };
 
