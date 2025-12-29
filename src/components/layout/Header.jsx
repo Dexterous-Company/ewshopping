@@ -569,7 +569,6 @@ const Header = () => {
                       className="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-200 transition-colors"
                       aria-label="Clear search"
                     >
-                      <X size={16} />
                     </button>
                   )}
                 </div>
