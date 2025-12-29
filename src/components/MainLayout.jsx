@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import Header from "./layout/Header";
 import Footer from "./layout/Footer";
+
 import { useEffect, useState } from "react";
 import MobileHeader from "./MobileHeader";
 import HomeMobileHeader from "./HomeMobileHeader";
