@@ -1,47 +1,42 @@
 "use client";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import {
-  IoClose,
-  IoLocationOutline,
-  IoLogoGooglePlaystore,
-  IoSearch,
-} from "react-icons/io5";
 import { usePathname, useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
+import Image from "next/image";
 import { fetchUserWishlist } from "@/redux/wishlist/wishlistSlice";
 import { signout } from "@/redux/athentication/Athentication";
-import {
-  MdHome,
-  MdOutlineAccountCircle,
-  MdOutlineAppRegistration,
-  MdOutlineLogin,
-  MdOutlineShoppingCart,
-} from "react-icons/md";
-import {
-  FaAngleRight,
-  FaClipboardList,
-  FaExchangeAlt,
-  FaTags,
-} from "react-icons/fa";
-import { LuHeart, LuLogOut, LuUser } from "react-icons/lu";
-import {
-  AiOutlineAppstore,
-  AiOutlineFileProtect,
-  AiOutlineFileText,
-  AiOutlineHome,
-  AiOutlineInfoCircle,
-  AiOutlineLink,
-  AiOutlinePhone,
-  AiOutlineQuestionCircle,
-  AiOutlineReload,
-  AiOutlineStop,
-  AiOutlineUserSwitch,
-  AiTwotoneShop,
-} from "react-icons/ai";
 import Link from "next/link";
-import { BsCart3 } from "react-icons/bs";
-import { GiHamburgerMenu } from "react-icons/gi";
 import Cartheader from "../Home/Cartheader";
+import {
+  X,
+  ShoppingBag,
+  Home,
+  User,
+  LogIn,
+  UserPlus,
+  Heart,
+  LogOut,
+  ChevronRight,
+  ClipboardList,
+  Tag,
+  Grid3x3,
+  Shield,
+  FileText,
+  Info,
+  Link as LinkIcon,
+  Phone,
+  HelpCircle,
+  RefreshCw,
+  Ban,
+  Users,
+  Store,
+  Search,
+  Menu,
+  Package,
+  ShoppingCart,
+  Download
+} from "lucide-react";
+
 const Baseurl = process.env.NEXT_PUBLIC_API_URL;
 
 const Header = () => {
@@ -167,107 +162,107 @@ const Header = () => {
       ? [
           {
             label: "My Account",
-            icon: <MdOutlineAccountCircle />,
+            icon: <User size={18} />,
             path: "/accounts/profile",
           },
           {
             label: "Orders",
-            icon: <FaClipboardList />,
+            icon: <ClipboardList size={18} />,
             path: "/accounts/orders",
           },
-          { label: "Coupons", icon: <FaTags />, path: "/accounts/coupons" },
-          { label: "Wishlist", icon: <LuHeart />, path: "/accounts/wishlist" },
-          { label: "Logout", icon: <LuLogOut />, onClick: handleLogout },
+          { label: "Coupons", icon: <Tag size={18} />, path: "/accounts/coupons" },
+          { label: "Wishlist", icon: <Heart size={18} />, path: "/accounts/wishlist" },
+          { label: "Logout", icon: <LogOut size={18} />, onClick: handleLogout },
         ]
       : [
-          { label: "Sign In", icon: <MdOutlineLogin />, path: "/login" },
+          { label: "Sign In", icon: <LogIn size={18} />, path: "/login" },
           {
             label: "Register",
-            icon: <MdOutlineAppRegistration />,
+            icon: <UserPlus size={18} />,
             path: "/register-page",
           },
         ];
 
   const sideMenu = [
-    { label: "Home", icon: <AiOutlineHome />, path: "/" },
-    { label: "Categories", icon: <AiOutlineAppstore />, path: "/category" },
+    { label: "Home", icon: <Home size={18} />, path: "/" },
+    { label: "Categories", icon: <Grid3x3 size={18} />, path: "/category" },
     ...(isAuth
       ? [
-          { label: "Wishlist", icon: <LuHeart />, path: "/accounts/wishlist" },
+          { label: "Wishlist", icon: <Heart size={18} />, path: "/accounts/wishlist" },
           {
             label: "Orders",
-            icon: <FaClipboardList />,
+            icon: <ClipboardList size={18} />,
             path: "/accounts/orders",
           },
-          { label: "Coupons", icon: <FaTags />, path: "/accounts/coupons" },
+          { label: "Coupons", icon: <Tag size={18} />, path: "/accounts/coupons" },
           {
             label: "My Account",
-            icon: <MdOutlineAccountCircle />,
+            icon: <User size={18} />,
             path: "/accounts",
           },
           {
             label: "Seller",
-            icon: <AiTwotoneShop />,
+            icon: <Store size={18} />,
             path: "https://seller.ewshopping.com/",
           },
-          { label: "Logout", icon: <LuLogOut />, onClick: handleLogout },
+          { label: "Logout", icon: <LogOut size={18} />, onClick: handleLogout },
         ]
       : [
-          { label: "Sign In", icon: <MdOutlineLogin />, path: "/login" },
+          { label: "Sign In", icon: <LogIn size={18} />, path: "/login" },
           {
             label: "Register",
-            icon: <MdOutlineAppRegistration />,
+            icon: <UserPlus size={18} />,
             path: "/register-page",
           },
         ]),
     {
       label: "Privacy Policy",
-      icon: <AiOutlineFileProtect />,
+      icon: <Shield size={18} />,
       path: "/privacypolicy",
     },
     {
       label: "About Us",
-      icon: <AiOutlineInfoCircle />,
+      icon: <Info size={18} />,
       path: "/aboutus",
     },
     {
       label: "Terms & Conditions",
-      icon: <AiOutlineFileText />,
+      icon: <FileText size={18} />,
       path: "/termsandcondition",
     },
     {
       label: "Refund Policy",
-      icon: <AiOutlineReload />,
+      icon: <RefreshCw size={18} />,
       path: "/refundpolicy",
     },
     {
       label: "FAQ",
-      icon: <AiOutlineQuestionCircle />,
+      icon: <HelpCircle size={18} />,
       path: "/faq",
     },
     {
       label: "Contact Us",
-      icon: <AiOutlinePhone />,
+      icon: <Phone size={18} />,
       path: "/contactus",
     },
     {
       label: "Cancellation Policy",
-      icon: <AiOutlineStop />,
+      icon: <Ban size={18} />,
       path: "/cancellationpolicy",
     },
     {
       label: "Exchange Policy",
-      icon: <FaExchangeAlt />,
+      icon: <Package size={18} />,
       path: "/exchangepolicy",
     },
     {
       label: "Career",
-      icon: <AiOutlineUserSwitch />,
+      icon: <Users size={18} />,
       path: "/career",
     },
     {
       label: "Affiliate",
-      icon: <AiOutlineLink />,
+      icon: <LinkIcon size={18} />,
       path: "/affilliate",
     },
   ];
@@ -301,7 +296,7 @@ const Header = () => {
               <span className="text-slate-800 truncate text-[14px] flex flex-row items-center select-none">
                 {current_address.HNo}, {current_address.Area},{" "}
                 {current_address.City}{" "}
-                <FaAngleRight className="ml-1 text-blue-600" />
+                <ChevronRight className="ml-1 text-blue-600" size={14} />
               </span>
             </div>
           ) : !isMounted ? (
@@ -315,7 +310,7 @@ const Header = () => {
             </div>
           ) : (
             <span className="text-white font-medium text-sm flex flex-row items-center select-none bg-blue-600 px-3 py-1 rounded-lg border border-blue-700">
-              Set delivery location <FaAngleRight className="ml-1 text-white" />
+              Set delivery location <ChevronRight className="ml-1 text-white" size={14} />
             </span>
           )}
         </div>
@@ -550,7 +545,7 @@ const Header = () => {
             <div className="relative search-container no-scrollbar">
               <form onSubmit={handleSearch} className="relative">
                 <div className="flex flex-row gap-3 items-center no-scrollbar rounded-lg w-full bg-gray-100 px-4 py-2.5 border border-gray-300 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-200 transition-all">
-                  <IoSearch size={18} className="text-gray-600" />
+                  <Search size={18} className="text-gray-600" />
                   <input
                     type="search"
                     value={searchQuery}
@@ -574,7 +569,7 @@ const Header = () => {
                       className="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-200 transition-colors"
                       aria-label="Clear search"
                     >
-                      {/* <IoClose size={16} /> */}
+                      <X size={16} />
                     </button>
                   )}
                 </div>
@@ -607,7 +602,7 @@ const Header = () => {
                           <div className="flex items-center">
                             {suggestion.image && (
                               <div className="flex items-center justify-center w-10 h-10 mr-3 rounded-lg bg-gray-100">
-                                <img
+                                <Image
                                   src={suggestion.image}
                                   alt={suggestion.keyword}
                                   loading="lazy"
@@ -667,7 +662,7 @@ const Header = () => {
                     aria-label="Menu"
                     onClick={handleClickMenu}
                   >
-                    <GiHamburgerMenu className="text-xl text-white" />
+                    <Menu className="text-xl text-white" size={20} />
                   </button>
                 </div>
                 <Link href={"/"}>
@@ -685,13 +680,13 @@ const Header = () => {
                   rel="noopener noreferrer"
                   className="bg-[#ffffff20] rounded-lg p-2 hover:bg-[#ffffff30] transition-colors duration-300"
                 >
-                  <IoLogoGooglePlaystore className="text-lg text-white" />
+                  <Download className="text-lg text-white" size={18} />
                 </a>
                 <div
                   className="flex flex-row items-center relative text-center p-2 bg-[#ffffff20] rounded-lg hover:bg-[#ffffff30] transition-colors duration-300 cursor-pointer"
                   onClick={() => setActiveModal("Cart")}
                 >
-                  <MdOutlineShoppingCart className="text-lg text-white" />
+                  <ShoppingCart className="text-lg text-white" size={18} />
                   <span
                     className={`absolute -top-1 -right-1 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center ${
                       isMounted && CartItems.length > 0
@@ -720,7 +715,7 @@ const Header = () => {
               }}
             >
               <div className="flex flex-row gap-2 items-center rounded-lg w-full bg-[#ffffff20] px-4 py-2.5 cursor-pointer border border-[#ffffff30]">
-                <IoSearch size={18} className="text-white" />
+                <Search size={18} className="text-white" />
                 <input
                   type="search"
                   value={isSearchPage ? searchQuery : ""}
@@ -754,7 +749,7 @@ const Header = () => {
              hover:bg-[#ffffff20]"
                 aria-label="Account"
               >
-                <LuUser className="text-xl text-white transition-all duration-200" />
+                <User className="text-xl text-white transition-all duration-200" size={20} />
 
                 <span className="text-sm font-medium hidden lg:block text-white transition-all duration-200">
                   {isAuth ? ` ${loginData?.Name?.split(" ")[0]}` : " Login"}
@@ -810,7 +805,7 @@ const Header = () => {
                hover:bg-[#ffffff20]"
               aria-label="Wishlist"
             >
-              <LuHeart className="text-xl text-white transition-all duration-200" />
+              <Heart className="text-xl text-white transition-all duration-200" size={20} />
 
               <span
                 className="absolute -top-1 -right-1 bg-white text-black 
@@ -843,7 +838,7 @@ const Header = () => {
               aria-label="Shopping Cart"
               onClick={() => toggleModal("Cart")}
             >
-              <BsCart3 className="text-xl text-white transition-all duration-200" />
+              <ShoppingBag className="text-xl text-white transition-all duration-200" size={20} />
 
               <span
                 className="absolute -top-1 -right-1 bg-white text-black 
@@ -877,7 +872,7 @@ const Header = () => {
                hover:bg-[#ffffff20]"
               aria-label="Seller"
             >
-              <AiTwotoneShop className="text-xl text-white transition-all duration-200" />
+              <Store className="text-xl text-white transition-all duration-200" size={20} />
 
               <span
                 className="text-sm font-medium hidden lg:block text-white 
@@ -914,7 +909,7 @@ const Header = () => {
               onClick={closeAllModals}
               aria-label="Close menu"
             >
-              <IoClose size={20} />
+              <X size={20} />
             </button>
 
             {/* Logo & Profile */}

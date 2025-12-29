@@ -19,11 +19,11 @@ export default function ReduxLayout({ children }) {
     const loadData = () => {
       dispatch(getSubCategory());
       dispatch(getBanners());
-      dispatch(getCategoryPromotionOne());
-      dispatch(fetchCardPromotions());
       dispatch(getPromotionBanners());
-      dispatch(getCategoryPromotionTwo());
       dispatch(getSubCategoryPromotions());
+      dispatch(fetchCardPromotions());
+      dispatch(getCategoryPromotionOne());
+      dispatch(getCategoryPromotionTwo());
       dispatch(getCategoryPromotionThree());
     };
     // Initial load
