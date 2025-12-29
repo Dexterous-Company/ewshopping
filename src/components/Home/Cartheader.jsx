@@ -25,6 +25,11 @@ const Cartheader = ({ isCartOpen, closeCart }) => {
   const [isFooterOpen, setIsFooterOpen] = useState(true);
   const [isUpdatingPrices, setIsUpdatingPrices] = useState(false);
 
+  const formatPrice = (value, mounted) => {
+    if (!mounted) return value; // raw number for SSR
+    return value?.toLocaleString("en-IN");
+  };
+
   useEffect(() => {
     setIsMounted(true);
   }, []);
@@ -174,6 +179,8 @@ const Cartheader = ({ isCartOpen, closeCart }) => {
               </div>
             </div>
             <button
+              aria-label="Close cart"
+              title="Close cart"
               onClick={closeCart}
               className="p-2 rounded-lg hover:bg-gray-100 transition-all duration-200"
             >
@@ -195,9 +202,7 @@ const Cartheader = ({ isCartOpen, closeCart }) => {
               <p className="text-gray-700 font-medium mb-2">
                 Loading your cart...
               </p>
-              <p className="text-gray-500 text-sm">
-                Please wait a moment
-              </p>
+              <p className="text-gray-500 text-sm">Please wait a moment</p>
             </div>
           ) : !CartItems || CartItems.length <= 0 ? (
             // Modern Empty Cart State
@@ -252,7 +257,7 @@ const Cartheader = ({ isCartOpen, closeCart }) => {
                         </h3>
                       </Link>
                     </div>
-                    
+
                     {/* Price and Quantity Controls Row */}
                     <div className="flex items-center justify-between mt-2">
                       {/* Price Section */}
@@ -273,6 +278,10 @@ const Cartheader = ({ isCartOpen, closeCart }) => {
                         <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden bg-white">
                           <button
                             onClick={() => handleDecrement(item)}
+                            aria-label={`Decrease quantity of ${
+                              item.productName || item.name
+                            }`}
+                            title="Decrease quantity"
                             className="px-2 py-1 text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                             disabled={item.cart_Quentity <= 1}
                           >
@@ -283,16 +292,26 @@ const Cartheader = ({ isCartOpen, closeCart }) => {
                           </span>
                           <button
                             onClick={() => handleIncrement(item)}
+                            aria-label={`Increase quantity of ${
+                              item.productName || item.name
+                            }`}
+                            title="Increase quantity"
                             className="px-2 py-1 text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                            disabled={item.cart_Quentity >= item.maximumQuantity}
+                            disabled={
+                              item.cart_Quentity >= item.maximumQuantity
+                            }
                           >
                             +
                           </button>
                         </div>
                         <button
                           onClick={() => handleRemove(item)}
-                          className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all duration-200"
+                          aria-label={`Remove ${
+                            item.productName || item.name
+                          } from cart`}
                           title="Remove item"
+                          className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all duration-200"
+                          
                         >
                           <FaTrash className="w-4 h-4" />
                         </button>
@@ -326,8 +345,11 @@ const Cartheader = ({ isCartOpen, closeCart }) => {
           <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200">
             {/* Toggle Header */}
             <div
+              type="button"
               className="flex justify-between items-center p-6 cursor-pointer select-none bg-gray-50 hover:bg-gray-100 transition-colors"
               onClick={() => setIsFooterOpen((prev) => !prev)}
+              aria-expanded={isFooterOpen}
+              aria-label="Toggle order summary"
             >
               <div className="flex items-center justify-between w-full">
                 <div className="flex flex-col">
