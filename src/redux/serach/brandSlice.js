@@ -1,12 +1,8 @@
-// File: /redux/serach/brandSlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
 const Baseurl = process.env.NEXT_PUBLIC_API_URL;
 
-/* ======================================================
-   ALL API THUNKS - INCLUDING LOAD MORE
-====================================================== */
 export const fetchBrandSubProducts = createAsyncThunk(
   "brandSub/fetchProducts",
   async (params, { rejectWithValue }) => {
@@ -53,9 +49,6 @@ export const loadMoreBrandSubProducts = createAsyncThunk(
   }
 );
 
-/* ======================================================
-   INITIAL STATE
-====================================================== */
 const initialState = {
   success: false,
   products: [],
@@ -72,9 +65,6 @@ const initialState = {
   error: null,
 };
 
-/* ======================================================
-   SLICE
-====================================================== */
 const brandSubSlice = createSlice({
   name: "brandSub",
   initialState,
@@ -104,12 +94,10 @@ const brandSubSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchBrandSubProducts.fulfilled, (state, action) => {
-        console.log("slice", action.payload);
         state.loading = false;
         state.success = action.payload.success;
 
         state.products = action.payload.products || [];
-        console.log("slice products", action.payload.products);
         state.total = action.payload.total || 0;
         state.page = action.payload.page || 1;
         state.limit = action.payload.limit || 20;
@@ -122,7 +110,6 @@ const brandSubSlice = createSlice({
         state.error = action.payload?.message || action.error.message;
       })
 
-      /* ---------------- LOAD MORE PRODUCTS ---------------- */
       .addCase(loadMoreBrandSubProducts.pending, (state) => {
         state.loadingMore = true;
         state.error = null;
@@ -152,16 +139,12 @@ const brandSubSlice = createSlice({
         state.loadingFilters = false;
         state.filtersLoaded = true;
 
-        // Handle both old and new filter structures
         const filters = action.payload.filters || [];
 
-        // Transform the filters if needed
         const transformedFilters = filters.map((filter) => {
-          // If filter already has values array, use it
           if (filter.values && Array.isArray(filter.values)) {
             return filter;
           }
-          // If filter has a value string, convert to values array
           if (filter.value) {
             return {
               ...filter,
@@ -175,7 +158,6 @@ const brandSubSlice = createSlice({
         state.filtersCount = action.payload.filtersCount || 0;
         state.success = action.payload.success;
 
-        console.log("Filters stored in Redux:", transformedFilters); // Debug log
       })
       .addCase(fetchBrandSubFilters.rejected, (state, action) => {
         state.loadingFilters = false;
@@ -185,9 +167,6 @@ const brandSubSlice = createSlice({
   },
 });
 
-/* ======================================================
-   EXPORTS
-====================================================== */
 export const {
   clearBrandSub,
   resetFiltersLoaded,
@@ -195,7 +174,6 @@ export const {
   clearSelectedFilters,
 } = brandSubSlice.actions;
 
-/* ---------------- SELECTORS ---------------- */
 export const selectBrandSubProducts = (state) => state.brandSub.products;
 export const selectBrandSubTotal = (state) => state.brandSub.total;
 export const selectBrandSubPage = (state) => state.brandSub.page;
