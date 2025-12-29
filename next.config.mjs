@@ -7,8 +7,8 @@ const bundleAnalyzer = withBundleAnalyzer({
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  swcMinify: true,
-  output: 'standalone',
+  // swcMinify: true,
+  // output: 'standalone',
   compress: true,
 
   // Fix Turbopack issues

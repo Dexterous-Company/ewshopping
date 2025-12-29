@@ -36,7 +36,10 @@ const Footer = () => {
   const router = useRouter();
 
   const socialLinks = [
-    { icon: <Facebook size={18} />, url: "https://www.facebook.com/ewshopping" },
+    {
+      icon: <Facebook size={18} />,
+      url: "https://www.facebook.com/ewshopping",
+    },
     { icon: <Twitter size={18} />, url: "https://x.com/ewshoppingindia" },
     {
       icon: <Linkedin size={18} />,
@@ -86,9 +89,7 @@ const Footer = () => {
     {
       title: "Information",
       links: [
-        ...(mounted && isAuth
-          ? [["My Account", "/accounts/profile"]]
-          : [["Login", "/login"]]),
+        ["My Account", isAuth ? "/accounts/profile" : "/login"],
         ["About Us", "/aboutus"],
         ["Privacy Policy", "/privacypolicy"],
         ["Terms & Conditions", "/termsandcondition"],
@@ -98,9 +99,9 @@ const Footer = () => {
     {
       title: "My Account",
       links: [
-        ...(mounted && isAuth ? [["Sign Out", "#"]] : [["Sign In", "/login"]]),
+        [isAuth ? "Sign Out" : "Sign In", isAuth ? "#" : "/login"],
         ["View Cart", "/cart"],
-        ...(mounted && isAuth ? [["Orders", "/accounts/orders"]] : []),
+        ["Orders", isAuth ? "/accounts/orders" : "/login"],
       ],
     },
     {
@@ -325,20 +326,30 @@ const Footer = () => {
         >
           <div className="relative p-2 group-hover:bg-gray-800 rounded-lg transition-colors">
             <HeartOutline className="size-5 text-white group-hover:text-blue-400 transition-colors" />
+
+            {/* Badge container ALWAYS rendered */}
             <span
-              className={`absolute -top-1 -right-1 text-xs rounded-full h-4 w-4 flex items-center justify-center ${
-                isMounted && wishlistItems.length > 0
-                  ? "bg-red-500 text-white shadow-sm text-[10px]"
-                  : "hidden"
-              }`}
+              className="absolute -top-1 -right-1 h-4 w-4
+      flex items-center justify-center
+      rounded-full text-[10px] font-semibold
+      bg-red-500 text-white
+      transition-opacity duration-200
+      pointer-events-none
+    "
+              style={{
+                opacity: wishlistItems.length > 0 ? 1 : 0,
+              }}
+              aria-hidden="true"
             >
-              {isMounted && wishlistItems.length > 0
+              {/* Stable text width */}
+              {wishlistItems.length > 0
                 ? wishlistItems.length > 9
                   ? "9+"
                   : wishlistItems.length
-                : null}
+                : "0"}
             </span>
           </div>
+
           <span className="text-xs text-white font-medium group-hover:text-blue-400 transition-colors">
             Wishlist
           </span>

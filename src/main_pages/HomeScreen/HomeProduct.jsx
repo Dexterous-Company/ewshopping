@@ -1,4 +1,6 @@
 // HomeProduct.js - Updated with vibrant colors, arrow buttons & skeleton loader
+"use client";
+
 import { useRef, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import CategoryCard from "./CategoryCard";
