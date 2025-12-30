@@ -54,13 +54,16 @@ const initialState = {
   count: 0,
   products: [],
   filters: [],
-  priceRange: null, // Added priceRange to state
+  priceRange: null,
   loading: false,
   loadingMore: false,
   loadingFilters: false,
   filtersLoaded: false,
   error: null,
   sort: "",
+  // New state for initial filters (static, won't change)
+  initialFilters: [],
+  initialFiltersLoaded: false,
 };
 
 const newSearchSlice = createSlice({
@@ -88,9 +91,17 @@ const newSearchSlice = createSlice({
     },
     resetFiltersLoaded: (state) => {
       state.filtersLoaded = false;
+      state.initialFiltersLoaded = false;
     },
     clearPriceRange: (state) => {
       state.priceRange = null;
+    },
+    // Store initial filters once and never update them
+    setInitialFilters: (state, action) => {
+      if (!state.initialFiltersLoaded) {
+        state.initialFilters = action.payload;
+        state.initialFiltersLoaded = true;
+      }
     },
   },
   extraReducers: (builder) => {
@@ -112,9 +123,10 @@ const newSearchSlice = createSlice({
         state.products = action.payload.products || [];
         state.sort = action.meta.arg?.sort || "relevance";
         
-        // Don't override filters if they're already loaded from getFilters
-        if (action.payload.filters && action.payload.filters.length > 0 && !state.filtersLoaded) {
-          state.filters = action.payload.filters;
+        // Store initial filters from first products search if not already loaded
+        if (action.payload.filters && action.payload.filters.length > 0 && !state.initialFiltersLoaded) {
+          state.initialFilters = action.payload.filters;
+          state.initialFiltersLoaded = true;
         }
         
         state.error = null;
@@ -134,18 +146,18 @@ const newSearchSlice = createSlice({
       .addCase(getFilters.fulfilled, (state, action) => {
         state.loadingFilters = false;
         
-        // Always update filters from getFilters endpoint
-        if (action.payload.filters && action.payload.filters.length > 0) {
-          state.filters = action.payload.filters;
-        } else {
-          state.filters = [];
-        }
-        
-        // Update price range from API
+        // Update price range from API (this changes dynamically)
         if (action.payload.priceRange) {
           state.priceRange = action.payload.priceRange;
         } else {
           state.priceRange = null;
+        }
+        
+        // Store filters but keep initial filters static
+        if (action.payload.filters && action.payload.filters.length > 0) {
+          state.filters = action.payload.filters;
+        } else {
+          state.filters = [];
         }
         
         state.filtersLoaded = true;
@@ -193,6 +205,7 @@ export const {
   resetFetching,
   resetFiltersLoaded,
   clearPriceRange,
+  setInitialFilters,
 } = newSearchSlice.actions;
 
 // Selectors
@@ -203,7 +216,9 @@ export const selectSearchLoadingFilters = (state) => state.searchNew.loadingFilt
 export const selectSearchError = (state) => state.searchNew.error;
 export const selectSearchQuery = (state) => state.searchNew.query;
 export const selectSearchFilters = (state) => state.searchNew.filters;
-export const selectPriceRange = (state) => state.searchNew.priceRange; // New selector
+export const selectPriceRange = (state) => state.searchNew.priceRange;
+export const selectInitialFilters = (state) => state.searchNew.initialFilters; // New selector
+export const selectInitialFiltersLoaded = (state) => state.searchNew.initialFiltersLoaded; // New selector
 export const selectPagination = (state) => ({
   page: state.searchNew.page,
   limit: state.searchNew.limit,

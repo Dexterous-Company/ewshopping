@@ -76,7 +76,7 @@ const SearchPage = ({ params }) => {
     products,
     total,
     filters,
-    priceRange: apiPriceRange, // Get price range from API response
+    priceRange: apiPriceRange,
     loadingMore,
     loadingFilters,
     filtersLoaded,
@@ -87,6 +87,7 @@ const SearchPage = ({ params }) => {
   const initialSearchDone = useRef(false);
   const searchTimeoutRef = useRef(null);
   const filtersTimeoutRef = useRef(null);
+  const productsTimeoutRef = useRef(null);
 
   const [selectedFilters, setSelectedFilters] = useState({
     priceRange: null,
@@ -94,8 +95,8 @@ const SearchPage = ({ params }) => {
   const [expandedFilters, setExpandedFilters] = useState({});
   const [tempPriceRange, setTempPriceRange] = useState([0, 1000]);
 
-  // Use ONLY the price range from backend API - NO frontend calculation
-  const productPriceRange = apiPriceRange; // Directly use API response
+  // Use ONLY the price range from backend API
+  const productPriceRange = apiPriceRange;
 
   // Initialize tempPriceRange when productPriceRange changes
   useEffect(() => {
@@ -181,7 +182,16 @@ const SearchPage = ({ params }) => {
       clearTimeout(filtersTimeoutRef.current);
       filtersTimeoutRef.current = setTimeout(() => {
         dispatch(getFilters(params));
-      }, 150);
+      }, 200);
+    },
+    [dispatch]
+  );
+
+  // Quick products update without debounce
+  const updateProducts = useCallback(
+    (params) => {
+      clearTimeout(productsTimeoutRef.current);
+      dispatch(searchNewProducts(params));
     },
     [dispatch]
   );
@@ -287,6 +297,11 @@ const SearchPage = ({ params }) => {
           : [...curr, value],
       };
 
+      // CRITICAL FIX: Update products immediately with new filters
+      const productParams = buildSearchParams(1, newFilters);
+      updateProducts(productParams);
+
+      // Also update filters (for price range)
       const filterParams = buildFiltersParams(newFilters);
       debouncedFetchFilters(filterParams);
 
@@ -301,6 +316,11 @@ const SearchPage = ({ params }) => {
         [name]: prev[name]?.filter((v) => v !== value),
       };
 
+      // CRITICAL FIX: Update products immediately
+      const productParams = buildSearchParams(1, newFilters);
+      updateProducts(productParams);
+
+      // Also update filters
       const filterParams = buildFiltersParams(newFilters);
       debouncedFetchFilters(filterParams);
 
@@ -333,8 +353,13 @@ const SearchPage = ({ params }) => {
       setTempPriceRange([productPriceRange.min, productPriceRange.max]);
     }
 
-    // Fetch updated filters after clearing (will get new price range from backend)
-    debouncedFetchFilters(buildFiltersParams(clearedFilters));
+    // Fetch products with cleared filters
+    const productParams = buildSearchParams(1, clearedFilters);
+    updateProducts(productParams);
+
+    // Update filters
+    const filterParams = buildFiltersParams(clearedFilters);
+    debouncedFetchFilters(filterParams);
   };
 
   /* ---------- Calculate hasSelectedFilters ---------- */
@@ -362,7 +387,7 @@ const SearchPage = ({ params }) => {
   // Show filters only when they're loaded or loading
   const shouldShowFilters = filtersLoaded || loadingFilters;
 
-  // Check if we should show price filter (only if backend returned a price range)
+  // Check if we should show price filter
   const shouldShowPriceFilter = shouldShowFilters && productPriceRange;
 
   return (
@@ -414,15 +439,18 @@ const SearchPage = ({ params }) => {
                           size={8}
                           className="cursor-pointer"
                           onClick={() => {
-                            setSelectedFilters((p) => ({
-                              ...p,
-                              priceRange: null,
-                            }));
-
-                            const filterParams = buildFiltersParams({
+                            const newFilters = {
                               ...selectedFilters,
                               priceRange: null,
-                            });
+                            };
+                            setSelectedFilters(newFilters);
+
+                            // Update products
+                            const productParams = buildSearchParams(1, newFilters);
+                            updateProducts(productParams);
+
+                            // Update filters
+                            const filterParams = buildFiltersParams(newFilters);
                             debouncedFetchFilters(filterParams);
                           }}
                         />
@@ -475,9 +503,9 @@ const SearchPage = ({ params }) => {
                     setSelectedFilters(newFilters);
 
                     // Fetch products with new price range
-                    debouncedSearch(buildSearchParams(1, newFilters));
+                    updateProducts(buildSearchParams(1, newFilters));
 
-                    // Also update filters (and get new price range from backend)
+                    // Also update filters
                     debouncedFetchFilters(buildFiltersParams(newFilters));
                   }}
                 />
@@ -608,16 +636,16 @@ const SearchPage = ({ params }) => {
         loadingFilters={loadingFilters}
         selectedFilters={selectedFilters}
         sort={sort}
-        productPriceRange={productPriceRange} // Pass ONLY backend price range
+        productPriceRange={productPriceRange}
         tempPriceRange={tempPriceRange}
         onFilterChange={(newFilters) => {
           setSelectedFilters(newFilters);
 
           // Update products with new filters
           const productParams = buildSearchParams(1, newFilters);
-          debouncedSearch(productParams);
+          updateProducts(productParams);
 
-          // Update filters list (will get new price range from backend)
+          // Update filters list
           const filterParams = buildFiltersParams(newFilters);
           debouncedFetchFilters(filterParams);
         }}
