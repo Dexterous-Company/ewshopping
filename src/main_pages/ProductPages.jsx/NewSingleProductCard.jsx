@@ -82,13 +82,12 @@ const NewSingleProductCard = ({ product }) => {
       };
     }
 
-
     // Default tag when none of the above are present
     return {
       type: "✨ Best Offer",
       content: "✨ Best Offer",
       className:
-  "bg-gradient-to-r from-pink-500 via-fuchsia-500 to-purple-600 text-white text-xs px-2 py-1 font-semibold rounded shadow-md shadow-pink-400/30"
+        "bg-gradient-to-r from-pink-500 via-fuchsia-500 to-purple-600 text-white text-xs px-2 py-1 font-semibold rounded shadow-md shadow-pink-400/30",
     };
   };
 
@@ -117,13 +116,13 @@ const NewSingleProductCard = ({ product }) => {
                 alt={product.name || product.title || "Product image"}
                 fill
                 className="object-contain"
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                sizes="(max-width: 640px) 45vw, (max-width: 1024px) 22vw, 180px"
                 onError={handleImageError}
                 priority={false}
               />
             </div>
           </div>
-          
+
           {/* Always show the tag - now includes default "Classic" */}
           <div className="bottom-0 left-0 w-full z-20">
             <div
@@ -175,10 +174,12 @@ const NewSingleProductCard = ({ product }) => {
           {/* Price */}
           <div className="flex items-center">
             {discount === 50 && (
-              <img
+              <Image
                 src="https://ewshoppingsellerapinew.dexterous.in/uploads/1759926575679.webp"
-                alt="icon"
-                className="h-7 w-7 object-contain ml-2"
+                alt="Offer icon"
+                width={28}
+                height={28}
+                className="object-contain ml-2"
               />
             )}
             <span className="text-sm font-bold text-blue-900">

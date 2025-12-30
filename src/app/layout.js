@@ -52,6 +52,14 @@ export const metadata = {
       "Your destination for stylish fashion and cutting-edge electronics.",
   },
   manifest: "/manifest.json",
+    icons: {
+    icon: [
+      { url: "/favicon.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon.png", sizes: "16x16", type: "image/png" },
+    ],
+    apple: "/favicon.png",
+  },
+
 };
 
 export const viewport = {
@@ -73,7 +81,7 @@ export default function RootLayout({ children }) {
         {/* ✅ Google Tag Manager (ONLY THIS – GA IS INSIDE GTM) */}
         <Script
           id="google-tag-manager"
-          strategy="afterInteractive"
+          strategy="lazyOnload"
           dangerouslySetInnerHTML={{
             __html: `
               (function(w,d,s,l,i){
