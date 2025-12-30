@@ -86,7 +86,6 @@ const SearchPage = ({ params }) => {
 
   const initialSearchDone = useRef(false);
   const searchTimeoutRef = useRef(null);
-  const filtersTimeoutRef = useRef(null);
   const productsTimeoutRef = useRef(null);
 
   const [selectedFilters, setSelectedFilters] = useState({
@@ -130,13 +129,6 @@ const SearchPage = ({ params }) => {
     return params;
   };
 
-  // Build params for filters only
-  const buildFiltersParams = (overrideFilters = null) => ({
-    q: searchQuery,
-    categoryTag,
-    filters: overrideFilters || selectedFilters,
-  });
-
   // Initialize selectedFilters based on filter names from API
   useEffect(() => {
     if (filters && filters.length > 0) {
@@ -176,17 +168,6 @@ const SearchPage = ({ params }) => {
     [dispatch]
   );
 
-  // Debounced filters fetch
-  const debouncedFetchFilters = useCallback(
-    (params) => {
-      clearTimeout(filtersTimeoutRef.current);
-      filtersTimeoutRef.current = setTimeout(() => {
-        dispatch(getFilters(params));
-      }, 200);
-    },
-    [dispatch]
-  );
-
   // Quick products update without debounce
   const updateProducts = useCallback(
     (params) => {
@@ -208,29 +189,22 @@ const SearchPage = ({ params }) => {
     // Fetch products first
     dispatch(searchNewProducts(params));
 
-    // Then fetch filters (which includes price range)
-    dispatch(getFilters(buildFiltersParams()));
+    // Then fetch filters (which includes price range) only ONCE
+    dispatch(getFilters({ q: searchQuery, categoryTag }));
 
     initialSearchDone.current = true;
   }, [searchQuery, categoryTag, dispatch]);
 
-  /* ---------- FILTER / SORT CHANGE ---------- */
+  /* ---------- SORT CHANGE ---------- */
   useEffect(() => {
     if (!initialSearchDone.current) return;
 
     const productParams = buildSearchParams(1);
-    const filterParams = buildFiltersParams();
-
-    // Fetch products with debounce
     debouncedSearch(productParams);
-
-    // Also update filters (and price range) based on current selection
-    debouncedFetchFilters(filterParams);
+    // NO filter fetching on sort change
   }, [
-    selectedFilters,
     sort,
     debouncedSearch,
-    debouncedFetchFilters,
     initialSearchDone,
   ]);
 
@@ -297,13 +271,10 @@ const SearchPage = ({ params }) => {
           : [...curr, value],
       };
 
-      // CRITICAL FIX: Update products immediately with new filters
+      // Update products immediately with new filters
+      // NO filter fetching - filters remain static
       const productParams = buildSearchParams(1, newFilters);
       updateProducts(productParams);
-
-      // Also update filters (for price range)
-      const filterParams = buildFiltersParams(newFilters);
-      debouncedFetchFilters(filterParams);
 
       return newFilters;
     });
@@ -316,13 +287,10 @@ const SearchPage = ({ params }) => {
         [name]: prev[name]?.filter((v) => v !== value),
       };
 
-      // CRITICAL FIX: Update products immediately
+      // Update products immediately
+      // NO filter fetching
       const productParams = buildSearchParams(1, newFilters);
       updateProducts(productParams);
-
-      // Also update filters
-      const filterParams = buildFiltersParams(newFilters);
-      debouncedFetchFilters(filterParams);
 
       return newFilters;
     });
@@ -354,12 +322,9 @@ const SearchPage = ({ params }) => {
     }
 
     // Fetch products with cleared filters
+    // NO filter fetching
     const productParams = buildSearchParams(1, clearedFilters);
     updateProducts(productParams);
-
-    // Update filters
-    const filterParams = buildFiltersParams(clearedFilters);
-    debouncedFetchFilters(filterParams);
   };
 
   /* ---------- Calculate hasSelectedFilters ---------- */
@@ -448,10 +413,7 @@ const SearchPage = ({ params }) => {
                             // Update products
                             const productParams = buildSearchParams(1, newFilters);
                             updateProducts(productParams);
-
-                            // Update filters
-                            const filterParams = buildFiltersParams(newFilters);
-                            debouncedFetchFilters(filterParams);
+                            // NO filter fetching
                           }}
                         />
                         <span>
@@ -504,9 +466,7 @@ const SearchPage = ({ params }) => {
 
                     // Fetch products with new price range
                     updateProducts(buildSearchParams(1, newFilters));
-
-                    // Also update filters
-                    debouncedFetchFilters(buildFiltersParams(newFilters));
+                    // NO filter fetching
                   }}
                 />
                 <div className="flex justify-between text-xs text-gray-600 mt-2">
@@ -546,12 +506,12 @@ const SearchPage = ({ params }) => {
                         checked={currentSelections.includes(v)}
                         onChange={() => handleFilterChange(filter.name, v)}
                         className="
-        w-[14px] h-[14px]
-        cursor-pointer
-        border-none
-        outline-none
-        accent-blue-600
-      "
+                          w-[14px] h-[14px]
+                          cursor-pointer
+                          border-none
+                          outline-none
+                          accent-blue-600
+                        "
                       />
 
                       <span className="truncate">{v}</span>
@@ -644,10 +604,7 @@ const SearchPage = ({ params }) => {
           // Update products with new filters
           const productParams = buildSearchParams(1, newFilters);
           updateProducts(productParams);
-
-          // Update filters list
-          const filterParams = buildFiltersParams(newFilters);
-          debouncedFetchFilters(filterParams);
+          // NO filter fetching
         }}
         onSortChange={handleSort}
         onTempPriceRangeChange={setTempPriceRange}

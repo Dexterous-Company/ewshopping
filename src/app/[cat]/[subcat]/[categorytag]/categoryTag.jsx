@@ -87,7 +87,7 @@ const SearchPage = ({ params }) => {
     // You can extract min/max from products or use default
     // For now, using reasonable defaults
     if (products.length > 0) {
-      const prices = products.map(p => p.price || 0).filter(p => p > 0);
+      const prices = products.map(p => p.priceRange || 0).filter(p => p > 0);
       if (prices.length > 0) {
         return {
           min: Math.min(...prices),

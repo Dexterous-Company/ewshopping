@@ -56,7 +56,6 @@ const SearchPage = ({ params }) => {
 
   const initialSearchDone = useRef(false);
   const searchTimeoutRef = useRef(null);
-  const filtersTimeoutRef = useRef(null);
 
   const [selectedFilters, setSelectedFilters] = useState({
     priceRange: null,
@@ -64,6 +63,7 @@ const SearchPage = ({ params }) => {
   const [expandedFilters, setExpandedFilters] = useState({});
   const [tempPriceRange, setTempPriceRange] = useState([0, 1000]);
 
+  // Extract price range from products
   const productPriceRange = useMemo(() => {
     let min = Infinity;
     let max = 0;
@@ -92,18 +92,15 @@ const SearchPage = ({ params }) => {
     };
   }, [products]);
 
+  // Initialize temp price range
   useEffect(() => {
     setTempPriceRange([productPriceRange.min, productPriceRange.max]);
-
-    setSelectedFilters((prev) => ({
-      ...prev,
-      priceRange: null,
-    }));
-  }, [category]); // ✅ only category change
+  }, [productPriceRange]);
 
   const toggleFilterExpand = (name) =>
     setExpandedFilters((p) => ({ ...p, [name]: !p[name] }));
 
+  // Build params for products search
   const buildSearchParams = useCallback(
     (page = 1, overrideFilters = null) => ({
       category,
@@ -115,11 +112,7 @@ const SearchPage = ({ params }) => {
     [category, limit, selectedFilters, sort]
   );
 
-  const buildFiltersParams = (overrideFilters = null) => ({
-    category,
-    filters: overrideFilters || selectedFilters,
-  });
-
+  // Initialize selectedFilters based on filter names from API
   useEffect(() => {
     if (filters && filters.length > 0) {
       const filterNames = filters
@@ -147,6 +140,7 @@ const SearchPage = ({ params }) => {
     }
   }, [filters]);
 
+  // Debounced search for products
   const debouncedSearch = useCallback(
     (params) => {
       clearTimeout(searchTimeoutRef.current);
@@ -157,47 +151,42 @@ const SearchPage = ({ params }) => {
     [dispatch]
   );
 
-  const debouncedFetchFilters = useCallback(
+  // Quick products update without debounce
+  const updateProducts = useCallback(
     (params) => {
-      clearTimeout(filtersTimeoutRef.current);
-      filtersTimeoutRef.current = setTimeout(() => {
-        dispatch(getCategoryFilters(params));
-      }, 150);
+      clearTimeout(searchTimeoutRef.current);
+      dispatch(CategoryProducts(params));
     },
     [dispatch]
   );
 
+  /* ---------- INITIAL SEARCH ---------- */
   useEffect(() => {
     if (initialSearchDone.current) return;
 
     dispatch(resetFiltersLoaded());
 
     const params = buildSearchParams(1);
-
+    
+    // Fetch products
     dispatch(CategoryProducts(params));
-
-    dispatch(getCategoryFilters(buildFiltersParams()));
+    
+    // Fetch filters only ONCE on initial load
+    dispatch(getCategoryFilters({ category }));
 
     initialSearchDone.current = true;
   }, [category, dispatch]);
 
+  /* ---------- SORT CHANGE ---------- */
   useEffect(() => {
     if (!initialSearchDone.current) return;
 
     const productParams = buildSearchParams(1);
-    const filterParams = buildFiltersParams();
-
     debouncedSearch(productParams);
+    // NO filter fetching on sort change
+  }, [sort, debouncedSearch, initialSearchDone]);
 
-    debouncedFetchFilters(filterParams);
-  }, [
-    selectedFilters,
-    sort,
-    debouncedSearch,
-    debouncedFetchFilters,
-    initialSearchDone,
-  ]);
-
+  /* ---------- INFINITE SCROLL ---------- */
   useEffect(() => {
     let ticking = false;
 
@@ -248,20 +237,20 @@ const SearchPage = ({ params }) => {
     }
   };
 
-  const handleFilterChange = (filter, value) => {
-    const key = filter.apiKey || filter.name;
-
+  const handleFilterChange = (name, value) => {
     setSelectedFilters((prev) => {
-      const curr = prev[key] || [];
+      const curr = prev[name] || [];
       const newFilters = {
         ...prev,
-        [key]: curr.includes(value)
+        [name]: curr.includes(value)
           ? curr.filter((v) => v !== value)
           : [...curr, value],
       };
 
-      const filterParams = buildFiltersParams(newFilters);
-      debouncedFetchFilters(filterParams);
+      // Update products immediately with new filters
+      // NO filter fetching - filters remain static
+      const productParams = buildSearchParams(1, newFilters);
+      updateProducts(productParams);
 
       return newFilters;
     });
@@ -274,8 +263,10 @@ const SearchPage = ({ params }) => {
         [name]: prev[name]?.filter((v) => v !== value),
       };
 
-      const filterParams = buildFiltersParams(newFilters);
-      debouncedFetchFilters(filterParams);
+      // Update products immediately
+      // NO filter fetching
+      const productParams = buildSearchParams(1, newFilters);
+      updateProducts(productParams);
 
       return newFilters;
     });
@@ -301,14 +292,19 @@ const SearchPage = ({ params }) => {
     setSelectedFilters(clearedFilters);
     setTempPriceRange([productPriceRange.min, productPriceRange.max]);
 
-    debouncedFetchFilters(buildFiltersParams(clearedFilters));
+    // Fetch products with cleared filters
+    // NO filter fetching
+    const productParams = buildSearchParams(1, clearedFilters);
+    updateProducts(productParams);
   };
 
+  /* ---------- Calculate hasSelectedFilters ---------- */
   const hasSelectedFilters = Object.entries(selectedFilters).some(
     ([key, value]) => {
       if (key === "priceRange") {
         return (
           value &&
+          productPriceRange &&
           (value.min !== productPriceRange.min ||
             value.max !== productPriceRange.max)
         );
@@ -317,18 +313,22 @@ const SearchPage = ({ params }) => {
     }
   );
 
-  const validFilters = React.useMemo(() => {
+  // Filter out empty filter values
+  const validFilters = useMemo(() => {
     return (filters || []).filter(
       (filter) => filter.values && filter.values.length > 0
     );
   }, [filters]);
 
+  // Show filters only when they're loaded or loading
   const shouldShowFilters = filtersLoaded || loadingFilters;
 
   return (
     <div className="min-h-screen bg-gray-100 pt-4">
       <div className="max-w-[1600px] mx-auto flex">
-        <div className="hidden lg:block w-[270px] bg-gray-50 border border-gray-300 text-gray-600">
+        {/* ---------------- LEFT FILTER ---------------- */}
+        <div className="hidden lg:block w-[240px] bg-gray-50 border border-gray-300 text-gray-600">
+          {/* HEADER */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-300 text-sm font-semibold text-gray-800">
             <span>Filters</span>
             {hasSelectedFilters && (
@@ -341,6 +341,7 @@ const SearchPage = ({ params }) => {
             )}
           </div>
 
+          {/* Show loading indicator for filters */}
           {loadingFilters && validFilters.length === 0 && (
             <div className="px-4 py-3 border-b border-gray-200">
               <div className="animate-pulse space-y-2">
@@ -351,12 +352,14 @@ const SearchPage = ({ params }) => {
             </div>
           )}
 
+          {/* SELECTED FILTERS */}
           {hasSelectedFilters && shouldShowFilters && (
             <div className="px-4 py-2 flex flex-wrap gap-2 border-b border-gray-300 bg-gray-100">
               {Object.entries(selectedFilters).map(([key, values]) => {
                 if (key === "priceRange") {
                   if (
                     values &&
+                    productPriceRange &&
                     (values.min !== productPriceRange.min ||
                       values.max !== productPriceRange.max)
                   ) {
@@ -369,16 +372,14 @@ const SearchPage = ({ params }) => {
                           size={8}
                           className="cursor-pointer"
                           onClick={() => {
-                            setSelectedFilters((p) => ({
-                              ...p,
-                              priceRange: null,
-                            }));
-
-                            const filterParams = buildFiltersParams({
+                            const newFilters = {
                               ...selectedFilters,
                               priceRange: null,
-                            });
-                            debouncedFetchFilters(filterParams);
+                            };
+                            setSelectedFilters(newFilters);
+
+                            const productParams = buildSearchParams(1, newFilters);
+                            updateProducts(productParams);
                           }}
                         />
                         <span>
@@ -410,6 +411,7 @@ const SearchPage = ({ params }) => {
             </div>
           )}
 
+          {/* PRICE FILTER */}
           {shouldShowFilters && (
             <div className="px-4 py-4 border-b border-gray-200">
               <p className="text-xs font-semibold mb-2 text-gray-800">PRICE</p>
@@ -422,7 +424,6 @@ const SearchPage = ({ params }) => {
                   onChange={(e, v) => {
                     setTempPriceRange(v);
                   }}
-                  // ✅ UI only
                   onChangeCommitted={(e, v) => {
                     const range = { min: v[0], max: v[1] };
                     const newFilters = {
@@ -431,10 +432,8 @@ const SearchPage = ({ params }) => {
                     };
 
                     setSelectedFilters(newFilters);
-
-                    debouncedSearch(buildSearchParams(1, newFilters));
-
-                    debouncedFetchFilters(buildFiltersParams(newFilters));
+                    updateProducts(buildSearchParams(1, newFilters));
+                    // NO filter fetching
                   }}
                 />
                 <div className="flex justify-between text-xs text-gray-600 mt-2">
@@ -445,6 +444,7 @@ const SearchPage = ({ params }) => {
             </div>
           )}
 
+          {/* DYNAMIC FILTERS */}
           {shouldShowFilters && validFilters.length > 0 ? (
             validFilters.map((filter) => {
               const values = filter.values || [];
@@ -459,7 +459,7 @@ const SearchPage = ({ params }) => {
                   key={filter.name}
                   className="px-4 py-4 border-b border-gray-200"
                 >
-                  <p className="text-xs font-semibold mb-1 text-gray-800">
+                  <p className="mb-2 text-gray-800 font-fk text-[11px] font-semibold text-fkText leading-[1.4]">
                     {(filter.name === "ProductType"
                       ? "PRODUCT TYPE"
                       : filter.name
@@ -469,14 +469,19 @@ const SearchPage = ({ params }) => {
                   {visible.map((v) => (
                     <label
                       key={v}
-                      className="flex gap-2 text-sm mb-1 text-gray-600 cursor-pointer"
+                      className="flex items-center text-gray-900 gap-3 mb-2 cursor-pointer font-inter text-[13px] font-normal text-fkText leading-[1.4]"
                     >
                       <input
                         type="checkbox"
-                        checked={(
-                          selectedFilters[filter.apiKey || filter.name] || []
-                        ).includes(v)}
-                        onChange={() => handleFilterChange(filter, v)}
+                        checked={currentSelections.includes(v)}
+                        onChange={() => handleFilterChange(filter.name, v)}
+                        className="
+                          w-[14px] h-[14px]
+                          cursor-pointer
+                          border-none
+                          outline-none
+                          accent-blue-600
+                        "
                       />
 
                       <span className="truncate">{v}</span>
@@ -485,7 +490,7 @@ const SearchPage = ({ params }) => {
 
                   {values.length > 4 && (
                     <button
-                      className="text-sm text-blue-600 mt-1 hover:text-blue-800"
+                      className="text-sm text-blue-600 mt-1 hover:text-blue-600"
                       onClick={() => toggleFilterExpand(filter.name)}
                     >
                       {expanded
@@ -503,6 +508,7 @@ const SearchPage = ({ params }) => {
           ) : null}
         </div>
 
+        {/* ---------------- PRODUCTS ---------------- */}
         <div className="flex-1 px-4">
           <div className="hidden lg:flex bg-white border border-gray-300 px-4 py-2 mb-3 items-center text-sm">
             <div className="flex gap-3 flex-wrap">
@@ -531,18 +537,21 @@ const SearchPage = ({ params }) => {
             ))}
           </div>
 
+          {/* LOADING INDICATOR */}
           {loadingMore && (
             <div className="flex justify-center my-8">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
             </div>
           )}
 
+          {/* END OF RESULTS */}
           {products.length > 0 && products.length >= total && (
             <div className="text-center py-8 text-gray-500">
               You've reached the end
             </div>
           )}
 
+          {/* NO PRODUCTS FOUND */}
           {products.length === 0 && !loadingMore && (
             <div className="text-center py-12 text-gray-500">
               No products found
@@ -551,6 +560,7 @@ const SearchPage = ({ params }) => {
         </div>
       </div>
 
+      {/* Mobile Filter */}
       <NewFilter
         filters={validFilters}
         loadingFilters={loadingFilters}
@@ -560,12 +570,9 @@ const SearchPage = ({ params }) => {
         tempPriceRange={tempPriceRange}
         onFilterChange={(newFilters) => {
           setSelectedFilters(newFilters);
-
           const productParams = buildSearchParams(1, newFilters);
-          debouncedSearch(productParams);
-
-          const filterParams = buildFiltersParams(newFilters);
-          debouncedFetchFilters(filterParams);
+          updateProducts(productParams);
+          // NO filter fetching
         }}
         onSortChange={handleSort}
         onTempPriceRangeChange={setTempPriceRange}
