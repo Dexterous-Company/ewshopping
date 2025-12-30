@@ -29,6 +29,11 @@ import {
   Users,
   Heart,
   LogOut,
+  List,
+  LogOutIcon,
+  User2,
+  Tag,
+  Store,
 } from "lucide-react";
 
 const HomeMobileHeader = () => {
@@ -93,7 +98,7 @@ const HomeMobileHeader = () => {
             icon: <Store />,
             path: "https://seller.ewshopping.com/",
           },
-          { label: "Logout", icon: <LogOut />, onClick: handleLogout },
+          { label: "Logout", icon: <LogOutIcon />, onClick: handleLogout },
         ]
       : [
           {
