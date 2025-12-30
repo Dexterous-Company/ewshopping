@@ -17,8 +17,6 @@ import {
   Menu,
   Play,
   ChevronRight,
-  List,
-  Tag,
   Grid3x3,
   Shield,
   FileText,
@@ -29,7 +27,6 @@ import {
   RotateCcw,
   Ban,
   Users,
-  Store,
   Heart,
   LogOut,
 } from "lucide-react";

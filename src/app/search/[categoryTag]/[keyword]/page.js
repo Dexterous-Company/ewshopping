@@ -76,6 +76,7 @@ const SearchPage = ({ params }) => {
     products,
     total,
     filters,
+    priceRange: apiPriceRange, // Get price range from API response
     loadingMore,
     loadingFilters,
     filtersLoaded,
@@ -93,68 +94,21 @@ const SearchPage = ({ params }) => {
   const [expandedFilters, setExpandedFilters] = useState({});
   const [tempPriceRange, setTempPriceRange] = useState([0, 1000]);
 
-  // Calculate min and max price from products
-  const productPriceRange = useMemo(() => {
-    if (!products || products.length === 0) {
-      return { min: 0, max: 1000 };
-    }
-
-    // Extract all product prices
-    const prices = products
-      .map((product) => {
-        // Adjust this based on your product price structure
-        // If price is stored as a number
-        if (typeof product.price === "number") {
-          return product.price;
-        }
-        // If price is stored as a string with currency symbol
-        if (typeof product.price === "string") {
-          const numericPrice = parseFloat(
-            product.price.replace(/[^0-9.-]+/g, "")
-          );
-          return isNaN(numericPrice) ? 0 : numericPrice;
-        }
-        // If price is in an object like product.price.current
-        if (product.price && typeof product.price === "object") {
-          const priceValue =
-            product.price.current ||
-            product.price.original ||
-            product.price.value;
-          if (typeof priceValue === "number") return priceValue;
-          if (typeof priceValue === "string") {
-            const numericPrice = parseFloat(
-              priceValue.replace(/[^0-9.-]+/g, "")
-            );
-            return isNaN(numericPrice) ? 0 : numericPrice;
-          }
-        }
-        return 0;
-      })
-      .filter((price) => !isNaN(price) && price > 0);
-
-    if (prices.length === 0) {
-      return { min: 0, max: 1000 };
-    }
-
-    const min = Math.floor(Math.min(...prices));
-    const max = Math.ceil(Math.max(...prices));
-
-    // Add some padding to the max value for better UX
-    const paddedMax = Math.ceil(max * 1.1);
-
-    return { min, max: paddedMax };
-  }, [products]);
+  // Use ONLY the price range from backend API - NO frontend calculation
+  const productPriceRange = apiPriceRange; // Directly use API response
 
   // Initialize tempPriceRange when productPriceRange changes
   useEffect(() => {
-    if (productPriceRange.min !== 0 || productPriceRange.max !== 1000) {
+    if (productPriceRange) {
       setTempPriceRange([productPriceRange.min, productPriceRange.max]);
+    } else {
+      setTempPriceRange([0, 1000]);
     }
   }, [productPriceRange]);
 
   // Reset tempPriceRange when price filter is cleared
   useEffect(() => {
-    if (!selectedFilters.priceRange) {
+    if (!selectedFilters.priceRange && productPriceRange) {
       setTempPriceRange([productPriceRange.min, productPriceRange.max]);
     }
   }, [selectedFilters.priceRange, productPriceRange]);
@@ -244,7 +198,7 @@ const SearchPage = ({ params }) => {
     // Fetch products first
     dispatch(searchNewProducts(params));
 
-    // Then fetch filters
+    // Then fetch filters (which includes price range)
     dispatch(getFilters(buildFiltersParams()));
 
     initialSearchDone.current = true;
@@ -260,7 +214,7 @@ const SearchPage = ({ params }) => {
     // Fetch products with debounce
     debouncedSearch(productParams);
 
-    // Also update filters based on current selection
+    // Also update filters (and price range) based on current selection
     debouncedFetchFilters(filterParams);
   }, [
     selectedFilters,
@@ -373,9 +327,13 @@ const SearchPage = ({ params }) => {
     }
 
     setSelectedFilters(clearedFilters);
-    setTempPriceRange([productPriceRange.min, productPriceRange.max]);
+    
+    // Reset temp price range to current API price range
+    if (productPriceRange) {
+      setTempPriceRange([productPriceRange.min, productPriceRange.max]);
+    }
 
-    // Fetch updated filters after clearing
+    // Fetch updated filters after clearing (will get new price range from backend)
     debouncedFetchFilters(buildFiltersParams(clearedFilters));
   };
 
@@ -385,6 +343,7 @@ const SearchPage = ({ params }) => {
       if (key === "priceRange") {
         return (
           value &&
+          productPriceRange &&
           (value.min !== productPriceRange.min ||
             value.max !== productPriceRange.max)
         );
@@ -403,11 +362,14 @@ const SearchPage = ({ params }) => {
   // Show filters only when they're loaded or loading
   const shouldShowFilters = filtersLoaded || loadingFilters;
 
+  // Check if we should show price filter (only if backend returned a price range)
+  const shouldShowPriceFilter = shouldShowFilters && productPriceRange;
+
   return (
     <div className="min-h-screen bg-gray-100 pt-4">
       <div className="max-w-[1600px] mx-auto flex">
         {/* ---------------- LEFT FILTER ---------------- */}
-        <div className="hidden lg:block w-[270px] bg-gray-50 border border-gray-300 text-gray-600">
+        <div className="hidden lg:block w-[240px] bg-gray-50 border border-gray-300 text-gray-600">
           {/* HEADER */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-300 text-sm font-semibold text-gray-800">
             <span>Filters</span>
@@ -439,6 +401,7 @@ const SearchPage = ({ params }) => {
                 if (key === "priceRange") {
                   if (
                     values &&
+                    productPriceRange &&
                     (values.min !== productPriceRange.min ||
                       values.max !== productPriceRange.max)
                   ) {
@@ -492,8 +455,8 @@ const SearchPage = ({ params }) => {
             </div>
           )}
 
-          {/* PRICE */}
-          {shouldShowFilters && (
+          {/* PRICE FILTER - Only show if backend returned a price range */}
+          {shouldShowPriceFilter && (
             <div className="px-4 py-4 border-b border-gray-200">
               <p className="text-xs font-semibold mb-2 text-gray-800">PRICE</p>
               <div className="w-[85%] mx-auto">
@@ -514,7 +477,7 @@ const SearchPage = ({ params }) => {
                     // Fetch products with new price range
                     debouncedSearch(buildSearchParams(1, newFilters));
 
-                    // Also update filters
+                    // Also update filters (and get new price range from backend)
                     debouncedFetchFilters(buildFiltersParams(newFilters));
                   }}
                 />
@@ -541,28 +504,35 @@ const SearchPage = ({ params }) => {
                   key={filter.name}
                   className="px-4 py-4 border-b border-gray-200"
                 >
-                  <p className="text-xs font-semibold mb-1 text-gray-800">
+                  <p className="mb-2 text-gray-800 font-fk text-[11px] font-semibold text-fkText leading-[1.4]">
                     {filter.name.toUpperCase()}
                   </p>
 
                   {visible.map((v) => (
                     <label
                       key={v}
-                      className="flex gap-2 text-sm mb-1 text-gray-600 cursor-pointer"
+                      className="flex items-center text-gray-900 gap-3 mb-2 cursor-pointer font-inter text-[13px] font-normal text-fkText leading-[1.4]"
                     >
                       <input
                         type="checkbox"
                         checked={currentSelections.includes(v)}
                         onChange={() => handleFilterChange(filter.name, v)}
-                        className="cursor-pointer"
+                        className="
+        w-[14px] h-[14px]
+        cursor-pointer
+        border-none
+        outline-none
+        accent-blue-600
+      "
                       />
+
                       <span className="truncate">{v}</span>
                     </label>
                   ))}
 
                   {values.length > 4 && (
                     <button
-                      className="text-sm text-blue-600 mt-1 hover:text-blue-800"
+                      className="text-sm text-blue-600 mt-1 hover:text-blue-600"
                       onClick={() => toggleFilterExpand(filter.name)}
                     >
                       {expanded
@@ -632,13 +602,13 @@ const SearchPage = ({ params }) => {
         </div>
       </div>
 
-      {/* In SearchPage component, update the NewFilter usage: */}
+      {/* Mobile Filter */}
       <NewFilter
         filters={validFilters}
         loadingFilters={loadingFilters}
         selectedFilters={selectedFilters}
         sort={sort}
-        productPriceRange={productPriceRange}
+        productPriceRange={productPriceRange} // Pass ONLY backend price range
         tempPriceRange={tempPriceRange}
         onFilterChange={(newFilters) => {
           setSelectedFilters(newFilters);
@@ -647,7 +617,7 @@ const SearchPage = ({ params }) => {
           const productParams = buildSearchParams(1, newFilters);
           debouncedSearch(productParams);
 
-          // Update filters list
+          // Update filters list (will get new price range from backend)
           const filterParams = buildFiltersParams(newFilters);
           debouncedFetchFilters(filterParams);
         }}
