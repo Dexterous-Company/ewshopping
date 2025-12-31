@@ -7,7 +7,7 @@ const Baseurl = process.env.NEXT_PUBLIC_API_URL;
    FETCH CATEGORY PRODUCTS
 ------------------------------------ */
 export const CategoryProducts = createAsyncThunk(
-  "category/CategoryProducts",
+  "categoryProdact/CategoryProducts", // ✅ Changed to match component selector
   async (params, { rejectWithValue }) => {
     try {
       const response = await axios.post(
@@ -28,7 +28,7 @@ export const CategoryProducts = createAsyncThunk(
    FETCH CATEGORY FILTERS
 ------------------------------------ */
 export const getCategoryFilters = createAsyncThunk(
-  "category/getCategoryFilters",
+  "categoryProdact/getCategoryFilters", // ✅ Changed to match component selector
   async (params, { rejectWithValue }) => {
     try {
       const response = await axios.post(
@@ -46,7 +46,7 @@ export const getCategoryFilters = createAsyncThunk(
    LOAD MORE CATEGORY PRODUCTS
 ------------------------------------ */
 export const loadMoreCategoryProducts = createAsyncThunk(
-  "category/loadMoreCategoryProducts",
+  "categoryProdact/loadMoreCategoryProducts", // ✅ Changed to match component selector
   async (params, { rejectWithValue }) => {
     try {
       const response = await axios.post(
@@ -72,6 +72,7 @@ const initialState = {
   count: 0,
   products: [],
   filters: [],
+  priceRange: null, // ✅ ADDED: Dynamic price range from API
   loading: false,
   loadingMore: false,
   loadingFilters: false,
@@ -83,8 +84,8 @@ const initialState = {
 /* ------------------------------------
    CATEGORY SLICE
 ------------------------------------ */
-const categorySlice = createSlice({
-  name: "category",
+const categoryProdactSlice = createSlice({ // ✅ Changed slice name
+  name: "categoryProdact", // ✅ Changed to match component selector
   initialState,
   reducers: {
     setSortOption: (state, action) => {
@@ -102,6 +103,9 @@ const categorySlice = createSlice({
     },
     resetFiltersLoaded: (state) => {
       state.filtersLoaded = false;
+    },
+    clearPriceRange: (state) => { // ✅ ADDED
+      state.priceRange = null;
     },
   },
   extraReducers: (builder) => {
@@ -139,6 +143,37 @@ const categorySlice = createSlice({
         state.loadingFilters = false;
         state.success = action.payload.success;
 
+        // ✅ DYNAMIC PRICE RANGE FROM API
+        if (action.payload.priceRange) {
+          state.priceRange = action.payload.priceRange;
+        } else {
+          // Fallback: calculate from current products
+          if (state.products.length > 0) {
+            const prices = state.products
+              .map(p => {
+                if (p.priceRange) return p.priceRange;
+                if (p.salePrice) return p.salePrice;
+                if (p.price) {
+                  // Handle both number and object price formats
+                  if (typeof p.price === 'object' && p.price.current) {
+                    return Number(p.price.current);
+                  }
+                  return Number(p.price);
+                }
+                return 0;
+              })
+              .filter(p => p > 0 && !isNaN(p));
+            
+            if (prices.length > 0) {
+              state.priceRange = {
+                min: Math.min(...prices),
+                max: Math.max(...prices)
+              };
+            }
+          }
+        }
+
+        // ✅ STATIC FILTERS (ONLY LOADED ONCE)
         const raw = action.payload.filters || {};
         const normalized = [];
 
@@ -196,14 +231,11 @@ const categorySlice = createSlice({
         state.loadingMore = false;
         state.success = action.payload.success;
         state.total = action.payload.total || state.total;
-
         state.page += 1;
-
         state.products = [
           ...state.products,
           ...(action.payload.products || []),
         ];
-
         state.error = null;
       })
       .addCase(loadMoreCategoryProducts.rejected, (state, action) => {
@@ -222,24 +254,28 @@ export const {
   setPage,
   resetFetching,
   resetFiltersLoaded,
-} = categorySlice.actions;
+  clearPriceRange, // ✅ ADDED
+} = categoryProdactSlice.actions;
 
 /* ------------------------------------
    SELECTORS
 ------------------------------------ */
-export const selectCategoryProducts = (state) => state.category.products;
-export const selectCategoryLoading = (state) => state.category.loading;
-export const selectCategoryLoadingMore = (state) => state.category.loadingMore;
-export const selectCategoryFilters = (state) => state.category.filters;
-export const selectCategoryFiltersLoaded = (state) =>
-  state.category.filtersLoaded;
+export const selectCategoryProducts = (state) => state.categoryProdact.products;
+export const selectCategoryLoading = (state) => state.categoryProdact.loading;
+export const selectCategoryLoadingMore = (state) => state.categoryProdact.loadingMore;
+export const selectCategoryFilters = (state) => state.categoryProdact.filters;
+export const selectCategoryPriceRange = (state) => state.categoryProdact.priceRange; // ✅ NEW
+export const selectCategoryLoadingFilters = (state) => state.categoryProdact.loadingFilters;
+export const selectCategoryFiltersLoaded = (state) => state.categoryProdact.filtersLoaded;
 export const selectCategoryPagination = (state) => ({
-  page: state.category.page,
-  limit: state.category.limit,
-  total: state.category.total,
-  totalPages: state.category.totalPages,
-  count: state.category.count,
-  hasNext: state.category.page < state.category.totalPages,
+  page: state.categoryProdact.page,
+  limit: state.categoryProdact.limit,
+  total: state.categoryProdact.total,
+  totalPages: state.categoryProdact.totalPages,
+  count: state.categoryProdact.count,
+  hasNext: state.categoryProdact.page < state.categoryProdact.totalPages,
 });
+export const selectCategorySort = (state) => state.categoryProdact.sort;
+export const selectCategorySuccess = (state) => state.categoryProdact.success;
 
-export default categorySlice.reducer;
+export default categoryProdactSlice.reducer;

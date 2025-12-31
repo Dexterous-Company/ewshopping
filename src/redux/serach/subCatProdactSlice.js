@@ -2,9 +2,8 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 const Baseurl = process.env.NEXT_PUBLIC_API_URL;
 
-
 export const SubCatProdact = createAsyncThunk(
-  "searchNew/SubCatProdact",
+  "subCatProdact/SubCatProdact", // ✅ Changed name to match slice
   async (params, { rejectWithValue }) => {
     try {
       const response = await axios.post(
@@ -21,9 +20,8 @@ export const SubCatProdact = createAsyncThunk(
   }
 );
 
-
 export const getSubCatFilters = createAsyncThunk(
-  "searchNew/getSubCatFilters",
+  "subCatProdact/getSubCatFilters", // ✅ Changed name to match slice
   async (params, { rejectWithValue }) => {
     try {
       const response = await axios.post(
@@ -37,9 +35,8 @@ export const getSubCatFilters = createAsyncThunk(
   }
 );
 
-
 export const loadMoreSubCatProducts = createAsyncThunk(
-  "searchNew/loadMoreSubCatProducts",
+  "subCatProdact/loadMoreSubCatProducts", // ✅ Changed name to match slice
   async (params, { rejectWithValue }) => {
     try {
       const response = await axios.post(
@@ -63,6 +60,7 @@ const initialState = {
   count: 0,
   products: [],
   filters: [],
+  priceRange: null, // ✅ ADDED: Dynamic price range from API
   loading: false,
   loadingMore: false,
   loadingFilters: false,
@@ -71,8 +69,8 @@ const initialState = {
   sort: "",
 };
 
-const subCatFiltersSlice = createSlice({
-  name: "searchNew",
+const subCatProdactSlice = createSlice({ // ✅ Changed slice name
+  name: "subCatProdact", // ✅ Changed name
   initialState,
   reducers: {
     setSearchQuery: (state, action) => {
@@ -94,14 +92,15 @@ const subCatFiltersSlice = createSlice({
       state.loadingMore = false;
       state.loadingFilters = false;
     },
-    
     resetFiltersLoaded: (state) => {
       state.filtersLoaded = false;
+    },
+    clearPriceRange: (state) => { // ✅ ADDED
+      state.priceRange = null;
     },
   },
   extraReducers: (builder) => {
     builder
-      
       .addCase(SubCatProdact.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -141,6 +140,31 @@ const subCatFiltersSlice = createSlice({
         state.loadingFilters = false;
         state.success = action.payload.success;
 
+        // ✅ DYNAMIC PRICE RANGE FROM API
+        if (action.payload.priceRange) {
+          state.priceRange = action.payload.priceRange;
+        } else {
+          // Fallback: calculate from current products
+          if (state.products.length > 0) {
+            const prices = state.products
+              .map(p => {
+                if (p.priceRange) return p.priceRange;
+                if (p.salePrice) return p.salePrice;
+                if (p.price) return p.price;
+                return 0;
+              })
+              .filter(p => p > 0);
+            
+            if (prices.length > 0) {
+              state.priceRange = {
+                min: Math.min(...prices),
+                max: Math.max(...prices)
+              };
+            }
+          }
+        }
+
+        // ✅ STATIC FILTERS (ONLY LOADED ONCE)
         const raw = action.payload.filters || {};
         const normalized = [];
 
@@ -167,6 +191,7 @@ const subCatFiltersSlice = createSlice({
             }
           });
         }
+        
         if (Array.isArray(raw.CategoryTag) && raw.CategoryTag.length > 0) {
           normalized.push({
             name: "ProductType", 
@@ -175,6 +200,7 @@ const subCatFiltersSlice = createSlice({
             tag: "static",
           });
         }
+        
         state.filters = normalized;
         state.filtersLoaded = true;
       })
@@ -183,7 +209,7 @@ const subCatFiltersSlice = createSlice({
         state.error = action.payload?.message || action.error.message;
         state.filtersLoaded = true;
       })
-      // Loading more products - FIXED
+      
       .addCase(loadMoreSubCatProducts.pending, (state) => {
         state.loadingMore = true;
         state.error = null;
@@ -193,9 +219,7 @@ const subCatFiltersSlice = createSlice({
         state.success = action.payload.success;
         state.query = action.payload.query || state.query;
         state.total = action.payload.total || state.total;
-
         state.page = state.page + 1;
-
         state.limit = action.payload.limit || state.limit;
         state.totalPages = action.payload.totalPages || state.totalPages;
         state.count = action.payload.count || state.count;
@@ -204,8 +228,6 @@ const subCatFiltersSlice = createSlice({
           ...(action.payload.products || []),
         ];
         state.error = null;
-
-        
       })
       .addCase(loadMoreSubCatProducts.rejected, (state, action) => {
         state.loadingMore = false;
@@ -221,27 +243,29 @@ export const {
   setPage,
   resetFetching,
   resetFiltersLoaded,
-} = subCatFiltersSlice.actions;
+  clearPriceRange, // ✅ ADDED
+} = subCatProdactSlice.actions;
 
-export const selectSearchProducts = (state) => state.searchNew.products;
-export const selectSearchLoading = (state) => state.searchNew.loading;
-export const selectSearchLoadingMore = (state) => state.searchNew.loadingMore;
-export const selectSearchLoadingFilters = (state) =>
-  state.searchNew.loadingFilters;
-export const selectSearchError = (state) => state.searchNew.error;
-export const selectSearchQuery = (state) => state.searchNew.query;
-export const selectSearchFilters = (state) => state.searchNew.filters;
-export const selectPagination = (state) => ({
-  page: state.searchNew.page,
-  limit: state.searchNew.limit,
-  total: state.searchNew.total,
-  totalPages: state.searchNew.totalPages,
-  count: state.searchNew.count,
-  hasNext: state.searchNew.page < state.searchNew.totalPages,
-  hasPrevious: state.searchNew.page > 1,
+// ✅ UPDATED SELECTORS WITH CORRECT STATE PATH
+export const selectSubCatProducts = (state) => state.subCatProdact.products;
+export const selectSubCatLoading = (state) => state.subCatProdact.loading;
+export const selectSubCatLoadingMore = (state) => state.subCatProdact.loadingMore;
+export const selectSubCatLoadingFilters = (state) => state.subCatProdact.loadingFilters;
+export const selectSubCatError = (state) => state.subCatProdact.error;
+export const selectSubCatQuery = (state) => state.subCatProdact.query;
+export const selectSubCatFilters = (state) => state.subCatProdact.filters;
+export const selectSubCatPriceRange = (state) => state.subCatProdact.priceRange; // ✅ NEW
+export const selectSubCatPagination = (state) => ({
+  page: state.subCatProdact.page,
+  limit: state.subCatProdact.limit,
+  total: state.subCatProdact.total,
+  totalPages: state.subCatProdact.totalPages,
+  count: state.subCatProdact.count,
+  hasNext: state.subCatProdact.page < state.subCatProdact.totalPages,
+  hasPrevious: state.subCatProdact.page > 1,
 });
-export const selectSortOption = (state) => state.searchNew.sort;
-export const selectSearchSuccess = (state) => state.searchNew.success;
-export const selectFiltersLoaded = (state) => state.searchNew.filtersLoaded;
+export const selectSubCatSort = (state) => state.subCatProdact.sort;
+export const selectSubCatSuccess = (state) => state.subCatProdact.success;
+export const selectSubCatFiltersLoaded = (state) => state.subCatProdact.filtersLoaded;
 
-export default subCatFiltersSlice.reducer;
+export default subCatProdactSlice.reducer;

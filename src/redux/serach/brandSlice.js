@@ -33,7 +33,6 @@ export const fetchBrandSubFilters = createAsyncThunk(
   }
 );
 
-// ADD THIS MISSING EXPORT
 export const loadMoreBrandSubProducts = createAsyncThunk(
   "brandSub/loadMore",
   async (params, { rejectWithValue }) => {
@@ -57,6 +56,7 @@ const initialState = {
   limit: 20,
   totalPages: 1,
   filters: [],
+  priceRange: null, // ✅ ADDED: Dynamic price range from API
   filtersCount: 0,
   filtersLoaded: false,
   loading: false,
@@ -84,6 +84,9 @@ const brandSubSlice = createSlice({
         });
       }
     },
+    clearPriceRange: (state) => { // ✅ ADDED
+      state.priceRange = null;
+    },
   },
 
   extraReducers: (builder) => {
@@ -110,6 +113,7 @@ const brandSubSlice = createSlice({
         state.error = action.payload?.message || action.error.message;
       })
 
+      /* ---------------- LOAD MORE ---------------- */
       .addCase(loadMoreBrandSubProducts.pending, (state) => {
         state.loadingMore = true;
         state.error = null;
@@ -139,6 +143,36 @@ const brandSubSlice = createSlice({
         state.loadingFilters = false;
         state.filtersLoaded = true;
 
+        // ✅ DYNAMIC PRICE RANGE FROM API
+        if (action.payload.priceRange) {
+          state.priceRange = action.payload.priceRange;
+        } else {
+          // Fallback: calculate from current products
+          if (state.products.length > 0) {
+            const prices = state.products
+              .map(p => {
+                if (p.priceRange) return p.priceRange;
+                if (p.salePrice) return p.salePrice;
+                if (p.price) {
+                  if (typeof p.price === 'object' && p.price.current) {
+                    return Number(p.price.current);
+                  }
+                  return Number(p.price);
+                }
+                return 0;
+              })
+              .filter(p => p > 0 && !isNaN(p));
+            
+            if (prices.length > 0) {
+              state.priceRange = {
+                min: Math.min(...prices),
+                max: Math.max(...prices)
+              };
+            }
+          }
+        }
+
+        // ✅ STATIC FILTERS (ONLY LOADED ONCE)
         const filters = action.payload.filters || [];
 
         const transformedFilters = filters.map((filter) => {
@@ -172,22 +206,22 @@ export const {
   resetFiltersLoaded,
   updateSelectedFilters,
   clearSelectedFilters,
+  clearPriceRange, // ✅ ADDED
 } = brandSubSlice.actions;
 
+/* ---------------- SELECTORS ---------------- */
 export const selectBrandSubProducts = (state) => state.brandSub.products;
 export const selectBrandSubTotal = (state) => state.brandSub.total;
 export const selectBrandSubPage = (state) => state.brandSub.page;
 export const selectBrandSubLimit = (state) => state.brandSub.limit;
 export const selectBrandSubTotalPages = (state) => state.brandSub.totalPages;
 export const selectBrandSubFilters = (state) => state.brandSub.filters;
-export const selectBrandSubFiltersCount = (state) =>
-  state.brandSub.filtersCount;
-export const selectBrandSubFiltersLoaded = (state) =>
-  state.brandSub.filtersLoaded;
+export const selectBrandSubPriceRange = (state) => state.brandSub.priceRange; // ✅ NEW
+export const selectBrandSubFiltersCount = (state) => state.brandSub.filtersCount;
+export const selectBrandSubFiltersLoaded = (state) => state.brandSub.filtersLoaded;
 export const selectBrandSubLoading = (state) => state.brandSub.loading;
 export const selectBrandSubLoadingMore = (state) => state.brandSub.loadingMore;
-export const selectBrandSubLoadingFilters = (state) =>
-  state.brandSub.loadingFilters;
+export const selectBrandSubLoadingFilters = (state) => state.brandSub.loadingFilters;
 export const selectBrandSubError = (state) => state.brandSub.error;
 export const selectBrandSubSuccess = (state) => state.brandSub.success;
 

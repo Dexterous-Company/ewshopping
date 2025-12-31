@@ -74,26 +74,13 @@ const SearchPage = ({ params }) => {
     products,
     total,
     filters,
+    priceRange: apiPriceRange, // ✅ GET PRICE RANGE FROM REDUX (DYNAMIC FROM API)
     loadingMore,
     loadingFilters,
     filtersLoaded,
     page: currentPage,
     limit,
-  } = useSelector((state) => state.subCatProdact);
-
-  // Extract price range from products or use default
-  const productPriceRange = useMemo(() => {
-    if (products.length > 0) {
-      const prices = products.map(p => p.price || 0).filter(p => p > 0);
-      if (prices.length > 0) {
-        return {
-          min: Math.min(...prices),
-          max: Math.max(...prices)
-        };
-      }
-    }
-    return { min: 0, max: 10000 };
-  }, [products]);
+  } = useSelector((state) => state.subCatProdact); // ✅ Changed selector
 
   const initialSearchDone = useRef(false);
   const searchTimeoutRef = useRef(null);
@@ -104,10 +91,51 @@ const SearchPage = ({ params }) => {
   const [expandedFilters, setExpandedFilters] = useState({});
   const [tempPriceRange, setTempPriceRange] = useState([0, 10000]);
 
-  // Initialize temp price range
+  // ✅ GET DISPLAY PRICE RANGE (API OR FALLBACK)
+  const productPriceRange = useMemo(() => {
+    // Priority 1: Use API price range from Redux
+    if (apiPriceRange) {
+      return apiPriceRange;
+    }
+    
+    // Priority 2: Calculate from current products
+    if (products.length > 0) {
+      const prices = products
+        .map(p => {
+          if (p.priceRange) return p.priceRange;
+          if (p.salePrice) return p.salePrice;
+          if (p.price) return p.price;
+          return 0;
+        })
+        .filter(p => p > 0);
+      
+      if (prices.length > 0) {
+        return {
+          min: Math.min(...prices),
+          max: Math.max(...prices)
+        };
+      }
+    }
+    
+    // Priority 3: Default values
+    return { min: 0, max: 10000 };
+  }, [apiPriceRange, products]);
+
+  // ✅ INITIALIZE TEMP PRICE RANGE FROM API/FALLBACK
   useEffect(() => {
-    setTempPriceRange([productPriceRange.min, productPriceRange.max]);
+    if (productPriceRange) {
+      setTempPriceRange([productPriceRange.min, productPriceRange.max]);
+    } else {
+      setTempPriceRange([0, 10000]);
+    }
   }, [productPriceRange]);
+
+  // ✅ RESET TEMP PRICE RANGE WHEN PRICE FILTER IS CLEARED
+  useEffect(() => {
+    if (!selectedFilters.priceRange && productPriceRange) {
+      setTempPriceRange([productPriceRange.min, productPriceRange.max]);
+    }
+  }, [selectedFilters.priceRange, productPriceRange]);
 
   const toggleFilterExpand = (name) =>
     setExpandedFilters((p) => ({ ...p, [name]: !p[name] }));
@@ -152,7 +180,7 @@ const SearchPage = ({ params }) => {
     }
   }, [filters]);
 
-  // Debounced search for products
+  // Debounced search for products (NO filter fetching)
   const debouncedSearch = useCallback(
     (params) => {
       clearTimeout(searchTimeoutRef.current);
@@ -180,10 +208,10 @@ const SearchPage = ({ params }) => {
 
     const params = buildSearchParams(1);
     
-    // Fetch products
+    // ✅ FETCH PRODUCTS FIRST
     dispatch(SubCatProdact(params));
     
-    // Fetch filters only ONCE on initial load
+    // ✅ FETCH FILTERS (INCLUDING PRICE RANGE) ONLY ONCE
     dispatch(getSubCatFilters({ subcat }));
 
     initialSearchDone.current = true;
@@ -195,6 +223,8 @@ const SearchPage = ({ params }) => {
 
     const productParams = buildSearchParams(1);
     debouncedSearch(productParams);
+    
+    // ✅ NO FILTER FETCHING ON SORT CHANGE
   }, [sort, debouncedSearch, initialSearchDone]);
 
   /* ---------- INFINITE SCROLL ---------- */
@@ -256,8 +286,8 @@ const SearchPage = ({ params }) => {
           : [...curr, value],
       };
 
-      // Update products immediately with new filters
-      // NO filter fetching - filters remain static
+      // ✅ UPDATE PRODUCTS IMMEDIATELY WITH NEW FILTERS
+      // ✅ NO FILTER FETCHING - FILTERS REMAIN STATIC
       const productParams = buildSearchParams(1, newFilters);
       updateProducts(productParams);
 
@@ -272,13 +302,48 @@ const SearchPage = ({ params }) => {
         [name]: prev[name]?.filter((v) => v !== value),
       };
 
-      // Update products immediately
-      // NO filter fetching
+      // ✅ UPDATE PRODUCTS IMMEDIATELY
+      // ✅ NO FILTER FETCHING
       const productParams = buildSearchParams(1, newFilters);
       updateProducts(productParams);
 
       return newFilters;
     });
+  };
+
+  // ✅ PRICE FILTER CHANGE HANDLER
+  const handlePriceChange = (newRange) => {
+    const range = { min: newRange[0], max: newRange[1] };
+    const newFilters = {
+      ...selectedFilters,
+      priceRange: range,
+    };
+
+    setSelectedFilters(newFilters);
+    
+    // ✅ UPDATE PRODUCTS WITH NEW PRICE FILTER
+    // ✅ NO FILTER FETCHING
+    const productParams = buildSearchParams(1, newFilters);
+    updateProducts(productParams);
+  };
+
+  // ✅ CLEAR PRICE FILTER
+  const clearPriceFilter = () => {
+    const newFilters = {
+      ...selectedFilters,
+      priceRange: null,
+    };
+
+    setSelectedFilters(newFilters);
+
+    // ✅ RESET TEMP PRICE RANGE TO CURRENT API/FALLBACK RANGE
+    if (productPriceRange) {
+      setTempPriceRange([productPriceRange.min, productPriceRange.max]);
+    }
+
+    // ✅ UPDATE PRODUCTS
+    const productParams = buildSearchParams(1, newFilters);
+    updateProducts(productParams);
   };
 
   const clearAllFilters = () => {
@@ -299,10 +364,14 @@ const SearchPage = ({ params }) => {
     }
 
     setSelectedFilters(clearedFilters);
-    setTempPriceRange([productPriceRange.min, productPriceRange.max]);
+    
+    // ✅ RESET TEMP PRICE RANGE TO CURRENT API/FALLBACK RANGE
+    if (productPriceRange) {
+      setTempPriceRange([productPriceRange.min, productPriceRange.max]);
+    }
 
-    // Fetch products with cleared filters
-    // NO filter fetching
+    // ✅ FETCH PRODUCTS WITH CLEARED FILTERS
+    // ✅ NO FILTER FETCHING
     const productParams = buildSearchParams(1, clearedFilters);
     updateProducts(productParams);
   };
@@ -380,16 +449,7 @@ const SearchPage = ({ params }) => {
                         <FaTimes
                           size={8}
                           className="cursor-pointer"
-                          onClick={() => {
-                            const newFilters = {
-                              ...selectedFilters,
-                              priceRange: null,
-                            };
-                            setSelectedFilters(newFilters);
-
-                            const productParams = buildSearchParams(1, newFilters);
-                            updateProducts(productParams);
-                          }}
+                          onClick={clearPriceFilter}
                         />
                         <span>
                           ₹{values.min} – ₹{values.max}
@@ -420,8 +480,8 @@ const SearchPage = ({ params }) => {
             </div>
           )}
 
-          {/* PRICE FILTER */}
-          {shouldShowFilters && (
+          {/* ✅ PRICE FILTER - SHOW ONLY WHEN WE HAVE PRICE RANGE DATA */}
+          {shouldShowFilters && productPriceRange && (
             <div className="px-4 py-4 border-b border-gray-200">
               <p className="text-xs font-semibold mb-2 text-gray-800">PRICE</p>
               <div className="w-[85%] mx-auto">
@@ -430,17 +490,7 @@ const SearchPage = ({ params }) => {
                   min={productPriceRange.min}
                   max={productPriceRange.max}
                   onChange={(e, v) => setTempPriceRange(v)}
-                  onChangeCommitted={(e, v) => {
-                    const range = { min: v[0], max: v[1] };
-                    const newFilters = {
-                      ...selectedFilters,
-                      priceRange: range,
-                    };
-
-                    setSelectedFilters(newFilters);
-                    updateProducts(buildSearchParams(1, newFilters));
-                    // NO filter fetching
-                  }}
+                  onChangeCommitted={(e, v) => handlePriceChange(v)}
                 />
                 <div className="flex justify-between text-xs text-gray-600 mt-2">
                   <span>₹{productPriceRange.min}</span>
@@ -575,10 +625,11 @@ const SearchPage = ({ params }) => {
           setSelectedFilters(newFilters);
           const productParams = buildSearchParams(1, newFilters);
           updateProducts(productParams);
-          // NO filter fetching
         }}
         onSortChange={handleSort}
         onTempPriceRangeChange={setTempPriceRange}
+        onPriceChange={handlePriceChange}
+        onClearPriceFilter={clearPriceFilter}
       />
     </div>
   );

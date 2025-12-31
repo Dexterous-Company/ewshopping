@@ -59,7 +59,7 @@ const HomePage = () => {
         />
         
         {/* Desktop Categories */}
-        <div className="hidden sm:flex gap-1 py-2">
+        <div className="hidden sm:flex  py-2">
           <BoxCategories title="HeadPhones Collection" singleCategory="HeadPhones" showAllPromotions />
           <BoxCategories title="Mobile Collection" singleCategory="Mobile" showAllPromotions />
           <BoxCategories title="LED TV Collection" singleCategory="LED" showAllPromotions />

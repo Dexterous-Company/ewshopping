@@ -10,6 +10,7 @@ import { FaTimes } from "react-icons/fa";
 import NewSingleProductCard from "@/main_pages/ProductPages.jsx/NewSingleProductCard";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
+import { styled } from "@mui/material/styles";
 
 const Slider = dynamic(() => import("@mui/material/Slider"), {
   ssr: false,
@@ -17,6 +18,40 @@ const Slider = dynamic(() => import("@mui/material/Slider"), {
 
 const NewFilter = dynamic(() => import("@/components/searchMobile/NewFilter"), {
   ssr: false,
+});
+
+/* ---------------- PRICE SLIDER STYLES ---------------- */
+const PriceSlider = styled(Slider)({
+  color: "#2874f0",
+  height: 2.5,
+  padding: "8px 0",
+
+  "& .MuiSlider-track": {
+    border: "none",
+    height: 2.5,
+  },
+
+  "& .MuiSlider-rail": {
+    backgroundColor: "#d1d5db",
+    opacity: 1,
+    height: 2.5,
+  },
+
+  "& .MuiSlider-thumb": {
+    height: 12,
+    width: 12,
+    backgroundColor: "#fff",
+    border: "2px solid #2874f0",
+    boxShadow: "0 1px 4px rgba(0,0,0,0.25)",
+
+    "&:hover": {
+      boxShadow: "0 2px 8px rgba(0,0,0,0.35)",
+    },
+
+    "&::after": {
+      display: "none",
+    },
+  },
 });
 
 // Sort options matching your UI
@@ -49,6 +84,7 @@ const BrandSubPage = ({ params }) => {
 
   const products = useSelector((state) => state.brandSub.products);
   const filters = useSelector((state) => state.brandSub.filters);
+  const priceRange = useSelector((state) => state.brandSub.priceRange); // ✅ FIXED: Removed TypeScript annotation
   const total = useSelector((state) => state.brandSub.total);
   const currentPage = useSelector((state) => state.brandSub.page);
   const loading = useSelector((state) => state.brandSub.loading);
@@ -67,18 +103,26 @@ const BrandSubPage = ({ params }) => {
   const [expandedFilters, setExpandedFilters] = useState({});
   const [tempPriceRange, setTempPriceRange] = useState([0, 50000]);
 
-  // Extract price range from products
+  // ✅ GET DISPLAY PRICE RANGE (API OR FALLBACK)
   const productPriceRange = useMemo(() => {
+    // Priority 1: Use API price range from Redux
+    if (priceRange) { // ✅ FIXED: Changed from apiPriceRange to priceRange
+      return priceRange;
+    }
+    
+    // Priority 2: Calculate from current products
     if (products.length > 0) {
-      const prices = products.map(p => {
-        let price = typeof p.price === "number"
-          ? p.price
-          : typeof p.price === "object"
-          ? Number(p.price?.current)
-          : Number(p.price);
-        return isNaN(price) || price <= 0 ? null : price;
-      }).filter(p => p !== null);
-
+      const prices = products
+        .map(p => {
+          let price = typeof p.price === "number"
+            ? p.price
+            : typeof p.price === "object"
+            ? Number(p.price?.current)
+            : Number(p.price);
+          return isNaN(price) || price <= 0 ? null : price;
+        })
+        .filter(p => p !== null);
+      
       if (prices.length > 0) {
         return {
           min: Math.floor(Math.min(...prices)),
@@ -86,13 +130,24 @@ const BrandSubPage = ({ params }) => {
         };
       }
     }
+    
+    // Priority 3: Default values
     return { min: 0, max: 50000 };
-  }, [products]);
+  }, [priceRange, products]); // ✅ FIXED: Changed from apiPriceRange to priceRange
 
-  // Initialize temp price range
+  // ✅ INITIALIZE TEMP PRICE RANGE FROM API/FALLBACK
   useEffect(() => {
-    setTempPriceRange([productPriceRange.min, productPriceRange.max]);
+    if (productPriceRange) {
+      setTempPriceRange([productPriceRange.min, productPriceRange.max]);
+    }
   }, [productPriceRange]);
+
+  // ✅ RESET TEMP PRICE RANGE WHEN PRICE FILTER IS CLEARED
+  useEffect(() => {
+    if (!selectedFilters.priceRange && productPriceRange) {
+      setTempPriceRange([productPriceRange.min, productPriceRange.max]);
+    }
+  }, [selectedFilters.priceRange, productPriceRange]);
 
   const toggleFilterExpand = (name) =>
     setExpandedFilters((p) => ({ ...p, [name]: !p[name] }));
@@ -135,7 +190,7 @@ const BrandSubPage = ({ params }) => {
     [brand, subCategory, sort, selectedFilters]
   );
 
-  // Debounced search for products
+  // Debounced search for products (NO filter fetching)
   const debouncedSearch = useCallback(
     (params) => {
       clearTimeout(searchTimeoutRef.current);
@@ -161,10 +216,10 @@ const BrandSubPage = ({ params }) => {
 
     const productParams = buildProductParams(1);
     
-    // Fetch products
+    // ✅ FETCH PRODUCTS FIRST
     dispatch(fetchBrandSubProducts(productParams));
     
-    // Fetch filters only ONCE on initial load
+    // ✅ FETCH FILTERS (INCLUDING PRICE RANGE) ONLY ONCE
     dispatch(fetchBrandSubFilters({ brand, subCategory }));
 
     initialLoadDone.current = true;
@@ -176,8 +231,9 @@ const BrandSubPage = ({ params }) => {
 
     const productParams = buildProductParams(1);
     debouncedSearch(productParams);
-    // NO filter fetching on sort change
-  }, [sort, debouncedSearch, initialLoadDone]);
+    
+    // ✅ NO FILTER FETCHING ON SORT CHANGE
+  }, [sort, debouncedSearch, initialLoadDone, buildProductParams]);
 
   /* ---------- INFINITE SCROLL ---------- */
   useEffect(() => {
@@ -229,8 +285,8 @@ const BrandSubPage = ({ params }) => {
         [filterName]: newValues,
       };
 
-      // Update products with new filters
-      // NO filter fetching - filters remain static
+      // ✅ UPDATE PRODUCTS WITH NEW FILTERS
+      // ✅ NO FILTER FETCHING - FILTERS REMAIN STATIC
       const productParams = buildProductParams(1, newFilters);
       updateProducts(productParams);
 
@@ -238,6 +294,7 @@ const BrandSubPage = ({ params }) => {
     });
   };
 
+  // ✅ PRICE FILTER CHANGE HANDLER
   const handlePriceRangeChange = (range) => {
     const newFilters = {
       ...selectedFilters,
@@ -246,8 +303,27 @@ const BrandSubPage = ({ params }) => {
 
     setSelectedFilters(newFilters);
     
-    // Update products with new price range
-    // NO filter fetching
+    // ✅ UPDATE PRODUCTS WITH NEW PRICE RANGE
+    // ✅ NO FILTER FETCHING
+    const productParams = buildProductParams(1, newFilters);
+    updateProducts(productParams);
+  };
+
+  // ✅ CLEAR PRICE FILTER
+  const clearPriceFilter = () => {
+    const newFilters = {
+      ...selectedFilters,
+      priceRange: null,
+    };
+
+    setSelectedFilters(newFilters);
+
+    // ✅ RESET TEMP PRICE RANGE TO CURRENT API/FALLBACK RANGE
+    if (productPriceRange) {
+      setTempPriceRange([productPriceRange.min, productPriceRange.max]);
+    }
+
+    // ✅ UPDATE PRODUCTS
     const productParams = buildProductParams(1, newFilters);
     updateProducts(productParams);
   };
@@ -262,8 +338,8 @@ const BrandSubPage = ({ params }) => {
         [filterName]: newValues,
       };
 
-      // Update products
-      // NO filter fetching
+      // ✅ UPDATE PRODUCTS
+      // ✅ NO FILTER FETCHING
       const productParams = buildProductParams(1, newFilters);
       updateProducts(productParams);
 
@@ -285,10 +361,14 @@ const BrandSubPage = ({ params }) => {
     }
 
     setSelectedFilters(clearedFilters);
-    setTempPriceRange([productPriceRange.min, productPriceRange.max]);
+    
+    // ✅ RESET TEMP PRICE RANGE TO CURRENT API/FALLBACK RANGE
+    if (productPriceRange) {
+      setTempPriceRange([productPriceRange.min, productPriceRange.max]);
+    }
 
-    // Fetch products with cleared filters
-    // NO filter fetching
+    // ✅ FETCH PRODUCTS WITH CLEARED FILTERS
+    // ✅ NO FILTER FETCHING
     const productParams = buildProductParams(1, clearedFilters);
     updateProducts(productParams);
   };
@@ -309,8 +389,10 @@ const BrandSubPage = ({ params }) => {
     filtersInitialized.current = false;
     setSelectedFilters({});
     setExpandedFilters({});
-    setTempPriceRange([0, 50000]);
-  }, [brand, subCategory]);
+    if (productPriceRange) {
+      setTempPriceRange([productPriceRange.min, productPriceRange.max]);
+    }
+  }, [brand, subCategory, productPriceRange]);
 
   const hasSelectedFilters = useMemo(() => {
     return Object.keys(selectedFilters).some(
@@ -435,12 +517,7 @@ const BrandSubPage = ({ params }) => {
                       <div
                         key={`price-${values.min}-${values.max}`}
                         className="flex items-center gap-1 bg-blue-50 text-blue-700 text-[11px] px-2 py-[3px] rounded hover:bg-blue-100 transition-colors cursor-pointer"
-                        onClick={() => {
-                          const newFilters = { ...selectedFilters, priceRange: null };
-                          setSelectedFilters(newFilters);
-                          const productParams = buildProductParams(1, newFilters);
-                          updateProducts(productParams);
-                        }}
+                        onClick={clearPriceFilter}
                       >
                         <FaTimes size={8} className="hover:text-red-600" />
                         <span>
@@ -469,12 +546,12 @@ const BrandSubPage = ({ params }) => {
             </div>
           )}
 
-          {/* PRICE FILTER */}
-          {shouldShowFilters && (
+          {/* ✅ PRICE FILTER - SHOW ONLY WHEN WE HAVE PRICE RANGE DATA */}
+          {shouldShowFilters && productPriceRange && (
             <div className="px-4 py-4 border-b border-gray-200">
               <p className="text-xs font-semibold mb-2 text-gray-800">PRICE</p>
               <div className="w-[85%] mx-auto">
-                <Slider
+                <PriceSlider
                   value={tempPriceRange}
                   min={productPriceRange.min}
                   max={productPriceRange.max}
@@ -482,7 +559,7 @@ const BrandSubPage = ({ params }) => {
                   onChange={(e, v) => setTempPriceRange(v)}
                   onChangeCommitted={(e, v) => {
                     handlePriceRangeChange(v);
-                    // NO filter fetching
+                    // ✅ NO FILTER FETCHING
                   }}
                 />
               </div>
@@ -620,10 +697,11 @@ const BrandSubPage = ({ params }) => {
           setSelectedFilters(newFilters);
           const productParams = buildProductParams(1, newFilters);
           updateProducts(productParams);
-          // NO filter fetching
         }}
         onSortChange={handleSort}
         onTempPriceRangeChange={setTempPriceRange}
+        onPriceChange={handlePriceRangeChange}
+        onClearPriceFilter={clearPriceFilter}
       />
     </div>
   );
