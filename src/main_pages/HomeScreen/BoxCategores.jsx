@@ -368,7 +368,7 @@ const BoxCategories = ({
         {isLoading ? (
           <LoadingSkeleton singleCategory={singleCategory} />
         ) : singleCategory ? (
-          <div className="mx-auto max-w-md">
+          <div className="">
             <CategoryBox
               category={singleCategory}
               brands={brandsByCategory[singleCategory] || []}
@@ -378,7 +378,7 @@ const BoxCategories = ({
         ) : (
           <>
             {/* First Row */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+            <div className="grid grid-cols-1 md:grid-cols-3  mb-3">
               {displayCategories.slice(0, 3).map((category, index) => (
                 <CategoryBox
                   key={category}

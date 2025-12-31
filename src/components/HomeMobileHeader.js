@@ -29,6 +29,9 @@ import {
   Users,
   Heart,
   LogOut,
+  List, // ADDED
+  Tag, // ADDED
+  Store, // ADDED
 } from "lucide-react";
 
 const HomeMobileHeader = () => {
@@ -183,7 +186,8 @@ const HomeMobileHeader = () => {
             </div>
           ) : (
             <span className="text-white font-medium text-sm flex flex-row items-center select-none">
-              Set delivery location <ChevronRight className="ml-1 text-white size-4" />
+              Set delivery location{" "}
+              <ChevronRight className="ml-1 text-white size-4" />
             </span>
           )}
         </div>
@@ -194,9 +198,7 @@ const HomeMobileHeader = () => {
   return (
     <>
       {/* ------------------- NON-STICKY HEADER (FIXED) ------------------- */}
-      <div
-        className="md:hidden lg:hidden w-full flex flex-col gap-2 px-2 bg-[#E30047] shadow-sm transition-all duration-300"
-      >
+      <div className="md:hidden lg:hidden w-full flex flex-col gap-2 px-2 bg-[#E30047] shadow-sm transition-all duration-300">
         {/* Top Row */}
         <div className="flex items-center justify-between py-2">
           <div className="flex items-center gap-3">

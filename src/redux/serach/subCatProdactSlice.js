@@ -26,6 +26,8 @@ export const getSubCatFilters = createAsyncThunk(
   "searchNew/getSubCatFilters",
   async (params, { rejectWithValue }) => {
     try {
+      console.log("params",params);
+      
       const response = await axios.post(
         `${Baseurl}/api/v1/search/getSubCatFilters`,
         params
