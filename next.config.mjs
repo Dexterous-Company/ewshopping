@@ -27,6 +27,8 @@ const nextConfig = {
     { protocol: "https", hostname: "images.unsplash.com" },
     { protocol: "https", hostname: "cdn.shopify.com" },
     { protocol: "https", hostname: "res.cloudinary.com" },
+    { protocol: "https", hostname: "cdn.ewshopping.com" },
+    { protocol: "http", hostname: "cdn.ewshopping.com" },
 
     // ✅ ADD BOTH
     { protocol: "https", hostname: "ewshoppingsellerapinew.dexterous.in" },
