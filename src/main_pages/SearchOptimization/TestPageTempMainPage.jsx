@@ -1,13 +1,13 @@
 "use client";
-import Filter from "@/components/searchMobile/Filter";
-import SearchResult from "@/components/searchMobile/SearchResult";
+import Filter from "../components/searchMobile/Filter";
+import SearchResult from "../components/searchMobile/SearchResult";
 import React, { useEffect, useState, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useSearchParams } from "next/navigation";
 import {
   searchProducts,
   loadMoreProducts,
-} from "@/redux/serach/searchProductsSlice";
+} from "../../redux/serach/searchProductsSlice";
 
 const TestPageTempMainPage = () => {
   const dispatch = useDispatch();

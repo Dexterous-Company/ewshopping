@@ -8,7 +8,7 @@ import {
     userRegistation,
     verifyUserEmail,
     signin
-} from '@/redux/athentication/Athentication';
+} from '../../redux/athentication/Athentication';
 
 const CheckOutRegister = ({ setRegister }) => {
     const dispatch = useDispatch();

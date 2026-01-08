@@ -1,6 +1,6 @@
 "use client";
 import { useSearchParams } from "next/navigation";
-import SellerProductsPage from "@/main_pages/sellerProduct/SellerProductsPage";
+import SellerProductsPage from "../../main_pages/sellerProduct/SellerProductsPage";
 
 export default function SellerProductWrapper() {
   const searchParams = useSearchParams();

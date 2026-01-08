@@ -1,4 +1,4 @@
-import TermsAndCondition from "@/main_pages/footerPages/TermsAndCondition";
+import TermsAndCondition from "../../../main_pages/footerPages/TermsAndCondition";
 import React from "react";
 
 export const metadata = {

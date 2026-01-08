@@ -1,169 +1,3 @@
-// "use client";
-// import React, { useEffect } from "react";
-// import { useDispatch, useSelector } from "react-redux";
-// import Image from "next/image";
-// import { addToCart, decrementCart, removeFromCart } from "@/redux/cart/CartSlice";
-// import { useRouter } from "next/navigation";
-// import { FaCheck } from "react-icons/fa";
-// import { setCheckoutStep } from "@/redux/athentication/Athentication";
-// import { motion, AnimatePresence } from "framer-motion";
-
-// const OrderSummary = ({ showSummary, setContinueSumamryData, continueSumamryData }) => {
-//   const { isAuth, loginData } = useSelector((store) => store.Athentication);
-//   const { CartItems } = useSelector((store) => store.cart);
-//   const dispatch = useDispatch();
-//   const router = useRouter();
-
-//   const handleIncrement = (item) => dispatch(addToCart(item));
-//   const handleDecrement = (item) => dispatch(decrementCart(item));
-//   const handleRemove = (item) => dispatch(removeFromCart(item));
-
-//   const handleContinue = () => setContinueSumamryData(true);
-//   const handleCancel = () => setContinueSumamryData(false);
-
-//   useEffect(() => {
-//     if (CartItems.length <= 0) router.push("/");
-//   }, [CartItems, router]);
-
-//   if (!isAuth || !showSummary) {
-//     return (
-//       <div>
-//       </div>
-//     );
-//   }
-
-//   return (
-//     <>
-//       {continueSumamryData ? (
-//         <div className="bg-white rounded-lg shadow-md p-4 flex items-center justify-between border border-gray-200">
-//           <div>
-//             <div className="flex items-center gap-2 font-medium text-sm text-gray-600">
-//               <span className="h-6 w-6 bg-gray-100 text-[#2874f0] flex items-center justify-center rounded-full text-xs font-bold">
-//                 3
-//               </span>
-//               <span>ORDER SUMMARY</span>
-//               <FaCheck size={14} className="text-green-500" />
-//             </div>
-//             <p className="mt-1 text-sm text-gray-800 ml-7">
-//               <span className="font-semibold">{CartItems?.length || 0} items</span>
-//             </p>
-//           </div>
-//           <button
-//             className="text-[#2874f0] font-medium text-sm border border-gray-300 px-4 py-1 rounded-md hover:bg-[#2f415d]-50 transition"
-//             onClick={handleCancel}
-//           >
-//             CHANGE
-//           </button>
-//         </div>
-//       ) : (
-//         <motion.div
-//           initial={{ opacity: 0, y: 30 }}
-//           animate={{ opacity: 1, y: 0 }}
-//           transition={{ duration: 0.4 }}
-//           className="rounded-lg shadow-md bg-white flex flex-col"
-//         >
-//           {/* Header */}
-//           <div className="bg-[#2f415d] px-6 py-3 rounded-t-lg">
-//             <div className="flex items-center gap-2">
-//               <span className="bg-white text-[#2874f0] text-xs font-bold px-2 py-1 rounded-full">
-//                 3
-//               </span>
-//               <span className="text-white font-semibold text-sm tracking-wide">
-//                 ORDER SUMMARY
-//               </span>
-//             </div>
-//           </div>
-
-//           {/* Product List */}
-//           <AnimatePresence>
-//             {CartItems?.length > 0 &&
-//               CartItems.map((item) => (
-//                 <motion.div
-//                   key={item.AttributeId}
-//                   initial={{ opacity: 0, scale: 0.95 }}
-//                   animate={{ opacity: 1, scale: 1 }}
-//                   exit={{ opacity: 0, scale: 0.95 }}
-//                   transition={{ duration: 0.3 }}
-//                   className="flex flex-col sm:flex-row gap-4 p-4 border-b border-gray-100"
-//                 >
-//                   {/* Image */}
-//                   <Image
-//                     src={item.thumbnail}
-//                     alt={item.name}
-//                     width={96}
-//                     height={128}
-//                     className="w-24 h-32 object-contain"
-//                   />
-
-//                   {/* Details */}
-//                   <div className="flex-1 flex flex-col justify-between">
-//                     <div>
-//                       <h3 className="font-medium text-md text-gray-800">{item.name}</h3>
-//                       <p className="text-sm text-gray-600 mt-1">
-//                         Seller: <span className="text-gray-500">{item.shopName}</span>
-//                       </p>
-//                       <div className="flex items-center gap-2 mt-2 text-sm">
-//                         <span className="line-through text-gray-400">₹{item.Mrp}</span>
-//                         <span className="text-black font-bold">₹{item.Price}</span>
-//                         <span className="text-green-600 text-sm font-semibold">
-//                           {Math.round(((item.Mrp - item.Price) / item.Mrp) * 100)}% Off
-//                         </span>
-//                       </div>
-//                     </div>
-
-//                     {/* Quantity & Remove */}
-//                     <div className="flex items-center gap-2 mt-3">
-//                       <div className="flex items-center border rounded-md overflow-hidden">
-//                         <button
-//                           className="px-3 py-1 text-lg font-bold hover:bg-gray-100"
-//                           onClick={() => handleDecrement(item)}
-//                         >
-//                           −
-//                         </button>
-//                         <span className="px-4 py-1">{item.cart_Quentity}</span>
-//                         <button
-//                           className="px-3 py-1 text-lg font-bold hover:bg-gray-100"
-//                           onClick={() => handleIncrement(item)}
-//                         >
-//                           +
-//                         </button>
-//                       </div>
-//                       <button
-//                         className="text-sm font-semibold text-gray-700 ml-4 hover:text-[#e96f84] transition"
-//                         onClick={() => handleRemove(item)}
-//                       >
-//                         REMOVE
-//                       </button>
-//                     </div>
-//                   </div>
-//                 </motion.div>
-//               ))}
-//           </AnimatePresence>
-
-//           {/* Email & Continue */}
-//           <div className="flex flex-col sm:flex-row justify-between items-center p-4 gap-3">
-//             <p className="text-sm text-gray-600 text-center sm:text-left">
-//               Order confirmation email will be sent to{" "}
-//               <span className="border-b border-[#2874f0] px-1">
-//                 {loginData?.Email || "your email"}
-//               </span>
-//             </p>
-//             <button
-//               className="bg-[#e96f84] hover:bg-[#2f415d] text-white px-6 py-2 rounded-md font-medium transition"
-//               onClick={() => {
-//                 handleContinue();
-//                 dispatch(setCheckoutStep(4));
-//               }}
-//             >
-//               CONTINUE
-//             </button>
-//           </div>
-//         </motion.div>
-//       )}
-//     </>
-//   );
-// };
-
 // export default OrderSummary;
 "use client";
 import React, { useEffect } from "react";
@@ -173,10 +7,10 @@ import {
   addToCart,
   decrementCart,
   removeFromCart,
-} from "@/redux/cart/CartSlice";
+} from "../../redux/cart/CartSlice";
 import { useRouter } from "next/navigation";
 import { FaCheck, FaPlus, FaMinus, FaTrash } from "react-icons/fa";
-import { setCheckoutStep } from "@/redux/athentication/Athentication";
+import { setCheckoutStep } from "../../redux/athentication/Athentication";
 import { motion, AnimatePresence } from "framer-motion";
 
 const OrderSummary = ({
@@ -400,22 +234,7 @@ const OrderSummary = ({
                       
                     </span>
                   </div>
-                  {/* <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Discount</span>
-                    <span className="text-green-600">
-                      -₹{totalDiscount.toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Total Items</span>
-                    <span className="text-gray-900">{totalItems}</span>
-                  </div>
-                  <div className="flex justify-between text-base font-semibold pt-2 border-t border-gray-200">
-                    <span className="text-gray-900">Total Amount</span>
-                    <span className="text-gray-900">
-                      ₹{totalPrice.toLocaleString()}
-                    </span>
-                  </div> */}
+                  
                 </div>
               </motion.div>
             )}

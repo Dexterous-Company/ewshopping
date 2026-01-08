@@ -1,10 +1,9 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { FaAngleRight } from "react-icons/fa";
 import { BsFillBoxSeamFill } from "react-icons/bs";
 import { useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
-import { clearCart, getCartTotal } from "@/redux/cart/CartSlice";
+import { clearCart, getCartTotal } from "../../redux/cart/CartSlice";
 
 const OrderSucess = () => {
   const [modelState, setModelState] = useState({ type: null });

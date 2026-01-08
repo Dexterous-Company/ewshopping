@@ -1,14 +1,15 @@
 "use client";
-import { IoIosArrowRoundBack } from "react-icons/io";
+import { ArrowLeft } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import { IoSearchSharp, IoCart } from "react-icons/io5";
+import { Search, ShoppingCart } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { useSelector, useDispatch } from "react-redux";
 import {
   getFillteredCategory,
   getAllCategoryTagsAllCategories,
-} from "@/redux/category/categorySlice";
-import { getFillteredSubCategory } from "@/redux/subcategory/SubCategorySlice";
+} from "../../redux/category/categorySlice";
+import { getFillteredSubCategory } from "../../redux/subcategory/SubCategorySlice";
 
 // ✅ Detect ALL mobile devices (any size)
 const isMobileDevice = () => {
@@ -48,9 +49,11 @@ const Leftcategory = ({ select, setSelect, categories, isLoading }) => {
           }`}
         >
           <div className="h-12 w-12 sm:h-15 sm:w-15 rounded-full mb-1 overflow-hidden">
-            <img
+            <Image
               src={category.mobileImage || category.desktopImage || "/placeholder-category.png"}
               alt={category.name}
+              width={60}
+              height={60}
               className="h-full w-full object-cover rounded-full border border-gray-200"
               onError={(e) => {
                 e.target.src = "/placeholder-category.png";
@@ -80,10 +83,7 @@ const RightCategory = ({ subcategories, selectedCategory, isLoading }) => {
   const handleClick = (e, subcat) => {
     e.preventDefault();
     if (subcat?.slugUrl) {
-      router.push(`/search?subCategory=${subcat.slugUrl}`);
-    } else if (subcat?.name) {
-      // Use encodeURIComponent to handle special characters
-      router.push(`/search?subCategory=${encodeURIComponent(subcat.name)}`);
+      router.push(`/category/${subcat.slugUrl}`);
     }
   };
 
@@ -138,12 +138,14 @@ const RightCategory = ({ subcategories, selectedCategory, isLoading }) => {
               onClick={(e) => handleClick(e, subcat)}
             >
               <div className="h-14 w-14 sm:h-16 sm:w-16 md:h-18 md:w-18 rounded-full overflow-hidden border border-gray-200 group-hover:border-blue-300 transition-colors duration-200 bg-white p-1">
-                <img
+                <Image
                   src={
                     subcat.mobileImage ||
                     subcat.desktopImage ||
                     "/placeholder-subcategory.png"
                   }
+                  width={72}
+                  height={72}
                   className="h-full w-full object-cover rounded-full"
                   alt={subcat.name}
                   onError={(e) => {
@@ -263,24 +265,24 @@ const CategoryPage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="h-14 flex justify-between items-center fixed top-0 z-10 w-full bg-white shadow-sm px-4 border-b border-gray-200">
+      <div className="h-14 flex justify-between items-center fixed top-0 z-10 w-full bg-white shadow-sm px-4  border-b border-gray-200">
         <div className="flex items-center flex-row gap-3">
           <button
             onClick={() => router.back()}
             className="flex items-center justify-center"
           >
-            <IoIosArrowRoundBack size={24} className="text-gray-700" />
+            <ArrowLeft size={24} className="text-gray-700" />
           </button>
           <span className="font-medium text-gray-800 text-lg">Categories</span>
         </div>
 
         <div className="flex items-center gap-4">
           <button onClick={() => router.push("/searchmobile")}>
-            <IoSearchSharp size={20} className="text-gray-700" />
+            <Search size={20} className="text-gray-700" />
           </button>
 
           <div className="relative" onClick={() => router.push("/cart")}>
-            <IoCart size={20} className="text-gray-700" />
+            <ShoppingCart size={20} className="text-gray-700" />
             {isMounted && CartItems?.length > 0 && (
               <span className="absolute text-white text-xs h-5 w-5 flex justify-center items-center -top-2 -right-2 bg-red-500 rounded-full font-medium">
                 {CartItems?.length > 99 ? "99+" : CartItems?.length}

@@ -1,4 +1,4 @@
-import ContactUs from "@/main_pages/footerPages/ContactUs";
+import ContactUs from "../../../main_pages/footerPages/ContactUs";
 import React from "react";
 
 export const metadata = {

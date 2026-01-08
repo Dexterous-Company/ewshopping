@@ -1,4 +1,4 @@
-import SellerProductWrapper from "@/main_pages/sellerProduct/SellerProductWrapper";
+import SellerProductWrapper from "../../main_pages/sellerProduct/SellerProductWrapper";
 import { Suspense } from "react";
 
 

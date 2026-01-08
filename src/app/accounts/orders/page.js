@@ -1,4 +1,4 @@
-import Orders from "@/components/Accounts/Orders";
+import Orders from "../../../components/Accounts/Orders";
 import React from "react";
 
 const page = () => {

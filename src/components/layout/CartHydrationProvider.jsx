@@ -2,7 +2,7 @@
 "use client";
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { hydrateCart } from '@/redux/cart/CartSlice';
+import { hydrateCart } from '../../redux/cart/CartSlice';
 
 const CartHydrationProvider = ({ children }) => {
   const dispatch = useDispatch();

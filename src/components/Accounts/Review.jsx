@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from "react";
 import {
   FaStar,
-  FaHourglassStart,
   FaTwitter,
   FaFacebookF,
   FaShareAlt,
@@ -18,14 +17,14 @@ import {
   FaAward,
   FaArrowLeft
 } from "react-icons/fa";
-import { IoCheckmarkCircle, IoSparkles } from "react-icons/io5";
-import { MdEmail, MdOutlineVerified, MdAutoAwesome } from "react-icons/md";
+import { IoSparkles } from "react-icons/io5";
+import { MdEmail, MdAutoAwesome } from "react-icons/md";
 import { RxCross2 } from "react-icons/rx";
 
 import { useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 
-import { deleteReview, fetchUserReviews } from "@/redux/reviews/reviewSlice";
+import { deleteReview, fetchUserReviews } from "../../redux/reviews/reviewSlice";
 import { toast } from "react-toastify";
 import EmptyReviews from "../EmptyPages/EmptyReviews";
 

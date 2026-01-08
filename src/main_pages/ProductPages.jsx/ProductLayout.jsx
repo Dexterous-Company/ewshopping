@@ -4,7 +4,7 @@ import ProductImages from "./ProductImages";
 import ProductDetails from "./ProductDetails";
 import { useDispatch, useSelector } from "react-redux";
 import SkeletonLoader from "./SkeletonLoader";
-import { fetchReviews } from "@/redux/reviews/reviewSlice";
+import { fetchReviews } from "../../redux/reviews/reviewSlice";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 

@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { add_Address } from "@/redux/athentication/Athentication";
+import { add_Address } from "../../redux/athentication/Athentication";
 import { RxCross2 } from "react-icons/rx";
 import {
   FaUser,
@@ -15,7 +15,7 @@ import {
   FaSpinner,
 } from "react-icons/fa";
 import toast from "react-hot-toast";
-import useGoogleMapsAutocomplete from "@/hooks/useGoogleMapsAutocomplete";
+import useGoogleMapsAutocomplete from "../../hooks/useGoogleMapsAutocomplete";
 
 const InputField = ({
   label,

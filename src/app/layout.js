@@ -1,13 +1,18 @@
 // app/layout.js
-import MainLayout from "@/components/MainLayout";
+import MainLayout from "../components/MainLayout";
 import "./globals.css";
-import ReduxLayout from "@/components/layout/ReduxLayout";
-import { ReduxProvider } from "@/components/layout/redux-provider";
+import ReduxLayout from "../components/layout/ReduxLayout";
+import { ReduxProvider } from "../components/layout/redux-provider";
 import { Toaster } from "react-hot-toast";
 import Script from "next/script";
-import CartHydrationProvider from "@/components/layout/CartHydrationProvider";
-import ScrollToTopEffect from "@/components/ScrollToTopEffect";
+import CartHydrationProvider from "../components/layout/CartHydrationProvider";
+import ScrollToTopEffect from "../components/ScrollToTopEffect";
 import { Poppins, Manrope } from "next/font/google";
+
+/* =====================
+   SITE URL (LOCAL ONLY)
+   ===================== */
+const SITE_URL = "https://ewshopping.com";
 
 /* Fonts */
 const poppins = Poppins({
@@ -24,42 +29,61 @@ const manrope = Manrope({
   display: "swap",
 });
 
-/* Metadata */
+/* =====================
+   METADATA (SEO + SOCIAL)
+   ===================== */
 export const metadata = {
   title: "EwShopping",
   description:
     "Welcome to EwShopping, your destination for stylish fashion and cutting-edge electronics.",
+
   keywords:
     "fashion, electronics, shopping, clothing, gadgets, tech accessories",
+
   authors: [{ name: "EwShopping" }],
+
   robots: {
     index: true,
     follow: true,
   },
+
+  /* OPEN GRAPH – WhatsApp / FB / LinkedIn / Telegram */
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://ewshopping.com",
+    url: SITE_URL,
     title: "EwShopping",
     description:
       "Your destination for stylish fashion and cutting-edge electronics.",
     siteName: "EwShopping",
+    images: [
+      {
+        url: `https://cdn.ewshopping.com/uploads/images/ewshopping-og-image.jpg`,
+        width: 1200,
+        height: 630,
+        alt: "EwShopping – Online Shopping Platform",
+      },
+    ],
   },
+
+  /* TWITTER (X) */
   twitter: {
     card: "summary_large_image",
     title: "EwShopping",
     description:
       "Your destination for stylish fashion and cutting-edge electronics.",
+    images: "https://cdn.ewshopping.com/uploads/images/ewshopping-og-image.jpg",
   },
+
   manifest: "/manifest.json",
-    icons: {
+
+  icons: {
     icon: [
       { url: "/favicon.png", sizes: "32x32", type: "image/png" },
       { url: "/favicon.png", sizes: "16x16", type: "image/png" },
     ],
     apple: "/favicon.png",
   },
-
 };
 
 export const viewport = {
@@ -68,17 +92,19 @@ export const viewport = {
   themeColor: "#cfebfe",
 };
 
+/* =====================
+   ROOT LAYOUT
+   ===================== */
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${poppins.variable} ${manrope.variable}`}>
       <head>
-        {/* Preconnect for analytics */}
         <link rel="preconnect" href="https://www.googletagmanager.com" />
         <link rel="preconnect" href="https://connect.facebook.net" />
       </head>
 
       <body suppressHydrationWarning>
-        {/* ✅ Google Tag Manager (ONLY THIS – GA IS INSIDE GTM) */}
+        {/* Google Tag Manager */}
         <Script
           id="google-tag-manager"
           strategy="lazyOnload"
@@ -97,7 +123,7 @@ export default function RootLayout({ children }) {
           }}
         />
 
-        {/* ✅ Facebook Pixel – lazy (non-blocking) */}
+        {/* Facebook Pixel */}
         <Script id="meta-pixel" strategy="lazyOnload">
           {`
             !function(f,b,e,v,n,t,s)
@@ -113,28 +139,7 @@ export default function RootLayout({ children }) {
           `}
         </Script>
 
-        {/* NoScript fallback */}
-        <noscript>
-          <iframe
-            src="https://www.googletagmanager.com/ns.html?id=GTM-XXXXXX"
-            height="0"
-            width="0"
-            style={{ display: "none", visibility: "hidden" }}
-            title="Google Tag Manager"
-          />
-        </noscript>
-
-        <noscript>
-          <img
-            height="1"
-            width="1"
-            style={{ display: "none" }}
-            src="https://www.facebook.com/tr?id=YOUR_PIXEL_ID&ev=PageView&noscript=1"
-            alt=""
-          />
-        </noscript>
-
-        {/* App Layout */}
+        {/* Layout */}
         <ReduxProvider>
           <ReduxLayout>
             <MainLayout>
@@ -144,7 +149,6 @@ export default function RootLayout({ children }) {
           </ReduxLayout>
         </ReduxProvider>
 
-        {/* Toast */}
         <Toaster position="top-left" />
 
         {/* Structured Data */}
@@ -156,7 +160,7 @@ export default function RootLayout({ children }) {
               "@context": "https://schema.org",
               "@type": "WebSite",
               name: "EwShopping",
-              url: "https://ewshopping.com",
+              url: SITE_URL,
             }),
           }}
         />

@@ -13,7 +13,7 @@ import {
   setCheckoutStep,
   setMobileNumber,
   signin,
-} from "@/redux/athentication/Athentication";
+} from "../../redux/athentication/Athentication";
 import CheckOutRegister from "./CheckOutRegister";
 import Link from "next/link";
 

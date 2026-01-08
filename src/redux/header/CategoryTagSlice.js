@@ -1,8 +1,10 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
+
 const Baseurl = process.env.NEXT_PUBLIC_API_URL;
 
 const initialState = {
+  scoData: null,
   CategoryPromotionOne: [],
   CategoryPromotionTwo: [],
   CategoryPromotionThree: [],
@@ -12,7 +14,7 @@ const initialState = {
 
 export const getCategoryPromotionOne = createAsyncThunk(
   "categoryTag/getCategoryPromotionOne",
-  async (position, thunkAPI) => {
+  async (_, thunkAPI) => {
     try {
       const url = `${Baseurl}/api/v1/categorytag/getCategoryPromotion/1`;
       const resp = await axios(url);
@@ -22,21 +24,23 @@ export const getCategoryPromotionOne = createAsyncThunk(
     }
   }
 );
+
 export const getCategoryPromotionTwo = createAsyncThunk(
   "categoryTag/getCategoryPromotionTwo",
-  async (position, thunkAPI) => {
+  async (_, thunkAPI) => {
     try {
       const url = `${Baseurl}/api/v1/categorytag/getCategoryPromotion/2`;
-      const resp = await axios(url);      
+      const resp = await axios(url);
       return resp.data.categoryTags;
     } catch (error) {
       return thunkAPI.rejectWithValue(error.message);
     }
   }
 );
+
 export const getCategoryPromotionThree = createAsyncThunk(
   "categoryTag/getCategoryPromotionThree",
-  async (position, thunkAPI) => {
+  async (_, thunkAPI) => {
     try {
       const url = `${Baseurl}/api/v1/categorytag/getCategoryPromotion/3`;
       const resp = await axios(url);
@@ -46,13 +50,14 @@ export const getCategoryPromotionThree = createAsyncThunk(
     }
   }
 );
+
 export const getCategoryTagBySlugUrl = createAsyncThunk(
   "categoryTag/getCategoryTagBySlugUrl",
-  async ({slugUrl}, thunkAPI) => {
+  async ({ slugUrl }, thunkAPI) => {
     try {
-      const url = `${Baseurl}/api/v1/categorytag/getCategoryTag/${slugUrl}`
-      
+      const url = `${Baseurl}/api/v1/categorytag/getCategoryTag/${slugUrl}`;
       const resp = await axios(url);
+      console.log("resp", resp);
       return resp.data.categoryTag;
     } catch (error) {
       return thunkAPI.rejectWithValue(error.message);
@@ -76,33 +81,17 @@ export const categoryTagSlice = createSlice({
       .addCase(getCategoryPromotionOne.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload;
-      });
-    builder
-      .addCase(getCategoryPromotionTwo.pending, (state) => {
-        state.status = "loading";
       })
       .addCase(getCategoryPromotionTwo.fulfilled, (state, action) => {
-        state.status = "succeeded";
         state.CategoryPromotionTwo = action.payload;
       })
-      .addCase(getCategoryPromotionTwo.rejected, (state, action) => {
-        state.status = "failed";
-        state.error = action.payload;
-      });
-    builder
-      .addCase(getCategoryPromotionThree.pending, (state) => {
-        state.status = "loading";
-      })
       .addCase(getCategoryPromotionThree.fulfilled, (state, action) => {
-        state.status = "succeeded";
         state.CategoryPromotionThree = action.payload;
       })
-      .addCase(getCategoryPromotionThree.rejected, (state, action) => {
-        state.status = "failed";
-        state.error = action.payload;
-      })
+      .addCase(getCategoryTagBySlugUrl.fulfilled, (state, action) => {
+        state.scoData = action.payload;
+      });
   },
 });
 
-export const {  } = categoryTagSlice.actions;
 export default categoryTagSlice.reducer;

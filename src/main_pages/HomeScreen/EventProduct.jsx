@@ -35,9 +35,10 @@ const ProductCard = ({ product, index }) => {
             src={product.thumbnail[0]}
             alt={product.name}
             fill
+            unoptimized
             sizes="(max-width: 768px) 120px, 160px"
             className="object-contain"
-            priority={index < 2} // ✅ only first 2
+            priority={index < 2}
           />
 
           {/* DISCOUNT */}

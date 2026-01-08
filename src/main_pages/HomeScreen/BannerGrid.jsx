@@ -3,7 +3,7 @@ import React, { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
-import { fetchCardPromotions } from "@/redux/header/cardPromotionSlice";
+import { fetchCardPromotions } from "../../redux/header/cardPromotionSlice";
 import BannerGridSkeleton from "./BannerGridSkeleton";
 
 const BannerGrid = () => {

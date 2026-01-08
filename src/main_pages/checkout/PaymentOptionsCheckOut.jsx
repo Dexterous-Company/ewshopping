@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { FaClock } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
-import { getCartData } from "@/redux/cart/CartSlice";
-import { newOrder } from "@/redux/order/OrderSlice";
+import { getCartData } from "../../redux/cart/CartSlice";
+import { newOrder } from "../../redux/order/OrderSlice";
 const Baseurl = process.env.NEXT_PUBLIC_API_URL;
 
 // Load Razorpay script

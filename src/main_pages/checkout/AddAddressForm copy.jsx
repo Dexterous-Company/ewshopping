@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { add_Address } from "@/redux/athentication/Athentication";
+import { add_Address } from "../../redux/athentication/Athentication";
 import { RxCross2 } from "react-icons/rx";
 
 const AddAddressForm = ({ setShowAddress }) => {

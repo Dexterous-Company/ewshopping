@@ -7,18 +7,9 @@ const bundleAnalyzer = withBundleAnalyzer({
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  // swcMinify: true,
-  // output: 'standalone',
   compress: true,
 
-  // ✅ Let Next.js handle optimization
   swcMinify: true,
-
-  // ❌ REMOVE turbopack config (default enabled)
-  // turbopack: {},
-
-  // ❌ REMOVE custom webpack splitting
-  // webpack: (config) => config,
 
  images: {
   formats: ["image/avif", "image/webp"],

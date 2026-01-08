@@ -8,10 +8,9 @@ import { MdStarRate } from "react-icons/md";
 import { useParams, useRouter } from "next/navigation";
 import { IoIosArrowRoundBack } from "react-icons/io";
 import {
-  fetchUserReviews,
   getSingleReview,
   putSingleReview,
-} from "@/redux/reviews/reviewSlice";
+} from "../../redux/reviews/reviewSlice";
 import { useDispatch, useSelector } from "react-redux";
 
 const ReviewId = () => {

@@ -1,4 +1,4 @@
-import EditAddress from "@/components/Accounts/EditAddress";
+import EditAddress from "../../../../components/Accounts/EditAddress";
 import React from "react";
 
 const page = () => {

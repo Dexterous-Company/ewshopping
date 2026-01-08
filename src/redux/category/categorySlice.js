@@ -3,18 +3,13 @@ import axios from "axios";
 
 const Baseurl = process.env.NEXT_PUBLIC_API_URL;
 
-// const initialState = {
-//   fillteredCategory: [],
-//   status: "idle",
-//   error: null,
-// };
 
 // code by sshaik
 const initialState = {
   fillteredCategory: [],
-  allCategoryTags: {}, // Change to object to store by categoryUrl
-  tagsStatus: {}, // Store status per category
-  tagsError: {}, // Store errors per category
+  allCategoryTags: {}, 
+  tagsStatus: {}, 
+  tagsError: {}, 
   status: "idle",
   error: null,
 };
@@ -53,8 +48,10 @@ export const getAllCategoryTagsAllCategories = createAsyncThunk(
     try {
       const url = `${Baseurl}/api/v1/category/category-tags/${categoryurl}`;
       const resp = await axios.get(url);
+      console.log("resp",resp);
+      
 
-      // Return the data with categoryUrl for proper storage
+     
       return {
         categoryUrl: categoryurl,
         data: resp.data.data, // This should contain the category data with tags

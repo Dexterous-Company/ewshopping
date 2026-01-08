@@ -1,4 +1,4 @@
-import AddAddress from "@/components/Accounts/AddAddress";
+import AddAddress from "../../../../components/Accounts/AddAddress";
 import React from "react";
 
 const page = () => {

@@ -1,4 +1,4 @@
-import ExchangePolicy from "@/components/layout/ExchangePolicy";
+import ExchangePolicy from "../../../components/layout/ExchangePolicy";
 import React from "react";
 
 export const metadata = {

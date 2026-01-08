@@ -1,4 +1,4 @@
-import Faq from "@/main_pages/footerPages/Faq";
+import Faq from "../../../main_pages/footerPages/Faq";
 import React from "react";
 
 export const metadata = {

@@ -1,9 +1,8 @@
 "use client";
 import React, { useCallback, useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { IoClose, IoSearch, IoTrendingUp } from "react-icons/io5";
-import { LuHistory } from "react-icons/lu";
-import { FaAngleLeft } from "react-icons/fa";
+import { X, Search, TrendingUp, History, ChevronLeft } from "lucide-react";
+import Image from "next/image";
 
 const Baseurl = process.env.NEXT_PUBLIC_API_URL;
 
@@ -26,7 +25,7 @@ const SearchHeader = ({ querySearch, setQuerySearch, onBack, onKeyDown }) => {
         <div className="flex-1 relative">
           <form onSubmit={handleSearch}>
             <div className="flex items-center rounded-xl bg-gray-100 px-4 py-3 border border-gray-200 transition-all duration-300 focus-within:bg-white focus-within:border-blue-500 focus-within:shadow-md">
-              <FaAngleLeft
+              <ChevronLeft
                 className="text-gray-500 mr-3 cursor-pointer hover:text-gray-700 transition-colors"
                 size={20}
                 onClick={onBack}
@@ -45,7 +44,7 @@ const SearchHeader = ({ querySearch, setQuerySearch, onBack, onKeyDown }) => {
                   onClick={() => setQuerySearch("")}
                   className="text-gray-500 ml-2 hover:text-gray-700 transition-colors p-1 rounded-full hover:bg-gray-200"
                 >
-                  <IoClose size={20} />
+                  <X size={20} />
                 </button>
               )}
             </div>
@@ -82,16 +81,20 @@ const SuggestionItem = ({ suggestion, onClick, isHighlighted }) => {
     >
       {mappedSuggestion.mobileImage ? (
         <div className="w-12 h-12 rounded-lg overflow-hidden mr-4 flex-shrink-0 border border-gray-200 group-hover:border-gray-300 transition-all duration-300 shadow-sm group-hover:shadow-md">
-          <img
+          <Image
             src={mappedSuggestion.mobileImage}
             alt={mappedSuggestion.name}
-            loading="lazy"
+            width={48}
+            height={48}
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+            onError={(e) => {
+              e.target.src = "/placeholder-search.png";
+            }}
           />
         </div>
       ) : (
         <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center mr-4 border border-gray-200 group-hover:border-gray-300 transition-all duration-300 shadow-sm group-hover:shadow-md">
-          <IoSearch
+          <Search
             className="text-gray-500 group-hover:text-gray-700 transition-colors"
             size={20}
           />
@@ -115,7 +118,7 @@ const SuggestionItem = ({ suggestion, onClick, isHighlighted }) => {
         )}
       </div>
       <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-        <IoSearch className="text-blue-500 ml-2" size={18} />
+        <Search className="text-blue-500 ml-2" size={18} />
       </div>
     </div>
   );
@@ -137,18 +140,22 @@ const RecentSearchItem = ({ item, onSelect, onRemove, isHighlighted }) => {
       >
         {item.mobileImage ? (
           <div className="w-16 h-16 rounded-lg overflow-hidden mb-2 flex-shrink-0 border border-gray-200 group-hover:border-blue-300 transition-all duration-300 shadow-md group-hover:shadow-xl relative">
-            <img
+            <Image
               src={item.mobileImage}
               alt={item.name}
-              loading="lazy"
+              width={64}
+              height={64}
               className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+              onError={(e) => {
+                e.target.src = "/placeholder-search.png";
+              }}
             />
             {/* Gradient Overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg"></div>
           </div>
         ) : (
           <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center mb-2 border border-gray-200 group-hover:border-blue-300 transition-all duration-300 shadow-md group-hover:shadow-lg">
-            <LuHistory
+            <History
               className="text-gray-500 group-hover:text-blue-600 transition-colors"
               size={24}
             />
@@ -173,7 +180,7 @@ const RecentSearchItem = ({ item, onSelect, onRemove, isHighlighted }) => {
         }}
         className="absolute -top-1 -right-1 bg-gray-300 hover:bg-red-400 rounded-full p-1 opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-md hover:shadow-lg hover:scale-110"
       >
-        <IoClose
+        <X
           size={12}
           className="text-gray-700 hover:text-white transition-colors"
         />
@@ -194,8 +201,8 @@ const RecentSearches = ({
   return (
     <div className="mt-6">
       <div className="flex justify-between items-center px-4">
-        <h3 className="font-semibold text-gray-800 text-lg flex items-center gap-2">
-          <LuHistory className="text-gray-600" />
+        <h3 className="font-semibold text-gray-800 text-lg flex items-center ">
+          <History className="text-gray-600" />
           Recent Searches
         </h3>
         <button
@@ -206,7 +213,7 @@ const RecentSearches = ({
         </button>
       </div>
       <div className="px-4 mt-3">
-        <div className="flex flex-row gap-4 overflow-x-auto hide-scrollbar">
+        <div className="flex flex-row overflow-x-auto hide-scrollbar">
           {searches.map((item, index) => (
             <RecentSearchItem
               key={`${item.name}-${index}`}
@@ -237,7 +244,7 @@ const TrendingSearches = ({ trending, onSelect, highlightedIndex }) => {
   return (
     <div className="mt-6 px-4">
       <h3 className="font-semibold text-gray-800 mb-4 text-lg flex items-center gap-2">
-        <IoTrendingUp className="text-gray-600" />
+        <TrendingUp className="text-gray-600" />
         Trending Searches
       </h3>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
@@ -254,7 +261,7 @@ const TrendingSearches = ({ trending, onSelect, highlightedIndex }) => {
             <div className="p-3">
               <div className="flex justify-center mb-2">
                 <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center group-hover:from-blue-200 group-hover:to-blue-300 transition-all duration-300 shadow-sm group-hover:shadow-md">
-                  <IoTrendingUp
+                  <TrendingUp
                     className="text-blue-600 group-hover:text-blue-700 transition-colors"
                     size={18}
                   />
@@ -283,7 +290,7 @@ const TopCategoryHandler = ({ category, onSelect, highlightedIndex }) => {
     <div className="mt-6 px-4">
       <div className="mb-4">
         <h3 className="font-semibold text-gray-800 text-lg flex items-center gap-2">
-          <IoSearch className="text-gray-600" />
+          <Search className="text-gray-600" />
           Top Categories
         </h3>
       </div>
@@ -301,19 +308,26 @@ const TopCategoryHandler = ({ category, onSelect, highlightedIndex }) => {
             <div className="relative w-full pt-[100%] bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
               {item.mobileImage ? (
                 <>
-                  <img
+                  <Image
                     src={item.mobileImage}
                     alt={item.name}
-                    loading="lazy"
+                    width={200}
+                    height={200}
+                    priority
+                    fetchPriority="high"
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    onError={(e) => {
+                      e.currentTarget.src = "/placeholder-category.png";
+                    }}
                   />
+
                   {/* Gradient Overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 </>
               ) : (
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center group-hover:from-blue-200 group-hover:to-blue-300 transition-all duration-300 shadow-sm group-hover:shadow-md">
-                    <IoSearch
+                    <Search
                       className="text-blue-600 group-hover:text-blue-700 transition-colors"
                       size={18}
                     />
@@ -766,7 +780,6 @@ const SearchPage = () => {
     }
   };
 
-  
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (!e.target.closest(".search-container")) {
@@ -899,7 +912,7 @@ const SearchPage = () => {
             ) : querySearch.length >= 2 ? (
               <div className="p-6 text-center text-gray-600">
                 <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm">
-                  <IoSearch className="text-gray-400" size={24} />
+                  <Search className="text-gray-400" size={24} />
                 </div>
                 <p className="font-medium">
                   No results found for "{querySearch}"

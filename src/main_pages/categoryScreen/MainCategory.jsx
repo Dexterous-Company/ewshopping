@@ -1,8 +1,6 @@
 import React from "react";
 import PageHeader from "./PageHeader";
-import MainSection from "./MainSection";
 import ShowingCategories from "./ShowingCategories";
-import SideFilteringCode from "./SideFilteringCode";
 import CategoryRelatedProducts from "./CategoryRelatedProducts";
 
 const MainCategory = () => {

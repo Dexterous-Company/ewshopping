@@ -1,4 +1,4 @@
-import Profile from "@/components/Accounts/Profile";
+import Profile from "../../../components/Accounts/Profile";
 import React from "react";
 
 const page = () => {

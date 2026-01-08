@@ -6,7 +6,7 @@ import {
   AiOutlineAppstore,
 } from "react-icons/ai";
 import { BsCart3 } from "react-icons/bs";
-import { IoSearch, IoTrendingUp } from "react-icons/io5";
+import { IoSearch } from "react-icons/io5";
 import { LuHeart, LuUser, LuLogOut } from "react-icons/lu";
 import {
   MdOutlineLogin,
@@ -19,8 +19,8 @@ import { GiHamburgerMenu } from "react-icons/gi";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchUserWishlist } from "@/redux/wishlist/wishlistSlice";
-import { signout } from "@/redux/athentication/Athentication";
+import { fetchUserWishlist } from "../../redux/wishlist/wishlistSlice";
+import { signout } from "../../redux/athentication/Athentication";
 
 const Header = () => {
   const [isMounted, setIsMounted] = useState(false);

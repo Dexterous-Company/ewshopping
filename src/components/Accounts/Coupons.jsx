@@ -10,7 +10,7 @@ import {
   TextField,
 } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
-import { getUserCoupons } from "@/redux/coupon/couponSlice";
+import { getUserCoupons } from "../../redux/coupon/couponSlice";
 
 const data = [
   {

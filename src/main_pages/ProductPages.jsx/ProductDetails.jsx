@@ -2,14 +2,14 @@
 import React, { useState, useEffect } from "react";
 import { IoStar } from "react-icons/io5";
 import { useSelector, useDispatch } from "react-redux";
-import { setSelectedVariant } from "@/redux/product/productSlice";
+import { setSelectedVariant } from "../../redux/product/productSlice";
 import { useRouter } from "next/navigation";
 import { FaAngleDown, FaAngleRight, FaAngleUp, FaCheck } from "react-icons/fa";
 import { IoIosArrowForward } from "react-icons/io";
 import ProductTabs from "./TabsListing";
 import { TbTruckDelivery } from "react-icons/tb";
 import { toast } from "react-toastify";
-import { addToCart, decrementCart } from "@/redux/cart/CartSlice";
+import { addToCart, decrementCart } from "../../redux/cart/CartSlice";
 
 // Add this utility function at the top
 const getStockStatus = (stockCount) => {

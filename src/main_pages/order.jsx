@@ -2,14 +2,14 @@
 import { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 
-import { signin, signout } from "@/redux/athentication/Athentication";
+import { signin } from "../redux/athentication/Athentication";
 import {
   newOrder,
   getOrderbyClId,
   getTotalOrderByClId,
   clearOrder,
   setcurrentOrder,
-} from "@/redux/order/OrderSlice";
+} from "../redux/order/OrderSlice";
 
 const OrderPage = () => {
   const dispatch = useDispatch();

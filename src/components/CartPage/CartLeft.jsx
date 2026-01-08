@@ -1,7 +1,6 @@
 "use client";
-import { Button, FormControl, TextField } from "@mui/material";
+import { Button } from "@mui/material";
 import React, { useEffect, useRef, useState } from "react";
-import { FaMapLocationDot } from "react-icons/fa6";
 import { FiPlus, FiMinus } from "react-icons/fi";
 import { RxCross2 } from "react-icons/rx";
 import { IoIosInformationCircle } from "react-icons/io";
@@ -12,7 +11,7 @@ import {
   addToCart,
   decrementCart,
   removeFromCart,
-} from "@/redux/cart/CartSlice";
+} from "../../redux/cart/CartSlice";
 import { useRouter } from "next/navigation";
 
 const CartLeft = () => {

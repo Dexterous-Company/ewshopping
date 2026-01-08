@@ -8,7 +8,7 @@ import Cartheader from "../Home/Cartheader";
 import { FiUser, FiLogIn, FiLogOut, FiHeart, FiRepeat } from "react-icons/fi";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { fetchUserWishlist } from "@/redux/wishlist/wishlistSlice";
+import { fetchUserWishlist } from "../../redux/wishlist/wishlistSlice";
 import { useDispatch, useSelector } from "react-redux";
 
 const Header = () => {

@@ -21,7 +21,7 @@ import { CiBoxes } from "react-icons/ci";
 import { IoIosNotificationsOutline } from "react-icons/io";
 import { FiPower } from "react-icons/fi";
 import { useDispatch, useSelector } from "react-redux";
-import { signout } from "@/redux/athentication/Athentication";
+import { signout } from "../../redux/athentication/Athentication";
 
 const Accountspage = () => {
   const router = useRouter();

@@ -3,7 +3,7 @@
 import React, { memo, useEffect, useRef, useState, useCallback } from "react";
 import Image from "next/image";
 import { useDispatch, useSelector } from "react-redux";
-import { getBanners } from "@/redux/header/BannerSlice";
+import { getBanners } from "../../redux/header/BannerSlice";
 import { useRouter } from "next/navigation";
 
 const AUTO_PLAY_DELAY = 3500;

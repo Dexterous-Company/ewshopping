@@ -15,7 +15,7 @@ import {
   deleteAddress,
   removeAddress,
   setCurrentAddress,
-} from "@/redux/athentication/Athentication";
+} from "../../redux/athentication/Athentication";
 
 import AddAddress from "./AddAddress";
 import EditAddress from "./EditAddress";

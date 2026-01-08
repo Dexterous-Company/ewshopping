@@ -1,18 +1,17 @@
 "use client";
-import React, { useState, useEffect, useCallback, useRef } from "react";
-import SingleProductCard from "@/main_pages/ProductPages.jsx/SingleProductCard";
+import React, { useCallback, useRef } from "react";
+import SingleProductCard from "../../main_pages/ProductPages.jsx/SingleProductCard";
 import DesktopFilter from "./DesktopFilter";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import SortFilterLoader from "../Loader/SingleProductCard";
-import Noproducts from "@/main_pages/ProductPages.jsx/Noproducts";
+import Noproducts from "../../main_pages/ProductPages.jsx/Noproducts";
 import HorizontalFilterScroll from "./HorizontalFilter";
 
 const SearchResultMainPage = ({
   products,
   loading,
   pagination,
-  searchQuery,
   loadMoreProducts,
   isLoadingMore,
   availableFilters,
@@ -51,12 +50,6 @@ const SearchResultMainPage = ({
   };
 
   // Calculate showing range
-  const showingFrom = (pagination.currentPage - 1) * pagination.limit + 1;
-  const showingTo = Math.min(
-    pagination.currentPage * pagination.limit,
-    pagination.total
-  );
-  const totalProducts = pagination?.total || 0;
 
   return (
     <>
@@ -71,21 +64,7 @@ const SearchResultMainPage = ({
           <div className="flex-1">
             {/* Results Header */}
             <div className="py-1 my-1 bg-white sm:px-2  rounded-lg shadow-lg">
-              {/* Results Count */}
-              {/* <div className="flex items-center justify-between">
-                <p className="text-amber-800 text-sm">
-                  <span className="font-semibold">Showing</span> {showingFrom} –{" "}
-                  {showingTo} of{" "}
-                  <span className="font-bold text-orange-600">
-                    {totalProducts.toLocaleString()}
-                  </span>{" "}
-                  results for "
-                  <span className="font-bold text-orange-600">
-                    {searchQuery || "all products"}
-                  </span>
-                  "
-                </p>
-              </div> */}
+          
 
               {/* Horizontal Filter Scroll - Mobile */}
               <div className="sm:hidden block">

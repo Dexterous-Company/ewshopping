@@ -1,4 +1,4 @@
-import OrderSucess from '@/components/Sucesspages/OrderSucess'
+import OrderSucess from '../../components/Sucesspages/OrderSucess'
 import React from 'react'
 
 const page = () => {

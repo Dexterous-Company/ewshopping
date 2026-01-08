@@ -1,4 +1,4 @@
-import BrandMainPage from "@/main_pages/Brand/BrandMainPage";
+import BrandMainPage from "../../../main_pages/Brand/BrandMainPage";
 import { Suspense } from "react";
 
 function page({ params }) {

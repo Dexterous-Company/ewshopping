@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import ProductLayout from "./ProductLayout";
 import { useDispatch, useSelector } from "react-redux";
-import { getSingleApprovedProductDetails } from "@/redux/product/productSlice";
+import { getSingleApprovedProductDetails } from "../../redux/product/productSlice";
 import RelatedProducts from "./RelatedProducts";
 
 const ProductMainPage = ({ slug }) => {

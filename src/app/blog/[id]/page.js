@@ -2,7 +2,7 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchBlogById } from "../../../redux/blog/blogSlice";
-import Blogid from "@/main_pages/footerPages/Blogid";
+import Blogid from "../../../main_pages/footerPages/Blogid";
 
 export default function BlogDetailPage({ params }) {
   const dispatch = useDispatch();

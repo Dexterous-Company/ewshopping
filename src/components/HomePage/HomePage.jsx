@@ -3,28 +3,28 @@ import dynamic from "next/dynamic";
 
 // ✅ ABOVE THE FOLD (SSR ENABLED)
 const CategoryCarousel = dynamic(
-  () => import("@/main_pages/HomeScreen/CategoryCarousel")
+  () => import("../../main_pages/HomeScreen/CategoryCarousel")
 );
 
 const HomeBanner = dynamic(
-  () => import("@/main_pages/HomeScreen/HomeBanner")
+  () => import("../../main_pages/HomeScreen/HomeBanner")
 );
 
 const HomeProduct = dynamic(
-  () => import("@/main_pages/HomeScreen/HomeProduct")
+  () => import("../../main_pages/HomeScreen/HomeProduct")
 );
 
 // 🔥 BELOW THE FOLD (STILL SSR, BUT CODE-SPLIT)
 const BannerGrid = dynamic(
-  () => import("@/main_pages/HomeScreen/BannerGrid")
+  () => import("../../main_pages/HomeScreen/BannerGrid")
 );
 
 const BoxCategories = dynamic(
-  () => import("@/main_pages/HomeScreen/BoxCategores")
+  () => import("../../main_pages/HomeScreen/BoxCategores")
 );
 
 const MobileAccessoriesIOSPhones = dynamic(
-  () => import("@/main_pages/HomeScreen/EventProduct")
+  () => import("../../main_pages/HomeScreen/EventProduct")
 );
 
 const HomePage = () => {

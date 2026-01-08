@@ -3,7 +3,7 @@ import React, { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
-import { signout } from "@/redux/athentication/Athentication";
+import { signout } from "../redux/athentication/Athentication";
 import Cartheader from "./Home/Cartheader";
 
 // Lucide React imports
@@ -28,10 +28,8 @@ import {
   Ban,
   Users,
   Heart,
-  LogOut,
   List,
   LogOutIcon,
-  User2,
   Tag,
   Store,
 } from "lucide-react";

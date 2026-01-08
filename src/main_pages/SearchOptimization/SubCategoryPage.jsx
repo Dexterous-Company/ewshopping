@@ -2,19 +2,19 @@
 import {
   searchNewProducts,
   loadMoreProducts,
-} from "@/redux/serach/newSerchProdactSlice";
+} from "../../redux/serach/newSerchProdactSlice";
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { FaTimes, FaSearch } from "react-icons/fa";
-import NewSingleProductCard from "@/main_pages/ProductPages.jsx/NewSingleProductCard";
+import { X, Search as SearchIcon } from "lucide-react";
+import NewSingleProductCard from "../../main_pages/ProductPages.jsx/NewSingleProductCard";
 import { useSearchParams, useRouter } from "next/navigation";
 import Slider from "@mui/material/Slider";
 import { styled } from "@mui/material/styles";
-import useInfiniteScroll from "@/hooks/useInfiniteScroll";
-import NewFilter from "@/components/searchMobile/NewFilter";
+import useInfiniteScroll from "../../hooks/useInfiniteScroll";
+import NewFilter from "../components/searchMobile/NewFilter";
 
 // Custom styled price slider
-const PriceSlider = styled(Slider)(({ theme }) => ({
+const PriceSlider = styled(Slider)(() => ({
   color: "#2874f0",
   height: 4,
   "& .MuiSlider-track": {
@@ -125,13 +125,11 @@ const SubCategoryPage = ({ params }) => {
 
   const {
     loading,
-    query,
     total,
     limit,
     products,
     totalPages,
     filters,
-    sort: reduxSort,
     loadingMore,
     page: currentPage,
   } = useSelector((state) => state.searchNew);
@@ -406,11 +404,6 @@ const SubCategoryPage = ({ params }) => {
   };
 
   // Check if any filter is active (for active filters display)
-  const hasActiveFilters = Object.keys(selectedFilters).some(
-    (key) =>
-      (selectedFilters[key] && selectedFilters[key].length > 0) ||
-      (key === "priceRange" && selectedFilters[key])
-  );
 
   // Extract specific filters for enhanced UI
   const colorFilter = filters?.find(
@@ -432,27 +425,6 @@ const SubCategoryPage = ({ params }) => {
     : [];
 
   // Active filters for display
-  const activeFilters = [
-    ...(selectedFilters.Color || []).map((color) => ({
-      id: `color-${color}`,
-      value: color,
-      type: "Color",
-    })),
-    ...(selectedFilters.Model || []).map((model) => ({
-      id: `model-${model}`,
-      value: model,
-      type: "Model",
-    })),
-    ...(selectedFilters.priceRange
-      ? [
-          {
-            id: "price",
-            value: `₹${selectedFilters.priceRange.min} – ₹${selectedFilters.priceRange.max}`,
-            type: "Price",
-          },
-        ]
-      : []),
-  ];
 
   // Combined loading state
   const isLoading = loading && !loadingMore;
@@ -489,8 +461,8 @@ const SubCategoryPage = ({ params }) => {
                           key={`${key}-${v}`}
                           className="flex items-center gap-1 bg-gray-200 text-gray-700 text-[11px] px-2 py-[3px] rounded"
                         >
-                          <FaTimes
-                            size={8}
+                          <X
+                            size={10}
                             className="cursor-pointer"
                             onClick={() => removeSelected(key, v)}
                           />
@@ -502,8 +474,8 @@ const SubCategoryPage = ({ params }) => {
 
                 {selectedFilters.priceRange && (
                   <div className="flex items-center gap-1 bg-gray-200 text-gray-700 text-[11px] px-2 py-[3px] rounded">
-                    <FaTimes
-                      size={8}
+                    <X
+                      size={10}
                       className="cursor-pointer"
                       onClick={() =>
                         setSelectedFilters((p) => ({
@@ -602,9 +574,9 @@ const SubCategoryPage = ({ params }) => {
                   COLOR
                 </p>
                 <div className="relative mb-3">
-                  <FaSearch
+                  <SearchIcon
                     className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                    size={14}
+                    size={16}
                   />
                   <input
                     type="text"
@@ -654,9 +626,9 @@ const SubCategoryPage = ({ params }) => {
                   MODEL
                 </p>
                 <div className="relative mb-3">
-                  <FaSearch
+                  <SearchIcon
                     className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                    size={14}
+                    size={16}
                   />
                   <input
                     type="text"
@@ -818,4 +790,3 @@ const SubCategoryPage = ({ params }) => {
 };
 
 export default SubCategoryPage;
-

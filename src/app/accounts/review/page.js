@@ -1,4 +1,4 @@
-import Review from '@/components/Accounts/Review'
+import Review from '../../../components/Accounts/Review'
 import React from 'react'
 
 const page = () => {

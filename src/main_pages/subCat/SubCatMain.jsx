@@ -1,12 +1,12 @@
 "use client";
-import Filter from "@/components/searchMobile/Filter";
-import SearchResult from "@/components/searchMobile/SearchResult";
+import Filter from "../components/searchMobile/Filter";
+import SearchResult from "../components/searchMobile/SearchResult";
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   searchProducts,
   loadMoreProducts,
-} from "@/redux/serach/searchProductsSlice";
+} from "../../redux/serach/searchProductsSlice";
 import { useSearchParams } from "next/navigation";
 
 const SubCatMain = ({ params }) => {
@@ -17,7 +17,7 @@ const SubCatMain = ({ params }) => {
   );
 
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [hasInitialSearch, setHasInitialSearch] = useState(false);
+  const [, setHasInitialSearch] = useState(false);
 
   // Extract from params and search params
   const subCatUrl = params?.subcat || "";

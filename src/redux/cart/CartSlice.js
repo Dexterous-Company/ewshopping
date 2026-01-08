@@ -89,7 +89,7 @@ const calculateTotals = (state) => {
     state.amountToGetfeeDelivery = 0;
     state.amountToGetfeeDeliveryPercentage = 100;
   } else {
-    state.DeliveryCharge = 40;// 40
+    state.DeliveryCharge = 0;// 40
     state.amountToGetfeeDelivery = Math.max(0, 500 - state.TotalPrice);
     state.amountToGetfeeDeliveryPercentage = Math.min(
       (state.TotalPrice / 500) * 100,

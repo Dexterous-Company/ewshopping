@@ -1,4 +1,4 @@
-import AboutUs from "@/main_pages/footerPages/AboutUs";
+import AboutUs from "../../../main_pages/footerPages/AboutUs";
 import React, { Suspense } from "react";
 
 export const metadata = {

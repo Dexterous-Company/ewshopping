@@ -1,4 +1,4 @@
-import Coupons from "@/components/Accounts/Coupons";
+import Coupons from "../../../components/Accounts/Coupons";
 import React from "react";
 
 const page = () => {

@@ -4,14 +4,14 @@ import { FaExpand, FaHeart } from "react-icons/fa";
 import { FiZoomIn } from "react-icons/fi";
 import { useSelector, useDispatch } from "react-redux";
 import Image from "next/image";
-import { addToCart, decrementCart } from "@/redux/cart/CartSlice";
+import { addToCart, decrementCart } from "../../redux/cart/CartSlice";
 import {
   addToWishlistLocal,
   addToWishlistServer,
   fetchUserWishlist,
   removeFromWishlistLocal,
   removeFromWishlistServer,
-} from "@/redux/wishlist/wishlistSlice";
+} from "../../redux/wishlist/wishlistSlice";
 import { useRouter } from "next/navigation";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Navigation } from "swiper/modules";

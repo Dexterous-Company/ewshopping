@@ -1,4 +1,4 @@
-import ReviewId from "@/components/Accounts/ReviewId";
+import ReviewId from "../../../../components/Accounts/ReviewId";
 import React from "react";
 
 const page = () => {

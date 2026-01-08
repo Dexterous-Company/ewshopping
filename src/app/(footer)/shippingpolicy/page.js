@@ -1,4 +1,4 @@
-import ShippingPolicy from "@/main_pages/footerPages/ShippingPolicy";
+import ShippingPolicy from "../../../main_pages/footerPages/ShippingPolicy";
 import React from "react";
 
 const page = () => {

@@ -3,11 +3,11 @@ import {
   fetchBrandSubProducts,
   fetchBrandSubFilters,
   loadMoreBrandSubProducts,
-} from "@/redux/serach/brandSlice";
+} from "../../redux/serach/brandSlice";
 import React, { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { FaTimes } from "react-icons/fa";
-import NewSingleProductCard from "@/main_pages/ProductPages.jsx/NewSingleProductCard";
+import { X } from "lucide-react";
+import NewSingleProductCard from "../../main_pages/ProductPages.jsx/NewSingleProductCard";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
 import { styled } from "@mui/material/styles";
@@ -16,7 +16,7 @@ const Slider = dynamic(() => import("@mui/material/Slider"), {
   ssr: false,
 });
 
-const NewFilter = dynamic(() => import("@/components/searchMobile/NewFilter"), {
+const NewFilter = dynamic(() => import("../../components/searchMobile/NewFilter"), {
   ssr: false,
 });
 
@@ -76,11 +76,9 @@ const BrandSubPage = ({ params }) => {
   const subCategory = p?.subCat || "";
   const dispatch = useDispatch();
   const router = useRouter();
-  const pathname = usePathname();
 
   const searchParams = useSearchParams();
   const sort = searchParams.get("sort") || "relevance";
-  const page = searchParams.get("page") || "1";
 
   const products = useSelector((state) => state.brandSub.products);
   const filters = useSelector((state) => state.brandSub.filters);
@@ -91,7 +89,6 @@ const BrandSubPage = ({ params }) => {
   const loadingMore = useSelector((state) => state.brandSub.loadingMore);
   const loadingFilters = useSelector((state) => state.brandSub.loadingFilters);
   const filtersLoaded = useSelector((state) => state.brandSub.filtersLoaded);
-  const error = useSelector((state) => state.brandSub.error);
 
   // Refs
   const initialLoadDone = useRef(false);
@@ -519,7 +516,7 @@ const BrandSubPage = ({ params }) => {
                         className="flex items-center gap-1 bg-blue-50 text-blue-700 text-[11px] px-2 py-[3px] rounded hover:bg-blue-100 transition-colors cursor-pointer"
                         onClick={clearPriceFilter}
                       >
-                        <FaTimes size={8} className="hover:text-red-600" />
+                        <X   size={8} className="hover:text-red-600" />
                         <span>
                           ₹{values.min} – ₹{values.max}
                         </span>
@@ -536,7 +533,7 @@ const BrandSubPage = ({ params }) => {
                       className="flex items-center gap-1 bg-blue-50 text-blue-700 text-[11px] px-2 py-[3px] rounded hover:bg-blue-100 transition-colors cursor-pointer"
                       onClick={() => removeSelected(key, v)}
                     >
-                      <FaTimes size={8} className="hover:text-red-600" />
+                      <X size={8} className="hover:text-red-600" />
                       <span>{v}</span>
                     </div>
                   ));

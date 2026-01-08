@@ -1,8 +1,9 @@
 "use client";
 import React, { memo, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
-import { getCategoryTagBySlugUrl } from "@/redux/header/CategoryTagSlice";
+import { getCategoryTagBySlugUrl } from "../../redux/header/CategoryTagSlice";
 
 // Skeleton component
 const CategoryCardSkeleton = memo(() => {
@@ -19,7 +20,7 @@ const CategoryCardSkeleton = memo(() => {
         <div className="w-full p-2 sm:p-3 space-y-2.5">
           {/* Main title line */}
           <div className="h-3 bg-gray-100 rounded-full w-5/6 mx-auto"></div>
-          
+
           {/* Secondary line */}
           <div className="h-2.5 bg-gray-100 rounded-full w-1/2 mx-auto"></div>
         </div>
@@ -76,6 +77,8 @@ const CategoryCard = ({
         .unwrap()
         .then((res) => {
           if (res?.categoryUrl && res?.SubCategoryUrl && res?.slugUrl) {
+            console.log("======>", res);
+
             router.push(
               `/${res.categoryUrl}/${res.SubCategoryUrl}/${res.slugUrl}`
             );
@@ -119,17 +122,24 @@ const CategoryCard = ({
           <div className="relative w-full h-full">
             {!imageError ? (
               <div className="relative w-full h-full overflow-hidden rounded-sm xs:rounded-md">
-                <img
+                <Image
                   src={displayImage}
                   alt={`${name} category`}
-                  className={` object-contain w-full h-full rounded-sm xs:rounded-md transition-all duration-500 group-hover:scale-110 ${
+                  width={300}
+                  height={300}
+                  unoptimized
+                  sizes="(max-width: 640px) 110px, (max-width: 768px) 130px, 180px"
+                  className={`object-contain w-full h-full rounded-sm xs:rounded-md transition-all duration-500 group-hover:scale-110 ${
                     imageLoaded ? "opacity-100" : "opacity-0"
                   }`}
-                  onLoad={handleImageLoad}
-                  onError={handleImageError}
+                  onLoad={() => setImageLoaded(true)}
+                  onError={() => {
+                    setImageError(true);
+                    setImageLoaded(true);
+                  }}
                   loading="lazy"
-                  decoding="async"
                 />
+
                 {/* Enhanced overlay on hover */}
                 <div className="absolute inset-0 bg-gradient-to-t from-purple-600/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-sm xs:rounded-md"></div>
               </div>
@@ -145,10 +155,12 @@ const CategoryCard = ({
             {/* Enhanced fallback image */}
             {imageError && (
               <div className="absolute inset-1.5 xs:inset-2 flex items-center justify-center bg-gradient-to-br from-cyan-100 via-purple-100 to-pink-100 rounded-sm xs:rounded-md">
-                <img
+                <Image
                   src={placeholderImage}
                   alt="No Image"
                   className="w-full h-full object-cover rounded-sm xs:rounded-md opacity-50"
+                  width={100} // Added width prop
+                  height={100} // Added height prop
                 />
                 <div className="absolute inset-0 bg-gradient-to-br from-cyan-400/10 to-purple-400/10 rounded-sm xs:rounded-md"></div>
               </div>

@@ -10,20 +10,11 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   fetchUserWishlist,
   removeFromWishlistServer,
-} from "@/redux/wishlist/wishlistSlice";
+} from "../../redux/wishlist/wishlistSlice";
 import Link from "next/link";
-import { addToCart } from "@/redux/cart/CartSlice";
-import { getSingleApprovedProductDetails } from "@/redux/product/productSlice";
+import { addToCart } from "../../redux/cart/CartSlice";
+import { getSingleApprovedProductDetails } from "../../redux/product/productSlice";
 
-/**
- * LocalStorage format used (Option A):
- * localStorage.setItem("wish_collections", JSON.stringify({
- *   "My Wishlist": ["prodId1", "prodId2"],
- *   "Kurti Collection": ["prodId3"]
- * }))
- *
- * Note: product identifier stored is: item.ProductId || item.productSlug
- */
 
 const STORAGE_KEY = "wish_collections";
 const DEFAULT_COLLECTION = "My Wishlist";

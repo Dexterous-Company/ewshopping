@@ -3,14 +3,15 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import Image from "next/image";
-import { fetchUserWishlist } from "@/redux/wishlist/wishlistSlice";
-import { signout } from "@/redux/athentication/Athentication";
+import { fetchUserWishlist } from "../../redux/wishlist/wishlistSlice";
+import { signout } from "../../redux/athentication/Athentication";
 import Link from "next/link";
 import Cartheader from "../Home/Cartheader";
 import {
   X,
   ShoppingBag,
   Home,
+  Play,
   User,
   LogIn,
   UserPlus,
@@ -34,7 +35,7 @@ import {
   Menu,
   Package,
   ShoppingCart,
-  Download,
+
 } from "lucide-react";
 
 const Baseurl = process.env.NEXT_PUBLIC_API_URL;
@@ -704,7 +705,7 @@ const Header = () => {
                   rel="noopener noreferrer"
                   className="bg-[#ffffff20] rounded-lg p-2 hover:bg-[#ffffff30] transition-colors duration-300"
                 >
-                  <Download className="text-lg text-white" size={18} />
+                  <Play className="text-lg text-white" size={18} />
                 </a>
                 <div
                   className="flex flex-row items-center relative text-center p-2 bg-[#ffffff20] rounded-lg hover:bg-[#ffffff30] transition-colors duration-300 cursor-pointer"

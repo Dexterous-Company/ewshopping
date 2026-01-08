@@ -4,8 +4,7 @@ import {
   send_sms_through_backend,
   set_checkout_authentication_status,
   signin,
-  setMobileNumber,
-} from "@/redux/athentication/Athentication";
+} from "../../../redux/athentication/Athentication";
 import { useRouter } from "next/navigation";
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";

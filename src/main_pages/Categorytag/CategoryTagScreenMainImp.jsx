@@ -1,12 +1,12 @@
 "use client";
-import Filter from "@/components/searchMobile/Filter";
-import SearchResult from "@/components/searchMobile/SearchResult";
+import Filter from "../../components/searchMobile/Filter";
+import SearchResult from "../../components/searchMobile/SearchResult";
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   searchProducts,
   loadMoreProducts,
-} from "@/redux/serach/searchProductsSlice";
+} from "../../redux/serach/searchProductsSlice";
 import { useSearchParams } from "next/navigation";
 
 const CategoryTagScreenMainImp = ({ params }) => {

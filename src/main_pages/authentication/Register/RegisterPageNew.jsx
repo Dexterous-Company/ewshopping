@@ -6,11 +6,9 @@ import { useRouter } from "next/navigation";
 import {
   getUserByMob,
   set_checkout_authentication_status,
-  signin,
   userRegistation,
   verifyUserEmail,
-  verifyUserMobile,
-} from "@/redux/athentication/Athentication";
+} from "../../../redux/athentication/Athentication";
 
 const RegisterPageNew = () => {
   const dispatch = useDispatch();

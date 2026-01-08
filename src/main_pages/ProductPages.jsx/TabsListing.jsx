@@ -1,13 +1,10 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { FaStar, FaStarHalfAlt, FaRegStar } from "react-icons/fa";
+import { FaStar, FaStarHalfAlt } from "react-icons/fa";
 import { FaRegCircleCheck } from "react-icons/fa6";
-import { FaAngleDown, FaAngleUp } from "react-icons/fa";
 import { useSelector, useDispatch } from "react-redux";
-import { fetchReviews, addReview } from "@/redux/reviews/reviewSlice";
-import { IoIosArrowForward } from "react-icons/io";
-import EmptyReviews from "@/components/EmptyPages/EmptyReviews";
+import { fetchReviews, addReview } from "../../redux/reviews/reviewSlice";
 import toast from "react-hot-toast";
 
 // Modern color theme

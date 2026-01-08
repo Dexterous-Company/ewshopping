@@ -1,4 +1,4 @@
-import Career from "@/main_pages/footerPages/Carrer";
+import Career from "../../../main_pages/footerPages/Carrer";
 import React from "react";
 
 export const metadata = {

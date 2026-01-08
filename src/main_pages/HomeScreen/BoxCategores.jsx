@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import {
   fetchBrandsByPromotion,
   clearPromotionData,
-} from "@/redux/header/NewBrandSlice";
+} from "../../redux/header/NewBrandSlice";
 
 const BoxCategories = ({
   promotionType = "promotionone",

@@ -2,13 +2,12 @@
 import React, { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import Cartheader from "../Home/Cartheader";
-import { FaHome, FaRegHeart } from "react-icons/fa";
+import { FaRegHeart } from "react-icons/fa";
 import { PiGridFourLight } from "react-icons/pi";
 import { FaRegUser } from "react-icons/fa6";
 import { AiOutlineHome } from "react-icons/ai";
-import { BsCart3 } from "react-icons/bs";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchUserWishlist } from "@/redux/wishlist/wishlistSlice";
+import { fetchUserWishlist } from "../../redux/wishlist/wishlistSlice";
 import {
   FaFacebookF,
   FaTwitter,
@@ -21,9 +20,8 @@ import {
   FaMapMarkerAlt,
 } from "react-icons/fa";
 import { useRouter } from "next/navigation";
-import { signout } from "@/redux/athentication/Athentication";
-import { red } from "@mui/material/colors";
-import { MdCardTravel, MdHome, MdOutlineShoppingCart } from "react-icons/md";
+import { signout } from "../../redux/athentication/Athentication";
+import { MdOutlineShoppingCart } from "react-icons/md";
 const Footer = () => {
   const { CartItems } = useSelector((state) => state.cart);
   const { items: wishlistItems } = useSelector((state) => state.wishlist);

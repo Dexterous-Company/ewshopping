@@ -3,12 +3,10 @@ import React, { useState } from "react";
 import {
   FaPlus,
   FaCheck,
-  FaEdit,
   FaMapMarkerAlt,
   FaHome,
   FaBuilding,
   FaBriefcase,
-  FaTruck,
 } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSelector, useDispatch } from "react-redux";
@@ -17,7 +15,7 @@ import EditAddressCheckOut from "./EditAddressCheckOut";
 import {
   setCheckoutStep,
   setCurrentAddress,
-} from "@/redux/athentication/Athentication";
+} from "../../redux/athentication/Athentication";
 
 const CheckOutAddress = ({ setShowSummary }) => {
   const { loginData, isAuth, user_address, current_address } = useSelector(

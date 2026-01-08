@@ -1,4 +1,4 @@
-import Whishlist from "@/components/Accounts/Whishlist";
+import Whishlist from "../../../components/Accounts/Whishlist";
 import React from "react";
 
 const page = () => {

@@ -1,10 +1,9 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { IoIosArrowRoundBack } from "react-icons/io";
-import CartLeft from "@/components/CartPage/CartLeft";
-import CartRight from "@/components/CartPage/CartRight";
-import EmptyCart from "@/components/CartPage/EmptyCard";
-// import Header from "@/components/layout/MobileHeader";
+import CartLeft from "../../components/CartPage/CartLeft";
+import CartRight from "../../components/CartPage/CartRight";
+import EmptyCart from "../../components/CartPage/EmptyCard";
+// import Header from "/layout/MobileHeader";
 import { useSelector } from "react-redux";
 const MainCart = () => {
   const { CartItems, TotalMrp, TotalPrice } = useSelector(

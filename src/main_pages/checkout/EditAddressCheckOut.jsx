@@ -5,7 +5,7 @@ import { RxCross2 } from "react-icons/rx";
 import {
   updateAddress,
   updateAddressLocally,
-} from "@/redux/athentication/Athentication";
+} from "../../redux/athentication/Athentication";
 import {
   FaUser,
   FaPhone,
@@ -23,7 +23,6 @@ const InputField = ({
   onChangeText,
   placeholder,
   icon,
-  keyboardType = "text",
   maxLength,
   error,
   onBlur,

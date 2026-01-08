@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { FaAngleDown, FaAngleUp } from "react-icons/fa";
-import { getCartData } from "@/redux/cart/CartSlice";
+import { getCartData } from "../../redux/cart/CartSlice";
 
 const RightSideCheckOut = () => {
   const [priceDetails, setPriceDetails] = useState(true);

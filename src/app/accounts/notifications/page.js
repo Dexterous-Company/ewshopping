@@ -1,4 +1,4 @@
-import Notifications from "@/components/Accounts/Notifications";
+import Notifications from "../../../components/Accounts/Notifications";
 import React from "react";
 
 const page = () => {

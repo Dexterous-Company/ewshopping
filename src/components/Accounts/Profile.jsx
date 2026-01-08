@@ -12,7 +12,7 @@ import { IoIosArrowRoundBack } from "react-icons/io";
 import { FaUser, FaEnvelope, FaVenusMars, FaPhone } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
-import { updateProfile } from "@/redux/athentication/Athentication";
+import { updateProfile } from "../../redux/athentication/Athentication";
 import toast from "react-hot-toast";
 
 const Profile = () => {

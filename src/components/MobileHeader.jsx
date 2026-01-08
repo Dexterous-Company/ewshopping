@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 // Lucide React imports
@@ -9,7 +8,6 @@ import { Search, Home, ShoppingCart, ChevronLeft } from "lucide-react";
 const MobileHeader = () => {
   const { CartItems = [] } = useSelector((state) => state.cart) || {};
   const [isMounted, setIsMounted] = useState(false);
-  const router = useRouter();
 
   useEffect(() => {
     setIsMounted(true);

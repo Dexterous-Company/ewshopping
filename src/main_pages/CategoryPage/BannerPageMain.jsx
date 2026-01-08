@@ -2,16 +2,16 @@
 import {
   searchNewProducts,
   loadMoreProducts,
-} from "@/redux/serach/newSerchProdactSlice";
+} from "../../redux/serach/newSerchProdactSlice";
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { FaTimes, FaSearch } from "react-icons/fa";
-import NewSingleProductCard from "@/main_pages/ProductPages.jsx/NewSingleProductCard";
+import NewSingleProductCard from "../../main_pages/ProductPages.jsx/NewSingleProductCard";
 import { useSearchParams, useRouter } from "next/navigation";
 import Slider from "@mui/material/Slider";
 import { styled } from "@mui/material/styles";
-import useInfiniteScroll from "@/hooks/useInfiniteScroll";
-import NewFilter from "@/components/searchMobile/NewFilter";
+import useInfiniteScroll from "../../hooks/useInfiniteScroll";
+import NewFilter from "../../components/searchMobile/NewFilter";
 
 // Custom styled price slider - Same as CatTagPage
 const PriceSlider = styled(Slider)(({ theme }) => ({

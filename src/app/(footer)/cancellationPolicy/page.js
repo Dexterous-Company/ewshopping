@@ -1,4 +1,4 @@
-import CancellationPolicy from '@/main_pages/footerPages/CancellationPolicy'
+import CancellationPolicy from '../../../main_pages/footerPages/CancellationPolicy'
 import React from 'react'
 
 export const metadata = {

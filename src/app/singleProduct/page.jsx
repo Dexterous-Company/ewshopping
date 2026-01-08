@@ -1,4 +1,4 @@
-import SingleProductCard from "@/main_pages/ProductPages.jsx/SingleProductCard";
+import SingleProductCard from "../../main_pages/ProductPages.jsx/SingleProductCard";
 import React from "react";
 
 const page = () => {

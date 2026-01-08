@@ -1,5 +1,5 @@
 "use client";
-import { fetchRelatedProducts } from "@/redux/product/RelatedProductsSlice";
+import { fetchRelatedProducts } from "../../redux/product/RelatedProductsSlice";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import RelatedSingleProductCard from "./RelatedHotProductCard";

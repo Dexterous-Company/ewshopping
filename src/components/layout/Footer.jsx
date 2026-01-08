@@ -3,10 +3,10 @@ import React, { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import Cartheader from "../Home/Cartheader";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchUserWishlist } from "@/redux/wishlist/wishlistSlice";
+import { fetchUserWishlist } from "../../redux/wishlist/wishlistSlice";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { signout } from "@/redux/athentication/Athentication";
+import { signout } from "../../redux/athentication/Athentication";
 
 // Lucide React imports
 import {

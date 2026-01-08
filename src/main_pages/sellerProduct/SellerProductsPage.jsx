@@ -1,5 +1,5 @@
 "use client";
-import { fetchShopProducts } from "@/redux/sellerProduct/SellerProductSlice";
+import { fetchShopProducts } from "../../redux/sellerProduct/SellerProductSlice";
 import React, { useEffect, useState, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/navigation";

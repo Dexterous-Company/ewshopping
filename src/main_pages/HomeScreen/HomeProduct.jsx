@@ -3,7 +3,7 @@
 import { useRef, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import CategoryCard from "./CategoryCard";
-import { getAllCategoryTagsAllCategories } from "@/redux/category/categorySlice";
+import { getAllCategoryTagsAllCategories } from "../../redux/category/categorySlice";
 
 const iconsByCategory = {
   Gardening: "🌿",

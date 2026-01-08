@@ -5,7 +5,7 @@ import {
   loadMoreCategoryTagProducts,
   getCategoryTagFilters,
   resetFiltersLoaded,
-} from "@/redux/serach/catTagProdactSlice";
+} from "../../../../redux/serach/catTagProdactSlice";
 import React, {
   useEffect,
   useState,
@@ -14,12 +14,12 @@ import React, {
   useMemo,
 } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { FaTimes } from "react-icons/fa";
-import NewSingleProductCard from "@/main_pages/ProductPages.jsx/NewSingleProductCard";
+import { X } from "lucide-react";
+import NewSingleProductCard from "../../../../main_pages/ProductPages.jsx/NewSingleProductCard";
 import { useSearchParams, useRouter } from "next/navigation";
 import Slider from "@mui/material/Slider";
 import { styled } from "@mui/material/styles";
-import NewFilter from "@/components/searchMobile/NewFilter";
+import NewFilter from "../.../../../../../components/searchMobile/NewFilter";
 
 /* ---------------- PRICE SLIDER ---------------- */
 const PriceSlider = styled(Slider)({
@@ -451,7 +451,7 @@ const SearchPage = ({ params }) => {
                         key={`price-${values.min}-${values.max}`}
                         className="flex items-center gap-1 bg-gray-200 text-gray-700 text-[11px] px-2 py-[3px] rounded"
                       >
-                        <FaTimes
+                        <X 
                           size={8}
                           className="cursor-pointer"
                           onClick={clearPriceFilter}
@@ -471,7 +471,7 @@ const SearchPage = ({ params }) => {
                       key={`${key}-${v}`}
                       className="flex items-center gap-1 bg-gray-200 text-gray-700 text-[11px] px-2 py-[3px] rounded"
                     >
-                      <FaTimes
+                      <X 
                         size={8}
                         className="cursor-pointer"
                         onClick={() => removeSelected(key, v)}

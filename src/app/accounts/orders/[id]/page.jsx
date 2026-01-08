@@ -1,4 +1,4 @@
-import OrderId from "@/components/Accounts/OrderId";
+import OrderId from "../../../../components/Accounts/OrderId";
 import React from "react";
 
 const page = () => {

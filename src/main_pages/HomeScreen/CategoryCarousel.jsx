@@ -13,7 +13,7 @@ import {
   getSubCategory,
   resetSubCategories,
   getCategoryTags,
-} from "@/redux/header/HeaderSubSlice";
+} from "../../redux/header/HeaderSubSlice";
 import { useRouter } from "next/navigation";
 
 const CategoryCarousel = () => {

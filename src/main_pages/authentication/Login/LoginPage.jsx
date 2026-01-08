@@ -5,7 +5,7 @@ import {
   send_sms_through_backend,
   set_checkout_authentication_status,
   setMobileNumber,
-} from "@/redux/athentication/Athentication";
+} from "../../../redux/athentication/Athentication";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState, useCallback, useMemo } from "react";

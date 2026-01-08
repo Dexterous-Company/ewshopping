@@ -1,4 +1,4 @@
-import RefundPolicy from '@/main_pages/footerPages/RefundPolicy'
+import RefundPolicy from '../../../main_pages/footerPages/RefundPolicy'
 import React from 'react'
 
 export const metadata = {

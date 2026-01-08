@@ -1,12 +1,12 @@
 "use client";
-import { FiX, FiTruck, FiCheck } from "react-icons/fi";
+import { FiX } from "react-icons/fi";
 import { BsCart3, BsBag } from "react-icons/bs";
 import { useSelector, useDispatch } from "react-redux";
 import {
   addToCart,
   decrementCart,
   removeFromCart,
-} from "@/redux/cart/CartSlice";
+} from "../../redux/cart/CartSlice";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";

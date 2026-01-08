@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   updateAddress,
   updateAddressLocally,
-} from "@/redux/athentication/Athentication";
+} from "../../redux/athentication/Athentication";
 import {
   FaUser,
   FaPhone,
