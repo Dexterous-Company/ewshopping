@@ -21,6 +21,7 @@ import Slider from "@mui/material/Slider";
 import { styled } from "@mui/material/styles";
 import NewFilter from "../../../components/searchMobile/NewFilter";
 
+
 const PriceSlider = styled(Slider)({
   color: "#2874f0",
   height: 2.5,
@@ -69,9 +70,12 @@ const SearchPage = ({ params }) => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const sort = searchParams.get("sort") || "relevance";
+  const [showProducts, setshowProducts] = useState(false);
+
 
   const {
     products,
+    loading,
     total,
     filters,
     priceRange: apiPriceRange, // ✅ GET PRICE RANGE FROM REDUX (DYNAMIC FROM API)
@@ -97,26 +101,26 @@ const SearchPage = ({ params }) => {
     if (apiPriceRange) {
       return apiPriceRange;
     }
-    
+
     // Priority 2: Calculate from current products
     if (products.length > 0) {
       const prices = products
-        .map(p => {
+        .map((p) => {
           if (p.priceRange) return p.priceRange;
           if (p.salePrice) return p.salePrice;
           if (p.price) return p.price;
           return 0;
         })
-        .filter(p => p > 0);
-      
+        .filter((p) => p > 0);
+
       if (prices.length > 0) {
         return {
           min: Math.min(...prices),
-          max: Math.max(...prices)
+          max: Math.max(...prices),
         };
       }
     }
-    
+
     // Priority 3: Default values
     return { min: 0, max: 10000 };
   }, [apiPriceRange, products]);
@@ -202,19 +206,23 @@ const SearchPage = ({ params }) => {
 
   /* ---------- INITIAL SEARCH ---------- */
   useEffect(() => {
+  
     if (initialSearchDone.current) return;
-
+setshowProducts(false);
     dispatch(resetFiltersLoaded());
 
     const params = buildSearchParams(1);
-    
+
     // ✅ FETCH PRODUCTS FIRST
     dispatch(SubCatProdact(params));
-    
+
     // ✅ FETCH FILTERS (INCLUDING PRICE RANGE) ONLY ONCE
     dispatch(getSubCatFilters({ subcat }));
 
     initialSearchDone.current = true;
+   
+      setshowProducts(true);
+    
   }, [subcat, dispatch]);
 
   /* ---------- SORT CHANGE ---------- */
@@ -223,7 +231,7 @@ const SearchPage = ({ params }) => {
 
     const productParams = buildSearchParams(1);
     debouncedSearch(productParams);
-    
+
     // ✅ NO FILTER FETCHING ON SORT CHANGE
   }, [sort, debouncedSearch, initialSearchDone]);
 
@@ -320,7 +328,7 @@ const SearchPage = ({ params }) => {
     };
 
     setSelectedFilters(newFilters);
-    
+
     // ✅ UPDATE PRODUCTS WITH NEW PRICE FILTER
     // ✅ NO FILTER FETCHING
     const productParams = buildSearchParams(1, newFilters);
@@ -364,7 +372,7 @@ const SearchPage = ({ params }) => {
     }
 
     setSelectedFilters(clearedFilters);
-    
+
     // ✅ RESET TEMP PRICE RANGE TO CURRENT API/FALLBACK RANGE
     if (productPriceRange) {
       setTempPriceRange([productPriceRange.min, productPriceRange.max]);
@@ -446,7 +454,7 @@ const SearchPage = ({ params }) => {
                         key={`price-${values.min}-${values.max}`}
                         className="flex items-center gap-1 bg-gray-200 text-gray-700 text-[11px] px-2 py-[3px] rounded"
                       >
-                        <X 
+                        <X
                           size={8}
                           className="cursor-pointer"
                           onClick={clearPriceFilter}
@@ -466,7 +474,7 @@ const SearchPage = ({ params }) => {
                       key={`${key}-${v}`}
                       className="flex items-center gap-1 bg-gray-200 text-gray-700 text-[11px] px-2 py-[3px] rounded"
                     >
-                    <X 
+                      <X
                         size={8}
                         className="cursor-pointer"
                         onClick={() => removeSelected(key, v)}
@@ -562,6 +570,7 @@ const SearchPage = ({ params }) => {
         </div>
 
         {/* ---------------- PRODUCTS ---------------- */}
+        {showProducts && (
         <div className="flex-1 px-4">
           <div className="hidden lg:flex bg-white border border-gray-300 px-4 py-2 mb-3 items-center text-sm">
             <div className="flex gap-3 flex-wrap">
@@ -605,12 +614,12 @@ const SearchPage = ({ params }) => {
           )}
 
           {/* NO PRODUCTS FOUND */}
-          {products.length === 0 && !loadingMore && (
+          {products.length === 0 && !loading && (
             <div className="text-center py-12 text-gray-500">
               No products found
             </div>
           )}
-        </div>
+        </div>)}
       </div>
 
       {/* Mobile Filter */}

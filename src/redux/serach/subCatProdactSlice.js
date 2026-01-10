@@ -61,8 +61,8 @@ const initialState = {
   products: [],
   filters: [],
   priceRange: null, // ✅ ADDED: Dynamic price range from API
-  loading: false,
-  loadingMore: false,
+  loading: true,
+  loadingMore: true,
   loadingFilters: false,
   filtersLoaded: false,
   error: null,
@@ -106,7 +106,7 @@ const subCatProdactSlice = createSlice({ // ✅ Changed slice name
         state.error = null;
       })
       .addCase(SubCatProdact.fulfilled, (state, action) => {
-        state.loading = false;
+        
         state.success = action.payload.success;
         state.query = action.payload.query || "";
         state.total = action.payload.total || 0;
@@ -122,7 +122,8 @@ const subCatProdactSlice = createSlice({ // ✅ Changed slice name
         } else if (!state.filtersLoaded) {
           state.filters = state.filters || [];
         }
-
+        state.loading = false;
+        
         state.error = null;
       })
       .addCase(SubCatProdact.rejected, (state, action) => {

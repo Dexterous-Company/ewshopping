@@ -368,7 +368,7 @@ const PaymentOptions = ({ continueSumamryData, showSummary }) => {
         ProductName: item?.name || "Product",
         ProductId: item?.AttributeId || item?.ProductId || "",
         shopId: item?.shopId || "",
-        shopName: item?.shopName || "",
+        shopName:  "EW-Shopping",
         slugurl: item?.slugurl || "",
         thumbnail: item?.thumbnail || "",
 
