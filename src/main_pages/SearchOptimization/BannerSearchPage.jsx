@@ -5,12 +5,14 @@ import {
   loadMoreProducts,
   getFilters,
   resetFiltersLoaded,
+  clearProductsForNewSearch, // Import new action
 } from "../../redux/serach/newSerchProdactSlice";
 import React, {
   useEffect,
   useState,
   useRef,
   useCallback,
+  useMemo,
 } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { X } from "lucide-react";
@@ -19,6 +21,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import Slider from "@mui/material/Slider";
 import { styled } from "@mui/material/styles";
 import NewFilter from "../../components/searchMobile/NewFilter";
+import ProductGridSkeleton from "../../components/ProductGridSkeleton";
 
 /* ---------------- PRICE SLIDER ---------------- */
 const PriceSlider = styled(Slider)({
@@ -73,6 +76,7 @@ const BannerSearchPage = ({ params }) => {
 
   const {
     products,
+    loading,
     total,
     filters,
     priceRange: apiPriceRange,
@@ -81,18 +85,44 @@ const BannerSearchPage = ({ params }) => {
     filtersLoaded,
     page: currentPage,
     limit,
+    hasFetchedOnce,
+    currentSearch, // Add current search tracking
   } = useSelector((state) => state.searchNew);
 
   const initialSearchDone = useRef(false);
   const searchTimeoutRef = useRef(null);
   const filtersTimeoutRef = useRef(null);
   const productsTimeoutRef = useRef(null);
+  const previousSearchRef = useRef(null);
+
+  // Refs for infinite scroll
+  const pageRef = useRef(currentPage);
+  const loadingMoreRef = useRef(loadingMore);
+  const productsRef = useRef(products);
+  const totalRef = useRef(total);
+
+  // Update refs when state changes
+  useEffect(() => {
+    pageRef.current = currentPage;
+  }, [currentPage]);
+
+  useEffect(() => {
+    loadingMoreRef.current = loadingMore;
+  }, [loadingMore]);
+
+  useEffect(() => {
+    productsRef.current = products;
+  }, [products]);
+
+  useEffect(() => {
+    totalRef.current = total;
+  }, [total]);
 
   const [selectedFilters, setSelectedFilters] = useState({
     priceRange: null,
   });
   const [expandedFilters, setExpandedFilters] = useState({});
-  const [tempPriceRange, setTempPriceRange] = useState([0, 1000]);
+  const [tempPriceRange, setTempPriceRange] = useState([0, 10000]);
 
   // Use ONLY the price range from backend API
   const productPriceRange = apiPriceRange;
@@ -102,7 +132,7 @@ const BannerSearchPage = ({ params }) => {
     if (productPriceRange) {
       setTempPriceRange([productPriceRange.min, productPriceRange.max]);
     } else {
-      setTempPriceRange([0, 1000]);
+      setTempPriceRange([0, 10000]);
     }
   }, [productPriceRange]);
 
@@ -197,25 +227,33 @@ const BannerSearchPage = ({ params }) => {
 
   /* ---------- INITIAL SEARCH ---------- */
   useEffect(() => {
-    if (initialSearchDone.current) return;
+    if (previousSearchRef.current !== searchQuery) {
+      previousSearchRef.current = searchQuery;
 
-    // Reset filters loaded flag on initial load
-    dispatch(resetFiltersLoaded());
+      // 🔥 CLEAR OLD DATA + SHOW LOADER
+      dispatch(clearProductsForNewSearch());
+      initialSearchDone.current = false;
+      clearTimeout(searchTimeoutRef.current);
 
-    const params = buildSearchParams(1);
+      // Reset filters loaded flag on initial load
+      dispatch(resetFiltersLoaded());
 
-    // Fetch products first
-    dispatch(searchNewProducts(params));
+      const params = buildSearchParams(1);
 
-    // Then fetch filters (which includes price range)
-    dispatch(getFilters(buildFiltersParams()));
+      // Fetch products first
+      dispatch(searchNewProducts(params));
 
-    initialSearchDone.current = true;
+      // Then fetch filters (which includes price range)
+      dispatch(getFilters(buildFiltersParams()));
+
+      initialSearchDone.current = true;
+    }
   }, [searchQuery, categoryTag, dispatch]);
 
   /* ---------- FILTER / SORT CHANGE ---------- */
   useEffect(() => {
     if (!initialSearchDone.current) return;
+    if (currentSearch !== searchQuery) return; // Only update if we're on the correct search
 
     const productParams = buildSearchParams(1);
     const filterParams = buildFiltersParams();
@@ -231,16 +269,24 @@ const BannerSearchPage = ({ params }) => {
     debouncedSearch,
     debouncedFetchFilters,
     initialSearchDone,
+    currentSearch,
+    searchQuery,
   ]);
 
-  /* ---------- INFINITE SCROLL FIX ---------- */
+  /* ---------- INFINITE SCROLL ---------- */
   useEffect(() => {
     const handleScroll = () => {
-      // Don't trigger if already loading
-      if (loadingMore) return;
+      if (loadingMoreRef.current) return;
+      if (loading) return;
 
-      // Don't trigger if no products or already loaded all
-      if (products.length === 0 || products.length >= total) return;
+      const currentProducts = productsRef.current;
+      const currentTotal = totalRef.current;
+
+      if (
+        currentProducts.length === 0 ||
+        currentProducts.length >= currentTotal
+      )
+        return;
 
       const scrollTop = document.documentElement.scrollTop;
       const scrollHeight = document.documentElement.scrollHeight;
@@ -249,24 +295,22 @@ const BannerSearchPage = ({ params }) => {
       const isNearBottom = scrollTop + clientHeight >= scrollHeight - 300;
 
       if (isNearBottom) {
-        const nextPage = currentPage + 1;
+        const nextPage = pageRef.current + 1;
 
-        const params = buildSearchParams(nextPage);
-        dispatch(loadMoreProducts(params));
+        clearTimeout(searchTimeoutRef.current);
+        searchTimeoutRef.current = setTimeout(() => {
+          const params = buildSearchParams(nextPage);
+          dispatch(loadMoreProducts(params));
+        }, 200);
       }
     };
 
     window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [
-    loadingMore,
-    products.length,
-    total,
-    currentPage,
-    dispatch,
-    selectedFilters,
-    sort,
-  ]);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      clearTimeout(searchTimeoutRef.current);
+    };
+  }, [dispatch, loading]);
 
   const handleSort = (value) => {
     const p = new URLSearchParams(searchParams.toString());
@@ -279,7 +323,7 @@ const BannerSearchPage = ({ params }) => {
 
     router.push(`?${p.toString()}`, { scroll: false });
 
-    if (initialSearchDone.current) {
+    if (initialSearchDone.current && currentSearch === searchQuery) {
       const params = buildSearchParams(1);
       params.sort = value;
       debouncedSearch(params);
@@ -296,7 +340,7 @@ const BannerSearchPage = ({ params }) => {
           : [...curr, value],
       };
 
-      // CRITICAL FIX: Update products immediately with new filters
+      // Update products immediately with new filters
       const productParams = buildSearchParams(1, newFilters);
       updateProducts(productParams);
 
@@ -315,7 +359,7 @@ const BannerSearchPage = ({ params }) => {
         [name]: prev[name]?.filter((v) => v !== value),
       };
 
-      // CRITICAL FIX: Update products immediately
+      // Update products immediately
       const productParams = buildSearchParams(1, newFilters);
       updateProducts(productParams);
 
@@ -325,6 +369,41 @@ const BannerSearchPage = ({ params }) => {
 
       return newFilters;
     });
+  };
+
+  const handlePriceChange = (newRange) => {
+    const range = { min: newRange[0], max: newRange[1] };
+    const newFilters = {
+      ...selectedFilters,
+      priceRange: range,
+    };
+
+    setSelectedFilters(newFilters);
+
+    // Fetch products with new price range
+    updateProducts(buildSearchParams(1, newFilters));
+
+    // Also update filters
+    debouncedFetchFilters(buildFiltersParams(newFilters));
+  };
+
+  const clearPriceFilter = () => {
+    const newFilters = {
+      ...selectedFilters,
+      priceRange: null,
+    };
+
+    setSelectedFilters(newFilters);
+
+    if (productPriceRange) {
+      setTempPriceRange([productPriceRange.min, productPriceRange.max]);
+    }
+
+    // Fetch products with cleared price filter
+    updateProducts(buildSearchParams(1, newFilters));
+
+    // Also update filters
+    debouncedFetchFilters(buildFiltersParams(newFilters));
   };
 
   const clearAllFilters = () => {
@@ -346,7 +425,7 @@ const BannerSearchPage = ({ params }) => {
     }
 
     setSelectedFilters(clearedFilters);
-    
+
     // Reset temp price range to current API price range
     if (productPriceRange) {
       setTempPriceRange([productPriceRange.min, productPriceRange.max]);
@@ -377,7 +456,7 @@ const BannerSearchPage = ({ params }) => {
   );
 
   // Filter out empty filter values
-  const validFilters = React.useMemo(() => {
+  const validFilters = useMemo(() => {
     return (filters || []).filter(
       (filter) => filter.values && filter.values.length > 0
     );
@@ -437,21 +516,7 @@ const BannerSearchPage = ({ params }) => {
                         <X
                           size={8}
                           className="cursor-pointer"
-                          onClick={() => {
-                            const newFilters = {
-                              ...selectedFilters,
-                              priceRange: null,
-                            };
-                            setSelectedFilters(newFilters);
-
-                            // Update products
-                            const productParams = buildSearchParams(1, newFilters);
-                            updateProducts(productParams);
-
-                            // Update filters
-                            const filterParams = buildFiltersParams(newFilters);
-                            debouncedFetchFilters(filterParams);
-                          }}
+                          onClick={clearPriceFilter}
                         />
                         <span>
                           ₹{values.min} – ₹{values.max}
@@ -492,21 +557,7 @@ const BannerSearchPage = ({ params }) => {
                   min={productPriceRange.min}
                   max={productPriceRange.max}
                   onChange={(_e, v) => setTempPriceRange(v)}
-                  onChangeCommitted={(_e, v) => {
-                    const range = { min: v[0], max: v[1] };
-                    const newFilters = {
-                      ...selectedFilters,
-                      priceRange: range,
-                    };
-
-                    setSelectedFilters(newFilters);
-
-                    // Fetch products with new price range
-                    updateProducts(buildSearchParams(1, newFilters));
-
-                    // Also update filters
-                    debouncedFetchFilters(buildFiltersParams(newFilters));
-                  }}
+                  onChangeCommitted={(_e, v) => handlePriceChange(v)}
                 />
                 <div className="flex justify-between text-xs text-gray-600 mt-2">
                   <span>₹{productPriceRange.min}</span>
@@ -600,16 +651,24 @@ const BannerSearchPage = ({ params }) => {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {products.map((p) => (
-              <NewSingleProductCard key={p._id} product={p} />
-            ))}
-          </div>
+          {/* SHOW LOADING STATE WHEN SEARCH CHANGES */}
+          {loading && products.length === 0 && (
+            <ProductGridSkeleton count={limit || 20} />
+          )}
 
-          {/* LOADING INDICATOR */}
+          {/* PRODUCTS GRID - Only show when not loading or if we have products */}
+          {(!loading || products.length > 0) && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {products.map((p) => (
+                <NewSingleProductCard key={p._id} product={p} />
+              ))}
+            </div>
+          )}
+
+          {/* LOADING INDICATOR FOR LOAD MORE */}
           {loadingMore && (
-            <div className="flex justify-center my-8">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <div className="mt-6">
+              <ProductGridSkeleton count={5} />
             </div>
           )}
 
@@ -621,7 +680,7 @@ const BannerSearchPage = ({ params }) => {
           )}
 
           {/* NO PRODUCTS FOUND */}
-          {products.length === 0 && !loadingMore && (
+          {hasFetchedOnce && !loading && products.length === 0 && (
             <div className="text-center py-12 text-gray-500">
               No products found
             </div>
@@ -650,6 +709,8 @@ const BannerSearchPage = ({ params }) => {
         }}
         onSortChange={handleSort}
         onTempPriceRangeChange={setTempPriceRange}
+        onPriceChange={handlePriceChange}
+        onClearPriceFilter={clearPriceFilter}
       />
     </div>
   );

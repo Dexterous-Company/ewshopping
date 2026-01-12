@@ -31,8 +31,7 @@ export default function HomeProduct({ categoryUrl = "home-decor" }) {
   const categoryError = tagsError[categoryUrl];
 
   const categoryName = categoryData?.categoryName || "Featured Collection";
-  const categoryIcon =
-    iconsByCategory[categoryName] || iconsByCategory.Default;
+  const categoryIcon = iconsByCategory[categoryName] || iconsByCategory.Default;
 
   const problematicImages = [
     "https://res.cloudinary.com/dexterous-technology/image/upload/v1721580241/th_76_igkjus.jpg",
@@ -49,7 +48,7 @@ export default function HomeProduct({ categoryUrl = "home-decor" }) {
       categoryUrl &&
       categoryUrl !== "undefined" &&
       !allCategoryTags[categoryUrl] &&
-      categoryStatus !== "loading"
+      categoryStatus === "idle"
     ) {
       dispatch(getAllCategoryTagsAllCategories(categoryUrl));
     }
@@ -84,10 +83,7 @@ export default function HomeProduct({ categoryUrl = "home-decor" }) {
         role="region"
         aria-label={`${categoryName} products`}
       >
-        <div
-          className="flex  py-2 w-full"
-          role="list"
-        >
+        <div className="flex  py-2 w-full" role="list">
           {/* ================= SKELETON ================= */}
           {categoryStatus === "loading" &&
             Array.from({ length: 6 }).map((_, i) => (

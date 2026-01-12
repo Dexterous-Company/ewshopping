@@ -3,14 +3,16 @@ import {
   fetchBrandSubProducts,
   fetchBrandSubFilters,
   loadMoreBrandSubProducts,
+  clearProductsForNewBrandSub, // Import new action
 } from "../../redux/serach/brandSlice";
 import React, { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { X } from "lucide-react";
 import NewSingleProductCard from "../../main_pages/ProductPages.jsx/NewSingleProductCard";
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { styled } from "@mui/material/styles";
+import ProductGridSkeleton from "../../components/ProductGridSkeleton";
 
 const Slider = dynamic(() => import("@mui/material/Slider"), {
   ssr: false,
@@ -80,20 +82,48 @@ const BrandSubPage = ({ params }) => {
   const searchParams = useSearchParams();
   const sort = searchParams.get("sort") || "relevance";
 
-  const products = useSelector((state) => state.brandSub.products);
-  const filters = useSelector((state) => state.brandSub.filters);
-  const priceRange = useSelector((state) => state.brandSub.priceRange); // ✅ FIXED: Removed TypeScript annotation
-  const total = useSelector((state) => state.brandSub.total);
-  const currentPage = useSelector((state) => state.brandSub.page);
-  const loading = useSelector((state) => state.brandSub.loading);
-  const loadingMore = useSelector((state) => state.brandSub.loadingMore);
-  const loadingFilters = useSelector((state) => state.brandSub.loadingFilters);
-  const filtersLoaded = useSelector((state) => state.brandSub.filtersLoaded);
+  const {
+    products,
+    filters,
+    priceRange,
+    total,
+    page: currentPage,
+    limit,
+    loading,
+    loadingMore,
+    loadingFilters,
+    filtersLoaded,
+    hasFetchedOnce,
+    currentBrandSub, // Add current brand/subcategory tracking
+  } = useSelector((state) => state.brandSub);
 
   // Refs
   const initialLoadDone = useRef(false);
-  const filtersInitialized = useRef(false);
+  const previousBrandSubRef = useRef(null);
   const searchTimeoutRef = useRef(null);
+
+  // Refs for infinite scroll
+  const pageRef = useRef(currentPage);
+  const loadingMoreRef = useRef(loadingMore);
+  const productsRef = useRef(products);
+  const totalRef = useRef(total);
+
+  // Update refs when state changes
+  useEffect(() => {
+    pageRef.current = currentPage;
+  }, [currentPage]);
+
+  useEffect(() => {
+    loadingMoreRef.current = loadingMore;
+  }, [loadingMore]);
+
+  useEffect(() => {
+    productsRef.current = products;
+  }, [products]);
+
+  useEffect(() => {
+    totalRef.current = total;
+  }, [total]);
 
   // State for selected filters and sort
   const [selectedFilters, setSelectedFilters] = useState({});
@@ -103,7 +133,7 @@ const BrandSubPage = ({ params }) => {
   // ✅ GET DISPLAY PRICE RANGE (API OR FALLBACK)
   const productPriceRange = useMemo(() => {
     // Priority 1: Use API price range from Redux
-    if (priceRange) { // ✅ FIXED: Changed from apiPriceRange to priceRange
+    if (priceRange) {
       return priceRange;
     }
     
@@ -130,7 +160,7 @@ const BrandSubPage = ({ params }) => {
     
     // Priority 3: Default values
     return { min: 0, max: 50000 };
-  }, [priceRange, products]); // ✅ FIXED: Changed from apiPriceRange to priceRange
+  }, [priceRange, products]);
 
   // ✅ INITIALIZE TEMP PRICE RANGE FROM API/FALLBACK
   useEffect(() => {
@@ -209,48 +239,76 @@ const BrandSubPage = ({ params }) => {
 
   /* ---------- INITIAL SEARCH ---------- */
   useEffect(() => {
-    if (initialLoadDone.current) return;
+    const brandSubKey = `${brand}-${subCategory}`;
+    if (previousBrandSubRef.current !== brandSubKey) {
+      previousBrandSubRef.current = brandSubKey;
 
-    const productParams = buildProductParams(1);
-    
-    // ✅ FETCH PRODUCTS FIRST
-    dispatch(fetchBrandSubProducts(productParams));
-    
-    // ✅ FETCH FILTERS (INCLUDING PRICE RANGE) ONLY ONCE
-    dispatch(fetchBrandSubFilters({ brand, subCategory }));
+      // 🔥 CLEAR OLD DATA + SHOW LOADER
+      dispatch(clearProductsForNewBrandSub());
+      initialLoadDone.current = false;
+      clearTimeout(searchTimeoutRef.current);
 
-    initialLoadDone.current = true;
+      const productParams = buildProductParams(1);
+      
+      // ✅ FETCH PRODUCTS FIRST
+      dispatch(fetchBrandSubProducts(productParams));
+      
+      // ✅ FETCH FILTERS (INCLUDING PRICE RANGE) ONLY ONCE
+      dispatch(fetchBrandSubFilters({ brand, subCategory }));
+
+      initialLoadDone.current = true;
+    }
   }, [brand, subCategory, dispatch]);
 
   /* ---------- SORT CHANGE ---------- */
   useEffect(() => {
     if (!initialLoadDone.current) return;
+    if (currentBrandSub !== `${brand}-${subCategory}`) return; // Only update if we're on the correct brand/sub
 
     const productParams = buildProductParams(1);
     debouncedSearch(productParams);
     
     // ✅ NO FILTER FETCHING ON SORT CHANGE
-  }, [sort, debouncedSearch, initialLoadDone, buildProductParams]);
+  }, [sort, debouncedSearch, initialLoadDone, buildProductParams, currentBrandSub, brand, subCategory]);
 
   /* ---------- INFINITE SCROLL ---------- */
   useEffect(() => {
     const handleScroll = () => {
-      if (loadingMore || products.length >= total) return;
+      if (loadingMoreRef.current) return;
+      if (loading) return;
 
-      const scrollTop = window.scrollY || document.documentElement.scrollTop;
+      const currentProducts = productsRef.current;
+      const currentTotal = totalRef.current;
+
+      if (
+        currentProducts.length === 0 ||
+        currentProducts.length >= currentTotal
+      )
+        return;
+
+      const scrollTop = document.documentElement.scrollTop;
       const scrollHeight = document.documentElement.scrollHeight;
       const clientHeight = document.documentElement.clientHeight;
 
-      if (scrollTop + clientHeight >= scrollHeight - 300) {
-        const nextPage = currentPage + 1;
-        const params = buildProductParams(nextPage);
-        dispatch(loadMoreBrandSubProducts(params));
+      const isNearBottom = scrollTop + clientHeight >= scrollHeight - 300;
+
+      if (isNearBottom) {
+        const nextPage = pageRef.current + 1;
+
+        clearTimeout(searchTimeoutRef.current);
+        searchTimeoutRef.current = setTimeout(() => {
+          const params = buildProductParams(nextPage);
+          dispatch(loadMoreBrandSubProducts(params));
+        }, 200);
       }
     };
 
     window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [loadingMore, products.length, total, currentPage, dispatch, buildProductParams]);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      clearTimeout(searchTimeoutRef.current);
+    };
+  }, [dispatch, loading, buildProductParams]);
 
   const handleSort = (sortValue) => {
     const p = new URLSearchParams(searchParams.toString());
@@ -263,7 +321,7 @@ const BrandSubPage = ({ params }) => {
 
     router.push(`?${p.toString()}`, { scroll: false });
 
-    if (initialLoadDone.current) {
+    if (initialLoadDone.current && currentBrandSub === `${brand}-${subCategory}`) {
       const params = buildProductParams(1);
       params.sort = sortValue;
       debouncedSearch(params);
@@ -345,15 +403,19 @@ const BrandSubPage = ({ params }) => {
   };
 
   const clearAllFilters = () => {
-    const clearedFilters = {};
+    const clearedFilters = { priceRange: null };
 
     if (filters && filters.length > 0) {
       filters.forEach((filter) => {
-        clearedFilters[filter.name] = [];
+        if (filter.values && getFilterValues(filter).length > 0) {
+          clearedFilters[filter.name] = [];
+        }
       });
     } else {
       Object.keys(selectedFilters).forEach((key) => {
-        clearedFilters[key] = [];
+        if (key !== "priceRange") {
+          clearedFilters[key] = [];
+        }
       });
     }
 
@@ -370,115 +432,70 @@ const BrandSubPage = ({ params }) => {
     updateProducts(productParams);
   };
 
+  // Initialize selectedFilters based on filter names from API
   useEffect(() => {
-    if (filters && filters.length > 0 && !filtersInitialized.current) {
-      const initialFilters = {};
-      filters.forEach((filter) => {
-        initialFilters[filter.name] = [];
+    if (filters && filters.length > 0) {
+      const filterNames = filters
+        .filter((f) => getFilterValues(f).length > 0)
+        .map((f) => f.name);
+
+      setSelectedFilters((prev) => {
+        const newFilterState = { ...prev };
+        let hasChanges = false;
+
+        filterNames.forEach((name) => {
+          if (!(name in newFilterState)) {
+            newFilterState[name] = [];
+            hasChanges = true;
+          }
+        });
+
+        if (!("priceRange" in newFilterState)) {
+          newFilterState["priceRange"] = null;
+          hasChanges = true;
+        }
+
+        return hasChanges ? newFilterState : prev;
       });
-      setSelectedFilters(initialFilters);
-      filtersInitialized.current = true;
     }
   }, [filters]);
 
-  useEffect(() => {
-    initialLoadDone.current = false;
-    filtersInitialized.current = false;
-    setSelectedFilters({});
-    setExpandedFilters({});
-    if (productPriceRange) {
-      setTempPriceRange([productPriceRange.min, productPriceRange.max]);
+  const hasSelectedFilters = Object.entries(selectedFilters).some(
+    ([key, value]) => {
+      if (key === "priceRange") {
+        return (
+          value &&
+          productPriceRange &&
+          (value.min !== productPriceRange.min ||
+            value.max !== productPriceRange.max)
+        );
+      }
+      return Array.isArray(value) && value.length > 0;
     }
-  }, [brand, subCategory, productPriceRange]);
-
-  const hasSelectedFilters = useMemo(() => {
-    return Object.keys(selectedFilters).some(
-      (key) =>
-        (selectedFilters[key] && selectedFilters[key].length > 0) ||
-        (key === "priceRange" && selectedFilters[key])
-    );
-  }, [selectedFilters]);
+  );
 
   // Filter out empty filter values
   const validFilters = useMemo(() => {
     return (filters || []).filter(
-      (filter) => {
-        const values = getFilterValues(filter);
-        return values && values.length > 0;
-      }
+      (filter) => getFilterValues(filter).length > 0
     );
   }, [filters]);
 
   // Show filters only when they're loaded or loading
   const shouldShowFilters = filtersLoaded || loadingFilters;
 
-  const isLoading = loading && !loadingMore;
-  const isLoadingFilters = loadingFilters && !filtersLoaded;
-
-  if (isLoading && products.length === 0) {
-    return (
-      <div className="min-h-screen bg-gray-100 pt-4">
-        <div className="max-w-[1600px] mx-auto flex">
-          <div className="hidden lg:block w-[270px]">
-            <div className="w-80 bg-white border border-gray-200 rounded-lg h-screen sticky top-24">
-              <div className="animate-pulse p-4">
-                {[...Array(3)].map((_, i) => (
-                  <div key={i} className="mb-4">
-                    <div className="h-4 w-32 bg-gray-200 rounded mb-2"></div>
-                    {[...Array(4)].map((_, j) => (
-                      <div
-                        key={j}
-                        className="h-3 w-24 bg-gray-200 rounded mb-1"
-                      ></div>
-                    ))}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="flex-1 px-4">
-            <div className="bg-white border border-gray-300 px-4 py-2 mb-3">
-              <div className="flex gap-3 flex-wrap">
-                {[...Array(4)].map((_, i) => (
-                  <div
-                    key={i}
-                    className="h-8 w-24 bg-gray-200 rounded-full"
-                  ></div>
-                ))}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-              {[...Array(10)].map((_, index) => (
-                <div key={index} className="bg-white rounded-lg border border-gray-200 overflow-hidden animate-pulse">
-                  <div className="w-full aspect-square bg-gray-200"></div>
-                  <div className="p-3">
-                    <div className="h-4 bg-gray-200 rounded mb-2 w-3/4"></div>
-                    <div className="h-3 bg-gray-200 rounded mb-1 w-1/2"></div>
-                    <div className="h-3 bg-gray-200 rounded mb-3 w-2/3"></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gray-100 pt-4">
       <div className="max-w-[1600px] mx-auto flex">
         {/* ---------------- LEFT FILTER ---------------- */}
-        <div className="hidden lg:block w-[240px] bg-white border border-gray-300 text-gray-600">
+        <div className="hidden lg:block w-[240px] bg-gray-50 border border-gray-300 text-gray-600">
           {/* HEADER */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-300 text-sm font-semibold text-gray-800">
             <span>Filters</span>
             {hasSelectedFilters && (
               <button
                 onClick={clearAllFilters}
-                className="text-blue-600 text-xs font-medium hover:text-blue-700"
+                className="text-blue-600 text-xs font-medium"
               >
                 CLEAR ALL
               </button>
@@ -486,37 +503,37 @@ const BrandSubPage = ({ params }) => {
           </div>
 
           {/* Show loading indicator for filters */}
-          {isLoadingFilters && validFilters.length === 0 && (
+          {loadingFilters && validFilters.length === 0 && (
             <div className="px-4 py-3 border-b border-gray-200">
-              <div className="animate-pulse">
-                {[...Array(3)].map((_, i) => (
-                  <div key={i} className="mb-4">
-                    <div className="h-4 w-32 bg-gray-200 rounded mb-2"></div>
-                    {[...Array(4)].map((_, j) => (
-                      <div
-                        key={j}
-                        className="h-3 w-24 bg-gray-200 rounded mb-1"
-                      ></div>
-                    ))}
-                  </div>
-                ))}
+              <div className="animate-pulse space-y-2">
+                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+                <div className="h-3 bg-gray-200 rounded w-2/3"></div>
               </div>
             </div>
           )}
 
           {/* SELECTED FILTERS */}
           {hasSelectedFilters && shouldShowFilters && (
-            <div className="px-4 py-2 flex flex-wrap gap-2 border-b border-gray-300 bg-gray-50">
+            <div className="px-4 py-2 flex flex-wrap gap-2 border-b border-gray-300 bg-gray-100">
               {Object.entries(selectedFilters).map(([key, values]) => {
                 if (key === "priceRange") {
-                  if (values && values.min !== undefined && values.max !== undefined) {
+                  if (
+                    values &&
+                    productPriceRange &&
+                    (values.min !== productPriceRange.min ||
+                      values.max !== productPriceRange.max)
+                  ) {
                     return (
                       <div
                         key={`price-${values.min}-${values.max}`}
-                        className="flex items-center gap-1 bg-blue-50 text-blue-700 text-[11px] px-2 py-[3px] rounded hover:bg-blue-100 transition-colors cursor-pointer"
-                        onClick={clearPriceFilter}
+                        className="flex items-center gap-1 bg-gray-200 text-gray-700 text-[11px] px-2 py-[3px] rounded"
                       >
-                        <X   size={8} className="hover:text-red-600" />
+                        <X
+                          size={8}
+                          className="cursor-pointer"
+                          onClick={clearPriceFilter}
+                        />
                         <span>
                           ₹{values.min} – ₹{values.max}
                         </span>
@@ -530,10 +547,13 @@ const BrandSubPage = ({ params }) => {
                   return values.map((v) => (
                     <div
                       key={`${key}-${v}`}
-                      className="flex items-center gap-1 bg-blue-50 text-blue-700 text-[11px] px-2 py-[3px] rounded hover:bg-blue-100 transition-colors cursor-pointer"
-                      onClick={() => removeSelected(key, v)}
+                      className="flex items-center gap-1 bg-gray-200 text-gray-700 text-[11px] px-2 py-[3px] rounded"
                     >
-                      <X size={8} className="hover:text-red-600" />
+                      <X
+                        size={8}
+                        className="cursor-pointer"
+                        onClick={() => removeSelected(key, v)}
+                      />
                       <span>{v}</span>
                     </div>
                   ));
@@ -554,10 +574,7 @@ const BrandSubPage = ({ params }) => {
                   max={productPriceRange.max}
                   step={100}
                   onChange={(e, v) => setTempPriceRange(v)}
-                  onChangeCommitted={(e, v) => {
-                    handlePriceRangeChange(v);
-                    // ✅ NO FILTER FETCHING
-                  }}
+                  onChangeCommitted={(e, v) => handlePriceRangeChange(v)}
                 />
               </div>
               <div className="flex justify-between text-xs text-gray-600 mt-2">
@@ -597,13 +614,19 @@ const BrandSubPage = ({ params }) => {
                     {visible.map((v) => (
                       <label
                         key={v}
-                        className="flex items-center gap-2 text-sm mb-1 text-gray-600 hover:text-gray-800 cursor-pointer"
+                        className="flex items-center text-gray-900 gap-3 mb-2 cursor-pointer font-inter text-[13px] font-normal text-fkText leading-[1.4]"
                       >
                         <input
                           type="checkbox"
                           checked={currentSelections.includes(v)}
                           onChange={() => handleFilterChange(filter.name, v)}
-                          className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                          className="
+                            w-[14px] h-[14px]
+                            cursor-pointer
+                            border-none
+                            outline-none
+                            accent-blue-600
+                          "
                         />
                         <span className="truncate">{v}</span>
                       </label>
@@ -612,7 +635,7 @@ const BrandSubPage = ({ params }) => {
 
                   {values.length > 4 && (
                     <button
-                      className="text-sm text-blue-600 hover:text-blue-700 mt-1 font-medium"
+                      className="text-sm text-blue-600 mt-1 hover:text-blue-600"
                       onClick={() => toggleFilterExpand(filter.name)}
                     >
                       {expanded
@@ -624,7 +647,7 @@ const BrandSubPage = ({ params }) => {
               );
             })
           ) : shouldShowFilters && !loadingFilters && filters?.length === 0 ? (
-            <div className="px-4 py-4 text-center text-gray-500">
+            <div className="px-4 py-4 text-sm text-gray-500 text-center">
               No filters available
             </div>
           ) : null}
@@ -643,7 +666,7 @@ const BrandSubPage = ({ params }) => {
                     className={`px-3 py-1 rounded-full border transition-all duration-200 ${
                       isActive
                         ? "border-yellow-600 text-yellow-700 bg-yellow-50"
-                        : "border-gray-300 text-gray-700 hover:border-yellow-600 hover:bg-yellow-50"
+                        : "border-yellow-600 text-gray-700 hover:bg-yellow-50"
                     }`}
                   >
                     {s.label}
@@ -653,16 +676,24 @@ const BrandSubPage = ({ params }) => {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {products.map((p) => (
-              <NewSingleProductCard key={p._id} product={p} />
-            ))}
-          </div>
+          {/* SHOW LOADING STATE WHEN BRAND/SUB CHANGES */}
+          {loading && products.length === 0 && (
+            <ProductGridSkeleton count={limit || 20} />
+          )}
 
-          {/* LOADING INDICATOR */}
+          {/* PRODUCTS GRID - Only show when not loading or if we have products */}
+          {(!loading || products.length > 0) && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {products.map((p) => (
+                <NewSingleProductCard key={p._id} product={p} />
+              ))}
+            </div>
+          )}
+
+          {/* LOADING INDICATOR FOR LOAD MORE */}
           {loadingMore && (
-            <div className="flex justify-center my-8">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <div className="mt-6">
+              <ProductGridSkeleton count={5} />
             </div>
           )}
 
@@ -674,7 +705,7 @@ const BrandSubPage = ({ params }) => {
           )}
 
           {/* NO PRODUCTS FOUND */}
-          {products.length === 0 && !loadingMore && (
+          {hasFetchedOnce && !loading && products.length === 0 && (
             <div className="text-center py-12 text-gray-500">
               No products found
             </div>

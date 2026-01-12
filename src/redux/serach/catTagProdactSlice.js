@@ -77,6 +77,8 @@ const initialState = {
   loadingMore: false,
   loadingFilters: false,
   filtersLoaded: false,
+  hasFetchedOnce: false, // 🔥 NEW
+  currentCategoryTag: null, // 🔥 NEW
   error: null,
   sort: "relevance",
 };
@@ -99,27 +101,56 @@ const categoryTagSlice = createSlice({
     clearPriceRange: (state) => {
       state.priceRange = null;
     },
+    clearProductsForNewCategoryTag: (state) => {
+      state.products = [];
+      state.page = 1;
+      state.total = 0;
+      state.hasFetchedOnce = false;
+      state.loading = true;
+      state.filtersLoaded = false;
+      state.currentCategoryTag = null;
+      state.error = null;
+    },
   },
   extraReducers: (builder) => {
     builder
 
       /* ---------- FETCH PRODUCTS ---------- */
-      .addCase(CategoryTagProducts.pending, (state) => {
-        state.loading = true;
-        state.error = null;
+      .addCase(CategoryTagProducts.pending, (state, action) => {
+        if (action.meta.arg.page === 1) {
+          state.loading = true;
+          state.loadingMore = false;
+        }
       })
       .addCase(CategoryTagProducts.fulfilled, (state, action) => {
-        state.loading = false;
+        const { page, categoryTag } = action.meta.arg;
+
+        state.currentCategoryTag = categoryTag;
+        state.hasFetchedOnce = true;
+
         state.success = action.payload.success;
-        state.products = action.payload.products || [];
         state.total = action.payload.total || 0;
-        state.page = action.payload.page || 1;
+        state.page = page;
         state.limit = action.payload.limit || 30;
-        state.totalPages = Math.ceil(state.total / state.limit);
+        state.totalPages = action.payload.totalPages || 1;
+
+        if (page === 1) {
+          state.products = action.payload.products || [];
+        } else {
+          state.products = [
+            ...state.products,
+            ...(action.payload.products || []),
+          ];
+        }
+
+        state.loading = false;
+        state.loadingMore = false;
         state.error = null;
       })
       .addCase(CategoryTagProducts.rejected, (state, action) => {
+        state.hasFetchedOnce = true;
         state.loading = false;
+        state.loadingMore = false;
         state.error = action.payload?.message || action.error.message;
         state.products = [];
       })
@@ -127,93 +158,49 @@ const categoryTagSlice = createSlice({
       /* ---------- LOAD MORE ---------- */
       .addCase(loadMoreCategoryTagProducts.pending, (state) => {
         state.loadingMore = true;
-        state.error = null;
       })
       .addCase(loadMoreCategoryTagProducts.fulfilled, (state, action) => {
         state.loadingMore = false;
-        state.success = action.payload.success;
-        state.page += 1;
         state.products = [
           ...state.products,
           ...(action.payload.products || []),
         ];
         state.total = action.payload.total || state.total;
+        state.page = action.meta.arg.page; // 🔥 FIXED
       })
-      .addCase(loadMoreCategoryTagProducts.rejected, (state, action) => {
+      .addCase(loadMoreCategoryTagProducts.rejected, (state) => {
         state.loadingMore = false;
-        state.error = action.payload?.message || action.error.message;
       })
 
       /* ---------- FETCH FILTERS (ONLY ONCE) ---------- */
       .addCase(getCategoryTagFilters.pending, (state) => {
         state.loadingFilters = true;
-        state.error = null;
       })
       .addCase(getCategoryTagFilters.fulfilled, (state, action) => {
         state.loadingFilters = false;
-        state.success = action.payload.success;
+        state.filtersLoaded = true;
 
-        // ✅ DYNAMIC PRICE RANGE FROM API
         if (action.payload.priceRange) {
           state.priceRange = action.payload.priceRange;
-        } else {
-          // Fallback: calculate from current products
-          if (state.products.length > 0) {
-            const prices = state.products
-              .map(p => {
-                if (p.priceRange) return p.priceRange;
-                if (p.salePrice) return p.salePrice;
-                if (p.price) return p.price;
-                return 0;
-              })
-              .filter(p => p > 0);
-            
-            if (prices.length > 0) {
-              state.priceRange = {
-                min: Math.min(...prices),
-                max: Math.max(...prices)
-              };
-            }
-          }
         }
 
-        // ✅ STATIC FILTERS (ONLY LOADED ONCE)
         const raw = action.payload.filters || {};
         const normalized = [];
 
-        // BRAND
-        if (Array.isArray(raw.brand) && raw.brand.length > 0) {
-          normalized.push({
-            name: "brand",
-            values: raw.brand,
-            tag: "static",
-          });
+        if (Array.isArray(raw.brand)) {
+          normalized.push({ name: "brand", values: raw.brand });
         }
 
-        // CATEGORY TAG
-        if (Array.isArray(raw.CategoryTag) && raw.CategoryTag.length > 0) {
-          normalized.push({
-            name: "CategoryTag",
-            values: raw.CategoryTag,
-            tag: "static",
-          });
-        }
-
-        // ATTRIBUTE FILTERS
         if (Array.isArray(raw.attributes)) {
-          raw.attributes.forEach((attr) => {
-            if (attr.values?.length > 0) {
-              normalized.push(attr);
-            }
+          raw.attributes.forEach((a) => {
+            if (a.values?.length) normalized.push(a);
           });
         }
 
         state.filters = normalized;
-        state.filtersLoaded = true;
       })
-      .addCase(getCategoryTagFilters.rejected, (state, action) => {
+      .addCase(getCategoryTagFilters.rejected, (state) => {
         state.loadingFilters = false;
-        state.error = action.payload?.message || action.error.message;
         state.filtersLoaded = true;
       });
   },
@@ -222,11 +209,12 @@ const categoryTagSlice = createSlice({
 /* ===================================================
    EXPORTS
 =================================================== */
-export const { 
-  setSortOption, 
-  clearCategoryTagState, 
+export const {
+  setSortOption,
+  clearCategoryTagState,
   resetFiltersLoaded,
-  clearPriceRange 
+  clearPriceRange,
+  clearProductsForNewCategoryTag,
 } = categoryTagSlice.actions;
 
 /* ===================================================
@@ -234,7 +222,8 @@ export const {
 =================================================== */
 export const selectCategoryTagProducts = (state) => state.categoryTag.products;
 export const selectCategoryTagFilters = (state) => state.categoryTag.filters;
-export const selectCategoryTagPriceRange = (state) => state.categoryTag.priceRange; // ✅ NEW
+export const selectCategoryTagPriceRange = (state) =>
+  state.categoryTag.priceRange; // ✅ NEW
 export const selectCategoryTagLoading = (state) => state.categoryTag.loading;
 export const selectCategoryTagLoadingMore = (state) =>
   state.categoryTag.loadingMore;

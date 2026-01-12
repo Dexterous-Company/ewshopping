@@ -5,6 +5,7 @@ import {
   loadMoreCategoryTagProducts,
   getCategoryTagFilters,
   resetFiltersLoaded,
+  clearProductsForNewCategoryTag,
 } from "../../../../redux/serach/catTagProdactSlice";
 import React, {
   useEffect,
@@ -20,6 +21,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import Slider from "@mui/material/Slider";
 import { styled } from "@mui/material/styles";
 import NewFilter from "../.../../../../../components/searchMobile/NewFilter";
+import ProductGridSkeleton from "../../../../components/ProductGridSkeleton";
 
 /* ---------------- PRICE SLIDER ---------------- */
 const PriceSlider = styled(Slider)({
@@ -65,6 +67,7 @@ const SORTS = [
 const SearchPage = ({ params }) => {
   const p = React.use(params);
   const categoryTag = p.categorytag || "";
+  const previousTagRef = useRef(null);
 
   const dispatch = useDispatch();
   const router = useRouter();
@@ -81,6 +84,8 @@ const SearchPage = ({ params }) => {
     filtersLoaded,
     page: currentPage,
     limit,
+    loading,
+    hasFetchedOnce,
   } = useSelector((state) => state.catTagProdact);
 
   const initialSearchDone = useRef(false);
@@ -98,26 +103,26 @@ const SearchPage = ({ params }) => {
     if (apiPriceRange) {
       return apiPriceRange;
     }
-    
+
     // Priority 2: Calculate from current products
     if (products.length > 0) {
       const prices = products
-        .map(p => {
+        .map((p) => {
           if (p.priceRange) return p.priceRange;
           if (p.salePrice) return p.salePrice;
           if (p.price) return p.price;
           return 0;
         })
-        .filter(p => p > 0);
-      
+        .filter((p) => p > 0);
+
       if (prices.length > 0) {
         return {
           min: Math.min(...prices),
-          max: Math.max(...prices)
+          max: Math.max(...prices),
         };
       }
     }
-    
+
     // Priority 3: Default values
     return { min: 0, max: 10000 };
   }, [apiPriceRange, products]);
@@ -131,6 +136,19 @@ const SearchPage = ({ params }) => {
     }
   }, [productPriceRange]);
 
+  useEffect(() => {
+    if (previousTagRef.current !== categoryTag) {
+      previousTagRef.current = categoryTag;
+
+      dispatch(clearProductsForNewCategoryTag());
+      initialSearchDone.current = false;
+
+      dispatch(CategoryTagProducts(buildSearchParams(1)));
+      dispatch(getCategoryTagFilters({ categoryTag }));
+
+      initialSearchDone.current = true;
+    }
+  }, [categoryTag]);
   // ✅ RESET TEMP PRICE RANGE WHEN PRICE FILTER IS CLEARED
   useEffect(() => {
     if (!selectedFilters.priceRange && productPriceRange) {
@@ -208,10 +226,10 @@ const SearchPage = ({ params }) => {
     dispatch(resetFiltersLoaded());
 
     const params = buildSearchParams(1);
-    
+
     // ✅ FETCH PRODUCTS FIRST
     dispatch(CategoryTagProducts(params));
-    
+
     // ✅ FETCH FILTERS (INCLUDING PRICE RANGE) ONLY ONCE
     dispatch(getCategoryTagFilters({ categoryTag }));
 
@@ -224,13 +242,9 @@ const SearchPage = ({ params }) => {
 
     const productParams = buildSearchParams(1);
     debouncedSearch(productParams);
-    
+
     // ✅ NO FILTER FETCHING ON SORT CHANGE
-  }, [
-    sort,
-    debouncedSearch,
-    initialSearchDone,
-  ]);
+  }, [sort, debouncedSearch, initialSearchDone]);
 
   /* ---------- INFINITE SCROLL ---------- */
   useEffect(() => {
@@ -325,7 +339,7 @@ const SearchPage = ({ params }) => {
     };
 
     setSelectedFilters(newFilters);
-    
+
     // ✅ UPDATE PRODUCTS WITH NEW PRICE FILTER
     // ✅ NO FILTER FETCHING
     const productParams = buildSearchParams(1, newFilters);
@@ -369,7 +383,7 @@ const SearchPage = ({ params }) => {
     }
 
     setSelectedFilters(clearedFilters);
-    
+
     // ✅ RESET TEMP PRICE RANGE TO CURRENT API/FALLBACK RANGE
     if (productPriceRange) {
       setTempPriceRange([productPriceRange.min, productPriceRange.max]);
@@ -451,7 +465,7 @@ const SearchPage = ({ params }) => {
                         key={`price-${values.min}-${values.max}`}
                         className="flex items-center gap-1 bg-gray-200 text-gray-700 text-[11px] px-2 py-[3px] rounded"
                       >
-                        <X 
+                        <X
                           size={8}
                           className="cursor-pointer"
                           onClick={clearPriceFilter}
@@ -471,7 +485,7 @@ const SearchPage = ({ params }) => {
                       key={`${key}-${v}`}
                       className="flex items-center gap-1 bg-gray-200 text-gray-700 text-[11px] px-2 py-[3px] rounded"
                     >
-                      <X 
+                      <X
                         size={8}
                         className="cursor-pointer"
                         onClick={() => removeSelected(key, v)}
@@ -596,21 +610,24 @@ const SearchPage = ({ params }) => {
           </div>
 
           {/* LOADING INDICATOR */}
-          {loadingMore && (
-            <div className="flex justify-center my-8">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            </div>
+          {loading && products.length > 0 && (
+            <ProductGridSkeleton count={limit || 20} />
           )}
-
-          {/* END OF RESULTS */}
           {products.length > 0 && products.length >= total && (
             <div className="text-center py-8 text-gray-500">
               You've reached the end
             </div>
           )}
 
+          {/* LOADING INDICATOR FOR LOAD MORE */}
+          {loadingMore && (
+            <div className="mt-6">
+              <ProductGridSkeleton count={5} />
+            </div>
+          )}
+
           {/* NO PRODUCTS FOUND */}
-          {products.length === 0 && !loadingMore && (
+          {hasFetchedOnce && !loading && products.length === 0 && (
             <div className="text-center py-12 text-gray-500">
               No products found
             </div>

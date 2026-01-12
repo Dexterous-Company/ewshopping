@@ -5,6 +5,7 @@ import {
   loadMoreProducts,
   getFilters,
   resetFiltersLoaded,
+  clearProductsForNewSearch, // Import the clear action
 } from "../../../../redux/serach/newSerchProdactSlice";
 import React, {
   useEffect,
@@ -21,6 +22,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import Slider from "@mui/material/Slider";
 import { styled } from "@mui/material/styles";
 import NewFilter from "../../../../components/searchMobile/NewFilter";
+import ProductGridSkeleton from "../../../../components/ProductGridSkeleton";
 
 /* ---------------- MEMOIZED COMPONENTS ---------------- */
 const PriceSlider = memo(styled(Slider)({
@@ -57,33 +59,6 @@ const SORTS = [
   { label: "Price -- High to Low", value: "price_desc" },
   { label: "Newest First", value: "newest" },
 ];
-
-/* ---------------- LCP OPTIMIZATION HELPER ---------------- */
-const PreloadCriticalImages = memo(({ products }) => {
-  if (!products || products.length === 0) return null;
-  
-  // Preload first 3 product images for LCP
-  return (
-    <>
-      {products.slice(0, 3).map((product) => {
-        const imageUrl = product?.thumbnail?.[0] || product?.images?.default;
-        if (!imageUrl) return null;
-        
-        return (
-          <link
-            key={`preload-${product._id}`}
-            rel="preload"
-            as="image"
-            href={imageUrl}
-            fetchPriority="high"
-          />
-        );
-      })}
-    </>
-  );
-});
-
-PreloadCriticalImages.displayName = 'PreloadCriticalImages';
 
 /* ---------------- FILTER SUB-COMPONENTS ---------------- */
 const FilterItem = memo(({ filter, expandedFilters, selectedFilters, onFilterChange, onToggleExpand }) => {
@@ -183,6 +158,7 @@ const SearchPage = memo(({ params }) => {
   // Redux state with selector optimization
   const {
     products,
+    loading,
     total,
     filters,
     priceRange: apiPriceRange,
@@ -191,20 +167,95 @@ const SearchPage = memo(({ params }) => {
     filtersLoaded,
     page: currentPage,
     limit,
+    hasFetchedOnce,
+    currentSearch,
   } = useSelector((state) => state.searchNew);
 
   // Refs
   const initialSearchDone = useRef(false);
+  const previousSearchRef = useRef(null);
   const searchTimeoutRef = useRef(null);
+
+  // Refs for infinite scroll
+  const pageRef = useRef(currentPage);
+  const loadingMoreRef = useRef(loadingMore);
+  const productsRef = useRef(products);
+  const totalRef = useRef(total);
+
+  // Update refs when state changes
+  useEffect(() => {
+    pageRef.current = currentPage;
+  }, [currentPage]);
+
+  useEffect(() => {
+    loadingMoreRef.current = loadingMore;
+  }, [loadingMore]);
+
+  useEffect(() => {
+    productsRef.current = products;
+  }, [products]);
+
+  useEffect(() => {
+    totalRef.current = total;
+  }, [total]);
 
   // State
   const [selectedFilters, setSelectedFilters] = useState({ priceRange: null });
   const [expandedFilters, setExpandedFilters] = useState({});
-  const [tempPriceRange, setTempPriceRange] = useState([0, 1000]);
+  const [tempPriceRange, setTempPriceRange] = useState([0, 10000]);
+
+  // ✅ GET DISPLAY PRICE RANGE (API OR FALLBACK)
+  const productPriceRange = useMemo(() => {
+    // Priority 1: Use API price range from Redux
+    if (apiPriceRange) {
+      return apiPriceRange;
+    }
+    
+    // Priority 2: Calculate from current products
+    if (products.length > 0) {
+      const prices = products
+        .map(p => {
+          if (p.priceRange) return p.priceRange;
+          if (p.salePrice) return p.salePrice;
+          if (p.price) {
+            if (typeof p.price === 'object' && p.price.current) {
+              return Number(p.price.current);
+            }
+            return Number(p.price);
+          }
+          return 0;
+        })
+        .filter(p => p > 0 && !isNaN(p));
+      
+      if (prices.length > 0) {
+        return {
+          min: Math.min(...prices),
+          max: Math.max(...prices)
+        };
+      }
+    }
+    
+    // Priority 3: Default values
+    return { min: 0, max: 10000 };
+  }, [apiPriceRange, products]);
+
+  // ✅ INITIALIZE TEMP PRICE RANGE FROM API/FALLBACK
+  useEffect(() => {
+    if (productPriceRange) {
+      setTempPriceRange([productPriceRange.min, productPriceRange.max]);
+    } else {
+      setTempPriceRange([0, 10000]);
+    }
+  }, [productPriceRange]);
+
+  // ✅ RESET TEMP PRICE RANGE WHEN PRICE FILTER IS CLEARED
+  useEffect(() => {
+    if (!selectedFilters.priceRange && productPriceRange) {
+      setTempPriceRange([productPriceRange.min, productPriceRange.max]);
+    }
+  }, [selectedFilters.priceRange, productPriceRange]);
 
   // Memoized values
-  const productPriceRange = useMemo(() => apiPriceRange, [apiPriceRange]);
-  
   const validFilters = useMemo(() => 
     (filters || []).filter(filter => filter.values?.length > 0),
     [filters]
@@ -230,6 +281,13 @@ const SearchPage = memo(({ params }) => {
     sort,
   }), [searchQuery, categoryTag, limit, selectedFilters, sort]);
 
+  // Build params for filters only
+  const buildFiltersParams = useCallback((overrideFilters = null) => ({
+    q: searchQuery,
+    categoryTag,
+    filters: overrideFilters || selectedFilters,
+  }), [searchQuery, categoryTag, selectedFilters]);
+
   const debouncedSearch = useCallback((params) => {
     clearTimeout(searchTimeoutRef.current);
     searchTimeoutRef.current = setTimeout(() => {
@@ -242,20 +300,13 @@ const SearchPage = memo(({ params }) => {
     dispatch(searchNewProducts(params));
   }, [dispatch]);
 
-  // Price range effects
-  useEffect(() => {
-    if (productPriceRange) {
-      setTempPriceRange([productPriceRange.min, productPriceRange.max]);
-    } else {
-      setTempPriceRange([0, 1000]);
-    }
-  }, [productPriceRange]);
-
-  useEffect(() => {
-    if (!selectedFilters.priceRange && productPriceRange) {
-      setTempPriceRange([productPriceRange.min, productPriceRange.max]);
-    }
-  }, [selectedFilters.priceRange, productPriceRange]);
+  // Debounced filters fetch
+  const debouncedFetchFilters = useCallback((params) => {
+    const filtersTimeout = setTimeout(() => {
+      dispatch(getFilters(params));
+    }, 200);
+    return () => clearTimeout(filtersTimeout);
+  }, [dispatch]);
 
   // Initialize selected filters
   useEffect(() => {
@@ -283,59 +334,90 @@ const SearchPage = memo(({ params }) => {
     }
   }, [validFilters]);
 
-  // Initial search
+  /* ---------- INITIAL SEARCH ---------- */
   useEffect(() => {
-    if (initialSearchDone.current) return;
+    const searchKey = `${searchQuery}-${categoryTag}`;
+    if (previousSearchRef.current !== searchKey) {
+      previousSearchRef.current = searchKey;
 
-    dispatch(resetFiltersLoaded());
-    const params = buildSearchParams(1);
-    
-    dispatch(searchNewProducts(params));
-    dispatch(getFilters({ q: searchQuery, categoryTag }));
-    
-    initialSearchDone.current = true;
-  }, [searchQuery, categoryTag, dispatch, buildSearchParams]);
+      // 🔥 CLEAR OLD DATA + SHOW LOADER
+      dispatch(clearProductsForNewSearch());
+      initialSearchDone.current = false;
+      clearTimeout(searchTimeoutRef.current);
 
-  // Sort change effect
+      dispatch(resetFiltersLoaded());
+      const params = buildSearchParams(1);
+      
+      dispatch(searchNewProducts(params));
+      dispatch(getFilters(buildFiltersParams()));
+      
+      initialSearchDone.current = true;
+    }
+  }, [searchQuery, categoryTag, dispatch, buildSearchParams, buildFiltersParams]);
+
+  /* ---------- FILTER / SORT CHANGE ---------- */
   useEffect(() => {
     if (!initialSearchDone.current) return;
-    
-    const productParams = buildSearchParams(1);
-    debouncedSearch(productParams);
-  }, [sort, debouncedSearch, buildSearchParams]);
+    if (currentSearch !== searchQuery) return; // Only update if we're on the correct search
 
-  // Infinite scroll with Intersection Observer
+    const productParams = buildSearchParams(1);
+    const filterParams = buildFiltersParams();
+
+    // Fetch products with debounce
+    debouncedSearch(productParams);
+
+    // Also update filters (and price range) based on current selection
+    debouncedFetchFilters(filterParams);
+  }, [
+    selectedFilters,
+    sort,
+    debouncedSearch,
+    debouncedFetchFilters,
+    initialSearchDone,
+    currentSearch,
+    searchQuery,
+    buildSearchParams,
+    buildFiltersParams,
+  ]);
+
+  /* ---------- INFINITE SCROLL ---------- */
   useEffect(() => {
-    if (loadingMore || products.length === 0 || products.length >= total) return;
-    
-    let observer;
-    const options = {
-      root: null,
-      rootMargin: '300px',
-      threshold: 0.1,
-    };
-    
-    const handleIntersection = (entries) => {
-      if (entries[0].isIntersecting) {
-        const nextPage = currentPage + 1;
-        const params = buildSearchParams(nextPage);
-        dispatch(loadMoreProducts(params));
+    const handleScroll = () => {
+      if (loadingMoreRef.current) return;
+      if (loading) return;
+
+      const currentProducts = productsRef.current;
+      const currentTotal = totalRef.current;
+
+      if (
+        currentProducts.length === 0 ||
+        currentProducts.length >= currentTotal
+      )
+        return;
+
+      const scrollTop = document.documentElement.scrollTop;
+      const scrollHeight = document.documentElement.scrollHeight;
+      const clientHeight = document.documentElement.clientHeight;
+
+      const isNearBottom = scrollTop + clientHeight >= scrollHeight - 300;
+
+      if (isNearBottom) {
+        const nextPage = pageRef.current + 1;
+
+        clearTimeout(searchTimeoutRef.current);
+        searchTimeoutRef.current = setTimeout(() => {
+          const params = buildSearchParams(nextPage);
+          dispatch(loadMoreProducts(params));
+        }, 200);
       }
     };
-    
-    observer = new IntersectionObserver(handleIntersection, options);
-    const sentinel = document.getElementById('scroll-sentinel');
-    
-    if (sentinel) {
-      observer.observe(sentinel);
-    }
-    
+
+    window.addEventListener("scroll", handleScroll);
     return () => {
-      if (observer && sentinel) {
-        observer.unobserve(sentinel);
-      }
+      window.removeEventListener("scroll", handleScroll);
+      clearTimeout(searchTimeoutRef.current);
     };
-  }, [loadingMore, products.length, total, currentPage, dispatch, buildSearchParams]);
+  }, [dispatch, loading, buildSearchParams]);
 
   // Event handlers
   const handleSort = useCallback((value) => {
@@ -349,12 +431,12 @@ const SearchPage = memo(({ params }) => {
     
     router.push(`?${newParams.toString()}`, { scroll: false });
 
-    if (initialSearchDone.current) {
+    if (initialSearchDone.current && currentSearch === searchQuery) {
       const params = buildSearchParams(1);
       params.sort = value;
       debouncedSearch(params);
     }
-  }, [searchParams, router, buildSearchParams, debouncedSearch]);
+  }, [searchParams, router, buildSearchParams, debouncedSearch, currentSearch, searchQuery]);
 
   const handleFilterChange = useCallback((name, value) => {
     setSelectedFilters(prev => {
@@ -386,6 +468,36 @@ const SearchPage = memo(({ params }) => {
       return newFilters;
     });
   }, [buildSearchParams, updateProducts]);
+
+  const handlePriceChange = useCallback((newRange) => {
+    const range = { min: newRange[0], max: newRange[1] };
+    const newFilters = {
+      ...selectedFilters,
+      priceRange: range,
+    };
+
+    setSelectedFilters(newFilters);
+
+    // Fetch products with new price range
+    updateProducts(buildSearchParams(1, newFilters));
+  }, [selectedFilters, buildSearchParams, updateProducts]);
+
+  const clearPriceFilter = useCallback(() => {
+    const newFilters = {
+      ...selectedFilters,
+      priceRange: null,
+    };
+
+    setSelectedFilters(newFilters);
+
+    // ✅ RESET TEMP PRICE RANGE TO CURRENT API/FALLBACK RANGE
+    if (productPriceRange) {
+      setTempPriceRange([productPriceRange.min, productPriceRange.max]);
+    }
+
+    // Fetch products with cleared price filter
+    updateProducts(buildSearchParams(1, newFilters));
+  }, [selectedFilters, productPriceRange, buildSearchParams, updateProducts]);
 
   const clearAllFilters = useCallback(() => {
     const clearedFilters = { priceRange: null };
@@ -445,11 +557,7 @@ const SearchPage = memo(({ params }) => {
             key: `price-${values.min}-${values.max}`,
             type: "price",
             value: `₹${values.min} – ₹${values.max}`,
-            onRemove: () => {
-              const newFilters = { ...selectedFilters, priceRange: null };
-              setSelectedFilters(newFilters);
-              updateProducts(buildSearchParams(1, newFilters));
-            },
+            onRemove: clearPriceFilter,
           });
         }
       } else if (Array.isArray(values) && values.length > 0) {
@@ -465,189 +573,172 @@ const SearchPage = memo(({ params }) => {
     });
     
     return tags;
-  }, [selectedFilters, productPriceRange, buildSearchParams, updateProducts, removeSelected]);
-
-  // LCP optimization: prioritize first 3 product cards
-  const productCards = useMemo(() => 
-    products.map((product, index) => (
-      <NewSingleProductCard 
-        key={product._id} 
-        product={product}
-        index={index}
-      />
-    )),
-    [products]
-  );
+  }, [selectedFilters, productPriceRange, clearPriceFilter, removeSelected]);
 
   return (
-    <>
-      {/* LCP Image Preload */}
-      <PreloadCriticalImages products={products} />
-      
-      <div className="min-h-screen bg-gray-100 pt-4">
-        <div className="max-w-[1600px] mx-auto flex">
-          {/* ---------------- LEFT FILTER ---------------- */}
-          <div className="hidden lg:block w-[240px] bg-gray-50 border border-gray-300 text-gray-600">
-            {/* HEADER */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-300 text-sm font-semibold text-gray-800">
-              <span>Filters</span>
-              {hasSelectedFilters && (
-                <button
-                  onClick={clearAllFilters}
-                  className="text-blue-600 text-xs font-medium hover:text-blue-700 transition-colors"
-                  aria-label="Clear all filters"
-                >
-                  CLEAR ALL
-                </button>
-              )}
+    <div className="min-h-screen bg-gray-100 pt-4">
+      <div className="max-w-[1600px] mx-auto flex">
+        {/* ---------------- LEFT FILTER ---------------- */}
+        <div className="hidden lg:block w-[240px] bg-gray-50 border border-gray-300 text-gray-600">
+          {/* HEADER */}
+          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-300 text-sm font-semibold text-gray-800">
+            <span>Filters</span>
+            {hasSelectedFilters && (
+              <button
+                onClick={clearAllFilters}
+                className="text-blue-600 text-xs font-medium"
+                aria-label="Clear all filters"
+              >
+                CLEAR ALL
+              </button>
+            )}
+          </div>
+
+          {/* Loading State */}
+          {loadingFilters && validFilters.length === 0 && (
+            <div className="px-4 py-3 border-b border-gray-200">
+              <div className="animate-pulse space-y-2">
+                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+                <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+              </div>
             </div>
+          )}
 
-            {/* Loading State */}
-            {loadingFilters && validFilters.length === 0 && (
-              <div className="px-4 py-3 border-b border-gray-200">
-                <div className="animate-pulse space-y-2">
-                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                  <div className="h-3 bg-gray-200 rounded w-3/4"></div>
-                  <div className="h-3 bg-gray-200 rounded w-2/3"></div>
-                </div>
-              </div>
-            )}
-
-            {/* SELECTED FILTERS */}
-            {hasSelectedFilters && shouldShowFilters && (
-              <div className="px-4 py-2 flex flex-wrap gap-2 border-b border-gray-300 bg-gray-100">
-                {selectedFilterTags.map(tag => (
-                  <SelectedFilterTag
-                    key={tag.key}
-                    type={tag.type}
-                    value={tag.value}
-                    onRemove={tag.onRemove}
-                  />
-                ))}
-              </div>
-            )}
-
-            {/* PRICE FILTER */}
-            {shouldShowPriceFilter && (
-              <div className="px-4 py-4 border-b border-gray-200">
-                <p className="text-xs font-semibold mb-2 text-gray-800">PRICE</p>
-                <div className="w-[85%] mx-auto">
-                  <PriceSlider
-                    value={tempPriceRange}
-                    min={productPriceRange.min}
-                    max={productPriceRange.max}
-                    onChange={(e, v) => setTempPriceRange(v)}
-                    onChangeCommitted={(e, v) => {
-                      const range = { min: v[0], max: v[1] };
-                      const newFilters = { ...selectedFilters, priceRange: range };
-                      setSelectedFilters(newFilters);
-                      updateProducts(buildSearchParams(1, newFilters));
-                    }}
-                    aria-label="Price range slider"
-                  />
-                  <div className="flex justify-between text-xs text-gray-600 mt-2">
-                    <span>₹{productPriceRange.min}</span>
-                    <span>₹{productPriceRange.max}</span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* DYNAMIC FILTERS */}
-            {shouldShowFilters && validFilters.length > 0 ? (
-              validFilters.map(filter => (
-                <FilterItem
-                  key={filter.name}
-                  filter={filter}
-                  expandedFilters={expandedFilters}
-                  selectedFilters={selectedFilters}
-                  onFilterChange={handleFilterChange}
-                  onToggleExpand={toggleFilterExpand}
+          {/* SELECTED FILTERS */}
+          {hasSelectedFilters && shouldShowFilters && (
+            <div className="px-4 py-2 flex flex-wrap gap-2 border-b border-gray-300 bg-gray-100">
+              {selectedFilterTags.map(tag => (
+                <SelectedFilterTag
+                  key={tag.key}
+                  type={tag.type}
+                  value={tag.value}
+                  onRemove={tag.onRemove}
                 />
-              ))
-            ) : shouldShowFilters && !loadingFilters && filters?.length === 0 ? (
-              <div className="px-4 py-4 text-sm text-gray-500 text-center">
-                No filters available
-              </div>
-            ) : null}
-          </div>
+              ))}
+            </div>
+          )}
 
-          {/* ---------------- PRODUCTS ---------------- */}
-          <div className="flex-1 px-4">
-            {/* Sort Bar */}
-            <div className="hidden lg:flex bg-white border border-gray-300 px-4 py-2 mb-3 items-center text-sm">
-              <div className="flex gap-3 flex-wrap">
-                {SORTS.map(s => {
-                  const isActive = sort === s.value;
-                  return (
-                    <button
-                      key={s.value}
-                      onClick={() => handleSort(s.value)}
-                      className={`px-3 py-1 rounded-full border transition-all duration-200 ${
-                        isActive
-                          ? "border-yellow-600 text-yellow-700 bg-yellow-50"
-                          : "border-yellow-600 text-gray-700 hover:bg-yellow-50"
-                      }`}
-                      aria-pressed={isActive}
-                    >
-                      {s.label}
-                    </button>
-                  );
-                })}
+          {/* PRICE FILTER */}
+          {shouldShowPriceFilter && (
+            <div className="px-4 py-4 border-b border-gray-200">
+              <p className="text-xs font-semibold mb-2 text-gray-800">PRICE</p>
+              <div className="w-[85%] mx-auto">
+                <PriceSlider
+                  value={tempPriceRange}
+                  min={productPriceRange.min}
+                  max={productPriceRange.max}
+                  onChange={(e, v) => setTempPriceRange(v)}
+                  onChangeCommitted={(e, v) => handlePriceChange(v)}
+                  aria-label="Price range slider"
+                />
+                <div className="flex justify-between text-xs text-gray-600 mt-2">
+                  <span>₹{productPriceRange.min}</span>
+                  <span>₹{productPriceRange.max}</span>
+                </div>
               </div>
             </div>
+          )}
 
-            {/* Products Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-              {productCards}
+          {/* DYNAMIC FILTERS */}
+          {shouldShowFilters && validFilters.length > 0 ? (
+            validFilters.map(filter => (
+              <FilterItem
+                key={filter.name}
+                filter={filter}
+                expandedFilters={expandedFilters}
+                selectedFilters={selectedFilters}
+                onFilterChange={handleFilterChange}
+                onToggleExpand={toggleFilterExpand}
+              />
+            ))
+          ) : shouldShowFilters && !loadingFilters && filters?.length === 0 ? (
+            <div className="px-4 py-4 text-sm text-gray-500 text-center">
+              No filters available
             </div>
-
-            {/* Loading Indicator */}
-            {loadingMore && (
-              <div className="flex justify-center my-8">
-                <div 
-                  className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"
-                  aria-label="Loading more products"
-                ></div>
-              </div>
-            )}
-
-            {/* Scroll Sentinel for Intersection Observer */}
-            <div id="scroll-sentinel" className="h-1" />
-
-            {/* END OF RESULTS */}
-            {products.length > 0 && products.length >= total && (
-              <div className="text-center py-8 text-gray-500" role="status">
-                You've reached the end
-              </div>
-            )}
-
-            {/* NO PRODUCTS FOUND */}
-            {products.length === 0 && !loadingMore && (
-              <div className="text-center py-12 text-gray-500" role="status">
-                No products found
-              </div>
-            )}
-          </div>
+          ) : null}
         </div>
 
-        {/* Mobile Filter */}
-        <NewFilter
-          filters={validFilters}
-          loadingFilters={loadingFilters}
-          selectedFilters={selectedFilters}
-          sort={sort}
-          productPriceRange={productPriceRange}
-          tempPriceRange={tempPriceRange}
-          onFilterChange={(newFilters) => {
-            setSelectedFilters(newFilters);
-            updateProducts(buildSearchParams(1, newFilters));
-          }}
-          onSortChange={handleSort}
-          onTempPriceRangeChange={setTempPriceRange}
-        />
+        {/* ---------------- PRODUCTS ---------------- */}
+        <div className="flex-1 px-4">
+          {/* Sort Bar */}
+          <div className="hidden lg:flex bg-white border border-gray-300 px-4 py-2 mb-3 items-center text-sm">
+            <div className="flex gap-3 flex-wrap">
+              {SORTS.map(s => {
+                const isActive = sort === s.value;
+                return (
+                  <button
+                    key={s.value}
+                    onClick={() => handleSort(s.value)}
+                    className={`px-3 py-1 rounded-full border transition-all duration-200 ${
+                      isActive
+                        ? "border-yellow-600 text-yellow-700 bg-yellow-50"
+                        : "border-yellow-600 text-gray-700 hover:bg-yellow-50"
+                    }`}
+                    aria-pressed={isActive}
+                  >
+                    {s.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* SHOW LOADING STATE WHEN SEARCH CHANGES */}
+          {loading && products.length === 0 && (
+            <ProductGridSkeleton count={limit || 20} />
+          )}
+
+          {/* PRODUCTS GRID - Only show when not loading or if we have products */}
+          {(!loading || products.length > 0) && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {products.map((p) => (
+                <NewSingleProductCard key={p._id} product={p} />
+              ))}
+            </div>
+          )}
+
+          {/* LOADING INDICATOR FOR LOAD MORE */}
+          {loadingMore && (
+            <div className="mt-6">
+              <ProductGridSkeleton count={5} />
+            </div>
+          )}
+
+          {/* END OF RESULTS */}
+          {products.length > 0 && products.length >= total && (
+            <div className="text-center py-8 text-gray-500" role="status">
+              You've reached the end
+            </div>
+          )}
+
+          {/* NO PRODUCTS FOUND */}
+          {hasFetchedOnce && !loading && products.length === 0 && (
+            <div className="text-center py-12 text-gray-500" role="status">
+              No products found
+            </div>
+          )}
+        </div>
       </div>
-    </>
+
+      {/* Mobile Filter */}
+      <NewFilter
+        filters={validFilters}
+        loadingFilters={loadingFilters}
+        selectedFilters={selectedFilters}
+        sort={sort}
+        productPriceRange={productPriceRange}
+        tempPriceRange={tempPriceRange}
+        onFilterChange={(newFilters) => {
+          setSelectedFilters(newFilters);
+          updateProducts(buildSearchParams(1, newFilters));
+        }}
+        onSortChange={handleSort}
+        onTempPriceRangeChange={setTempPriceRange}
+        onPriceChange={handlePriceChange}
+        onClearPriceFilter={clearPriceFilter}
+      />
+    </div>
   );
 });
 

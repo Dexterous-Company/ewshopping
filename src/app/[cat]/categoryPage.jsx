@@ -5,6 +5,7 @@ import {
   loadMoreCategoryProducts,
   getCategoryFilters,
   resetFiltersLoaded,
+  clearProductsForNewCategory, // Import new action
 } from "../../redux/serach/catProdactSlice";
 import React, {
   useEffect,
@@ -19,14 +20,18 @@ import NewSingleProductCard from "../../main_pages/ProductPages.jsx/NewSinglePro
 import { useSearchParams, useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { styled } from "@mui/material/styles";
+import ProductGridSkeleton from "../../components/ProductGridSkeleton";
 
 const Slider = dynamic(() => import("@mui/material/Slider"), {
   ssr: false,
 });
 
-const NewFilter = dynamic(() => import("../../components/searchMobile/NewFilter"), {
-  ssr: false,
-});
+const NewFilter = dynamic(
+  () => import("../../components/searchMobile/NewFilter"),
+  {
+    ssr: false,
+  }
+);
 
 /* ---------------- PRICE SLIDER STYLES ---------------- */
 const PriceSlider = styled(Slider)(() => ({
@@ -80,24 +85,51 @@ const SearchPage = ({ params }) => {
 
   const {
     products,
+    loading,
     total,
     filters,
-    priceRange: apiPriceRange, // ✅ GET PRICE RANGE FROM REDUX (DYNAMIC FROM API)
+    priceRange: apiPriceRange,
     loadingMore,
     loadingFilters,
     filtersLoaded,
     page: currentPage,
     limit,
+    hasFetchedOnce,
+    currentCategory, // Add current category tracking
   } = useSelector((state) => state.categoryProdact);
 
   const initialSearchDone = useRef(false);
   const searchTimeoutRef = useRef(null);
+  const previousCategoryRef = useRef(null);
+
+  // Refs for infinite scroll
+  const pageRef = useRef(currentPage);
+  const loadingMoreRef = useRef(loadingMore);
+  const productsRef = useRef(products);
+  const totalRef = useRef(total);
+
+  // Update refs when state changes
+  useEffect(() => {
+    pageRef.current = currentPage;
+  }, [currentPage]);
+
+  useEffect(() => {
+    loadingMoreRef.current = loadingMore;
+  }, [loadingMore]);
+
+  useEffect(() => {
+    productsRef.current = products;
+  }, [products]);
+
+  useEffect(() => {
+    totalRef.current = total;
+  }, [total]);
 
   const [selectedFilters, setSelectedFilters] = useState({
     priceRange: null,
   });
   const [expandedFilters, setExpandedFilters] = useState({});
-  const [tempPriceRange, setTempPriceRange] = useState([0, 1000]);
+  const [tempPriceRange, setTempPriceRange] = useState([0, 10000]);
 
   // ✅ GET DISPLAY PRICE RANGE (API OR FALLBACK)
   const productPriceRange = useMemo(() => {
@@ -105,36 +137,36 @@ const SearchPage = ({ params }) => {
     if (apiPriceRange) {
       return apiPriceRange;
     }
-    
+
     // Priority 2: Calculate from current products
     if (products.length > 0) {
       const prices = products
-        .map(p => {
+        .map((p) => {
           if (p.priceRange) return p.priceRange;
           if (p.salePrice) return Number(p.salePrice);
           if (p.price) {
             // Handle both number and object price formats
-            if (typeof p.price === 'object' && p.price.current) {
+            if (typeof p.price === "object" && p.price.current) {
               return Number(p.price.current);
             }
             return Number(p.price);
           }
           return 0;
         })
-        .filter(p => p > 0 && !isNaN(p));
-      
+        .filter((p) => p > 0 && !isNaN(p));
+
       if (prices.length > 0) {
         const minPrice = Math.min(...prices);
         const maxPrice = Math.max(...prices);
         return {
           min: Math.floor(minPrice),
-          max: Math.ceil(maxPrice)
+          max: Math.ceil(maxPrice),
         };
       }
     }
-    
+
     // Priority 3: Default values
-    return { min: 0, max: 1000 };
+    return { min: 0, max: 10000 };
   }, [apiPriceRange, products]);
 
   // ✅ INITIALIZE TEMP PRICE RANGE FROM API/FALLBACK
@@ -142,7 +174,7 @@ const SearchPage = ({ params }) => {
     if (productPriceRange) {
       setTempPriceRange([productPriceRange.min, productPriceRange.max]);
     } else {
-      setTempPriceRange([0, 1000]);
+      setTempPriceRange([0, 10000]);
     }
   }, [productPriceRange]);
 
@@ -218,63 +250,84 @@ const SearchPage = ({ params }) => {
 
   /* ---------- INITIAL SEARCH ---------- */
   useEffect(() => {
-    if (initialSearchDone.current) return;
+    if (previousCategoryRef.current !== category) {
+      previousCategoryRef.current = category;
 
-    dispatch(resetFiltersLoaded());
+      // 🔥 CLEAR OLD DATA + SHOW LOADER
+      dispatch(clearProductsForNewCategory());
+      initialSearchDone.current = false;
+      clearTimeout(searchTimeoutRef.current);
 
-    const params = buildSearchParams(1);
-    
-    // ✅ FETCH PRODUCTS FIRST
-    dispatch(CategoryProducts(params));
-    
-    // ✅ FETCH FILTERS (INCLUDING PRICE RANGE) ONLY ONCE
-    dispatch(getCategoryFilters({ category }));
+      dispatch(resetFiltersLoaded());
 
-    initialSearchDone.current = true;
+      const params = buildSearchParams(1);
+
+      // ✅ FETCH PRODUCTS FIRST
+      dispatch(CategoryProducts(params));
+
+      // ✅ FETCH FILTERS (INCLUDING PRICE RANGE) ONLY ONCE
+      dispatch(getCategoryFilters({ category }));
+
+      initialSearchDone.current = true;
+    }
   }, [category, dispatch, buildSearchParams]);
 
   /* ---------- SORT CHANGE ---------- */
   useEffect(() => {
     if (!initialSearchDone.current) return;
+    if (currentCategory !== category) return; // Only update if we're on the correct category
 
     const productParams = buildSearchParams(1);
     debouncedSearch(productParams);
-    
+
     // ✅ NO FILTER FETCHING ON SORT CHANGE
-  }, [sort, debouncedSearch, initialSearchDone, buildSearchParams]);
+  }, [
+    sort,
+    debouncedSearch,
+    initialSearchDone,
+    buildSearchParams,
+    currentCategory,
+    category,
+  ]);
 
   /* ---------- INFINITE SCROLL ---------- */
   useEffect(() => {
-    let ticking = false;
+    const handleScroll = () => {
+      if (loadingMoreRef.current) return;
+      if (loading) return;
 
-    const onScroll = () => {
-      if (ticking || loadingMore) return;
-      ticking = true;
+      const currentProducts = productsRef.current;
+      const currentTotal = totalRef.current;
 
-      requestAnimationFrame(() => {
-        if (
-          window.innerHeight + window.scrollY >=
-            document.body.offsetHeight - 300 &&
-          products.length < total
-        ) {
-          dispatch(
-            loadMoreCategoryProducts(buildSearchParams(currentPage + 1))
-          );
-        }
-        ticking = false;
-      });
+      if (
+        currentProducts.length === 0 ||
+        currentProducts.length >= currentTotal
+      )
+        return;
+
+      const scrollTop = document.documentElement.scrollTop;
+      const scrollHeight = document.documentElement.scrollHeight;
+      const clientHeight = document.documentElement.clientHeight;
+
+      const isNearBottom = scrollTop + clientHeight >= scrollHeight - 300;
+
+      if (isNearBottom) {
+        const nextPage = pageRef.current + 1;
+
+        clearTimeout(searchTimeoutRef.current);
+        searchTimeoutRef.current = setTimeout(() => {
+          const params = buildSearchParams(nextPage);
+          dispatch(loadMoreCategoryProducts(params));
+        }, 200);
+      }
     };
 
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, [
-    loadingMore,
-    products.length,
-    total,
-    currentPage,
-    dispatch,
-    buildSearchParams,
-  ]);
+    window.addEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      clearTimeout(searchTimeoutRef.current);
+    };
+  }, [dispatch, loading, buildSearchParams]);
 
   const handleSort = (value) => {
     const p = new URLSearchParams(searchParams.toString());
@@ -287,7 +340,7 @@ const SearchPage = ({ params }) => {
 
     router.push(`?${p.toString()}`, { scroll: false });
 
-    if (initialSearchDone.current) {
+    if (initialSearchDone.current && currentCategory === category) {
       const params = buildSearchParams(1);
       params.sort = value;
       debouncedSearch(params);
@@ -305,7 +358,6 @@ const SearchPage = ({ params }) => {
       };
 
       // ✅ UPDATE PRODUCTS IMMEDIATELY WITH NEW FILTERS
-      // ✅ NO FILTER FETCHING - FILTERS REMAIN STATIC
       const productParams = buildSearchParams(1, newFilters);
       updateProducts(productParams);
 
@@ -321,7 +373,6 @@ const SearchPage = ({ params }) => {
       };
 
       // ✅ UPDATE PRODUCTS IMMEDIATELY
-      // ✅ NO FILTER FETCHING
       const productParams = buildSearchParams(1, newFilters);
       updateProducts(productParams);
 
@@ -338,9 +389,8 @@ const SearchPage = ({ params }) => {
     };
 
     setSelectedFilters(newFilters);
-    
+
     // ✅ UPDATE PRODUCTS WITH NEW PRICE FILTER
-    // ✅ NO FILTER FETCHING
     const productParams = buildSearchParams(1, newFilters);
     updateProducts(productParams);
   };
@@ -382,14 +432,13 @@ const SearchPage = ({ params }) => {
     }
 
     setSelectedFilters(clearedFilters);
-    
+
     // ✅ RESET TEMP PRICE RANGE TO CURRENT API/FALLBACK RANGE
     if (productPriceRange) {
       setTempPriceRange([productPriceRange.min, productPriceRange.max]);
     }
 
     // ✅ FETCH PRODUCTS WITH CLEARED FILTERS
-    // ✅ NO FILTER FETCHING
     const productParams = buildSearchParams(1, clearedFilters);
     updateProducts(productParams);
   };
@@ -610,16 +659,24 @@ const SearchPage = ({ params }) => {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {products.map((p) => (
-              <NewSingleProductCard key={p._id} product={p} />
-            ))}
-          </div>
+          {/* SHOW LOADING STATE WHEN CATEGORY CHANGES */}
+          {loading && products.length === 0 && (
+            <ProductGridSkeleton count={limit || 20} />
+          )}
 
-          {/* LOADING INDICATOR */}
+          {/* PRODUCTS GRID - Only show when not loading or if we have products */}
+          {(!loading || products.length > 0) && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {products.map((p) => (
+                <NewSingleProductCard key={p._id} product={p} />
+              ))}
+            </div>
+          )}
+
+          {/* LOADING INDICATOR FOR LOAD MORE */}
           {loadingMore && (
-            <div className="flex justify-center my-8">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <div className="mt-6">
+              <ProductGridSkeleton count={5} />
             </div>
           )}
 
@@ -631,7 +688,7 @@ const SearchPage = ({ params }) => {
           )}
 
           {/* NO PRODUCTS FOUND */}
-          {products.length === 0 && !loadingMore && (
+          {hasFetchedOnce && !loading && products.length === 0 && (
             <div className="text-center py-12 text-gray-500">
               No products found
             </div>

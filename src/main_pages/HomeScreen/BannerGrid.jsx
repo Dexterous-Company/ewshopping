@@ -7,9 +7,7 @@ import { fetchCardPromotions } from "../../redux/header/cardPromotionSlice";
 import BannerGridSkeleton from "./BannerGridSkeleton";
 
 const BannerGrid = () => {
-  const {
-    cardPromotions = [],
-  } = useSelector((state) => state.cPromotion);
+  const { cardPromotions, status } = useSelector((state) => state.cPromotion);
 
   const allPromotions = [...cardPromotions, ...cardPromotions];
   const [isLoading, setIsLoading] = useState(true);
@@ -25,8 +23,10 @@ const BannerGrid = () => {
   };
 
   useEffect(() => {
-    dispatch(fetchCardPromotions());
-  }, [dispatch]);
+    if (status === "idle") {
+      dispatch(fetchCardPromotions());
+    }
+  }, [dispatch, status]);
 
   useEffect(() => {
     if (cardPromotions.length > 0) {
@@ -39,7 +39,10 @@ const BannerGrid = () => {
   }
 
   return (
-    <div className="relative px-2 overflow-x-auto overflow-y-hidden" ref={containerRef}>
+    <div
+      className="relative px-2 overflow-x-auto overflow-y-hidden"
+      ref={containerRef}
+    >
       <div className="block">
         <div className="flex flex-row gap-3 sm:gap-4 whitespace-nowrap">
           {allPromotions.map((promotion, index) => {

@@ -5,6 +5,7 @@ import {
   loadMoreSubCatProducts,
   getSubCatFilters,
   resetFiltersLoaded,
+  clearProductsForNewSubcat, // Import the new action
 } from "../../../redux/serach/subCatProdactSlice";
 import React, {
   useEffect,
@@ -20,7 +21,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import Slider from "@mui/material/Slider";
 import { styled } from "@mui/material/styles";
 import NewFilter from "../../../components/searchMobile/NewFilter";
-
+import ProductGridSkeleton from "../../../components/ProductGridSkeleton";
 
 const PriceSlider = styled(Slider)({
   color: "#2874f0",
@@ -70,24 +71,48 @@ const SearchPage = ({ params }) => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const sort = searchParams.get("sort") || "relevance";
-  const [showProducts, setshowProducts] = useState(false);
-
 
   const {
     products,
     loading,
     total,
     filters,
-    priceRange: apiPriceRange, // ✅ GET PRICE RANGE FROM REDUX (DYNAMIC FROM API)
+    priceRange: apiPriceRange,
     loadingMore,
     loadingFilters,
     filtersLoaded,
     page: currentPage,
     limit,
-  } = useSelector((state) => state.subCatProdact); // ✅ Changed selector
+    hasFetchedOnce,
+    currentSubcat, // Get current subcat from Redux
+  } = useSelector((state) => state.subCatProdact);
 
   const initialSearchDone = useRef(false);
   const searchTimeoutRef = useRef(null);
+  const previousSubcatRef = useRef(null);
+
+  // Refs for infinite scroll
+  const pageRef = useRef(currentPage);
+  const loadingMoreRef = useRef(loadingMore);
+  const productsRef = useRef(products);
+  const totalRef = useRef(total);
+
+  // Update refs when state changes
+  useEffect(() => {
+    pageRef.current = currentPage;
+  }, [currentPage]);
+
+  useEffect(() => {
+    loadingMoreRef.current = loadingMore;
+  }, [loadingMore]);
+
+  useEffect(() => {
+    productsRef.current = products;
+  }, [products]);
+
+  useEffect(() => {
+    totalRef.current = total;
+  }, [total]);
 
   const [selectedFilters, setSelectedFilters] = useState({
     priceRange: null,
@@ -95,14 +120,11 @@ const SearchPage = ({ params }) => {
   const [expandedFilters, setExpandedFilters] = useState({});
   const [tempPriceRange, setTempPriceRange] = useState([0, 10000]);
 
-  // ✅ GET DISPLAY PRICE RANGE (API OR FALLBACK)
   const productPriceRange = useMemo(() => {
-    // Priority 1: Use API price range from Redux
     if (apiPriceRange) {
       return apiPriceRange;
     }
 
-    // Priority 2: Calculate from current products
     if (products.length > 0) {
       const prices = products
         .map((p) => {
@@ -121,11 +143,9 @@ const SearchPage = ({ params }) => {
       }
     }
 
-    // Priority 3: Default values
     return { min: 0, max: 10000 };
   }, [apiPriceRange, products]);
 
-  // ✅ INITIALIZE TEMP PRICE RANGE FROM API/FALLBACK
   useEffect(() => {
     if (productPriceRange) {
       setTempPriceRange([productPriceRange.min, productPriceRange.max]);
@@ -134,7 +154,6 @@ const SearchPage = ({ params }) => {
     }
   }, [productPriceRange]);
 
-  // ✅ RESET TEMP PRICE RANGE WHEN PRICE FILTER IS CLEARED
   useEffect(() => {
     if (!selectedFilters.priceRange && productPriceRange) {
       setTempPriceRange([productPriceRange.min, productPriceRange.max]);
@@ -144,7 +163,6 @@ const SearchPage = ({ params }) => {
   const toggleFilterExpand = (name) =>
     setExpandedFilters((p) => ({ ...p, [name]: !p[name] }));
 
-  // Build params for products search
   const buildSearchParams = (page = 1, overrideFilters = null) => {
     const params = {
       subcat,
@@ -156,7 +174,6 @@ const SearchPage = ({ params }) => {
     return params;
   };
 
-  // Initialize selectedFilters based on filter names from API
   useEffect(() => {
     if (filters && filters.length > 0) {
       const filterNames = filters
@@ -184,7 +201,6 @@ const SearchPage = ({ params }) => {
     }
   }, [filters]);
 
-  // Debounced search for products (NO filter fetching)
   const debouncedSearch = useCallback(
     (params) => {
       clearTimeout(searchTimeoutRef.current);
@@ -195,7 +211,6 @@ const SearchPage = ({ params }) => {
     [dispatch]
   );
 
-  // Quick products update without debounce
   const updateProducts = useCallback(
     (params) => {
       clearTimeout(searchTimeoutRef.current);
@@ -204,42 +219,46 @@ const SearchPage = ({ params }) => {
     [dispatch]
   );
 
-  /* ---------- INITIAL SEARCH ---------- */
   useEffect(() => {
-  
-    if (initialSearchDone.current) return;
-setshowProducts(false);
-    dispatch(resetFiltersLoaded());
+    if (previousSubcatRef.current !== subcat) {
+      previousSubcatRef.current = subcat;
 
-    const params = buildSearchParams(1);
+      // 🔥 CLEAR OLD DATA + SHOW LOADER
+      dispatch(clearProductsForNewSubcat());
+      initialSearchDone.current = false;
+      clearTimeout(searchTimeoutRef.current);
 
-    // ✅ FETCH PRODUCTS FIRST
-    dispatch(SubCatProdact(params));
+      // 🔥 FIRST PAGE FETCH
+      dispatch(SubCatProdact(buildSearchParams(1)));
+      dispatch(getSubCatFilters({ subcat }));
 
-    // ✅ FETCH FILTERS (INCLUDING PRICE RANGE) ONLY ONCE
-    dispatch(getSubCatFilters({ subcat }));
-
-    initialSearchDone.current = true;
-   
-      setshowProducts(true);
-    
+      initialSearchDone.current = true;
+    }
   }, [subcat, dispatch]);
 
   /* ---------- SORT CHANGE ---------- */
   useEffect(() => {
     if (!initialSearchDone.current) return;
+    if (currentSubcat !== subcat) return; // Only update if we're on the correct subcat
 
     const productParams = buildSearchParams(1);
     debouncedSearch(productParams);
-
-    // ✅ NO FILTER FETCHING ON SORT CHANGE
-  }, [sort, debouncedSearch, initialSearchDone]);
+  }, [sort, debouncedSearch, initialSearchDone, currentSubcat, subcat]);
 
   /* ---------- INFINITE SCROLL ---------- */
   useEffect(() => {
     const handleScroll = () => {
-      if (loadingMore) return;
-      if (products.length === 0 || products.length >= total) return;
+      if (loadingMoreRef.current) return;
+      if (loading) return;
+
+      const currentProducts = productsRef.current;
+      const currentTotal = totalRef.current;
+
+      if (
+        currentProducts.length === 0 ||
+        currentProducts.length >= currentTotal
+      )
+        return;
 
       const scrollTop = document.documentElement.scrollTop;
       const scrollHeight = document.documentElement.scrollHeight;
@@ -248,23 +267,22 @@ setshowProducts(false);
       const isNearBottom = scrollTop + clientHeight >= scrollHeight - 300;
 
       if (isNearBottom) {
-        const nextPage = currentPage + 1;
-        const params = buildSearchParams(nextPage);
-        dispatch(loadMoreSubCatProducts(params));
+        const nextPage = pageRef.current + 1;
+
+        clearTimeout(searchTimeoutRef.current);
+        searchTimeoutRef.current = setTimeout(() => {
+          const params = buildSearchParams(nextPage);
+          dispatch(loadMoreSubCatProducts(params));
+        }, 200);
       }
     };
 
     window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [
-    loadingMore,
-    products.length,
-    total,
-    currentPage,
-    dispatch,
-    selectedFilters,
-    sort,
-  ]);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      clearTimeout(searchTimeoutRef.current);
+    };
+  }, [dispatch, loading]);
 
   const handleSort = (value) => {
     const p = new URLSearchParams(searchParams.toString());
@@ -277,7 +295,7 @@ setshowProducts(false);
 
     router.push(`?${p.toString()}`, { scroll: false });
 
-    if (initialSearchDone.current) {
+    if (initialSearchDone.current && currentSubcat === subcat) {
       const params = buildSearchParams(1);
       params.sort = value;
       debouncedSearch(params);
@@ -294,8 +312,6 @@ setshowProducts(false);
           : [...curr, value],
       };
 
-      // ✅ UPDATE PRODUCTS IMMEDIATELY WITH NEW FILTERS
-      // ✅ NO FILTER FETCHING - FILTERS REMAIN STATIC
       const productParams = buildSearchParams(1, newFilters);
       updateProducts(productParams);
 
@@ -310,8 +326,6 @@ setshowProducts(false);
         [name]: prev[name]?.filter((v) => v !== value),
       };
 
-      // ✅ UPDATE PRODUCTS IMMEDIATELY
-      // ✅ NO FILTER FETCHING
       const productParams = buildSearchParams(1, newFilters);
       updateProducts(productParams);
 
@@ -319,7 +333,6 @@ setshowProducts(false);
     });
   };
 
-  // ✅ PRICE FILTER CHANGE HANDLER
   const handlePriceChange = (newRange) => {
     const range = { min: newRange[0], max: newRange[1] };
     const newFilters = {
@@ -329,13 +342,10 @@ setshowProducts(false);
 
     setSelectedFilters(newFilters);
 
-    // ✅ UPDATE PRODUCTS WITH NEW PRICE FILTER
-    // ✅ NO FILTER FETCHING
     const productParams = buildSearchParams(1, newFilters);
     updateProducts(productParams);
   };
 
-  // ✅ CLEAR PRICE FILTER
   const clearPriceFilter = () => {
     const newFilters = {
       ...selectedFilters,
@@ -344,12 +354,10 @@ setshowProducts(false);
 
     setSelectedFilters(newFilters);
 
-    // ✅ RESET TEMP PRICE RANGE TO CURRENT API/FALLBACK RANGE
     if (productPriceRange) {
       setTempPriceRange([productPriceRange.min, productPriceRange.max]);
     }
 
-    // ✅ UPDATE PRODUCTS
     const productParams = buildSearchParams(1, newFilters);
     updateProducts(productParams);
   };
@@ -373,18 +381,14 @@ setshowProducts(false);
 
     setSelectedFilters(clearedFilters);
 
-    // ✅ RESET TEMP PRICE RANGE TO CURRENT API/FALLBACK RANGE
     if (productPriceRange) {
       setTempPriceRange([productPriceRange.min, productPriceRange.max]);
     }
 
-    // ✅ FETCH PRODUCTS WITH CLEARED FILTERS
-    // ✅ NO FILTER FETCHING
     const productParams = buildSearchParams(1, clearedFilters);
     updateProducts(productParams);
   };
 
-  /* ---------- Calculate hasSelectedFilters ---------- */
   const hasSelectedFilters = Object.entries(selectedFilters).some(
     ([key, value]) => {
       if (key === "priceRange") {
@@ -399,14 +403,12 @@ setshowProducts(false);
     }
   );
 
-  // Filter out empty filter values
   const validFilters = useMemo(() => {
     return (filters || []).filter(
       (filter) => filter.values && filter.values.length > 0
     );
   }, [filters]);
 
-  // Show filters only when they're loaded or loading
   const shouldShowFilters = filtersLoaded || loadingFilters;
 
   return (
@@ -570,7 +572,6 @@ setshowProducts(false);
         </div>
 
         {/* ---------------- PRODUCTS ---------------- */}
-        {showProducts && (
         <div className="flex-1 px-4">
           <div className="hidden lg:flex bg-white border border-gray-300 px-4 py-2 mb-3 items-center text-sm">
             <div className="flex gap-3 flex-wrap">
@@ -593,16 +594,24 @@ setshowProducts(false);
             </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {products.map((p) => (
-              <NewSingleProductCard key={p._id} product={p} />
-            ))}
-          </div>
+          {/* SHOW LOADING STATE WHEN SUBCAT CHANGES */}
+          {loading && products.length === 0 && (
+            <ProductGridSkeleton count={limit || 20} />
+          )}
 
-          {/* LOADING INDICATOR */}
+          {/* PRODUCTS GRID - Only show when not loading or if we have products */}
+          {(!loading || products.length > 0) && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {products.map((p) => (
+                <NewSingleProductCard key={p._id} product={p} />
+              ))}
+            </div>
+          )}
+
+          {/* LOADING INDICATOR FOR LOAD MORE */}
           {loadingMore && (
-            <div className="flex justify-center my-8">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <div className="mt-6">
+              <ProductGridSkeleton count={5} />
             </div>
           )}
 
@@ -614,12 +623,12 @@ setshowProducts(false);
           )}
 
           {/* NO PRODUCTS FOUND */}
-          {products.length === 0 && !loading && (
+          {hasFetchedOnce && !loading && products.length === 0 && (
             <div className="text-center py-12 text-gray-500">
               No products found
             </div>
           )}
-        </div>)}
+        </div>
       </div>
 
       {/* Mobile Filter */}

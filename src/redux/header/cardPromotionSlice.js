@@ -1,55 +1,34 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
-const Baseurl = process.env.NEXT_PUBLIC_API_URL;
 
-// Cache duration in milliseconds (e.g., 1 hour)
-const CACHE_DURATION = 60 * 60 * 1000;
+const Baseurl = process.env.NEXT_PUBLIC_API_URL1;
+const STORAGE_KEY = "card_promotions_cache";
+
+// 🔹 Load from localStorage (FIRST RENDER)
+const loadFromStorage = () => {
+  if (typeof window === "undefined") return [];
+  try {
+    const cached = localStorage.getItem(STORAGE_KEY);
+    return cached ? JSON.parse(cached) : [];
+  } catch {
+    return [];
+  }
+};
 
 const initialState = {
-  cardPromotions: [],
+  cardPromotions: loadFromStorage(), // 👈 instant UI
   status: "idle",
   error: null,
-  lastUpdated: null,
 };
 
 export const fetchCardPromotions = createAsyncThunk(
   "cPromotion/fetchCardPromotions",
   async (_, thunkAPI) => {
     try {
-      // Check if we have cached data and it's still fresh
-      const cachedData = typeof window !== "undefined" && localStorage.getItem("cardPromotions");
-      const now = Date.now();
-      
-      if (cachedData) {
-        const { data, timestamp } = JSON.parse(cachedData);
-        if (now - timestamp < CACHE_DURATION) {
-          return data;
-        }
-      }
-
-      // Fetch fresh data if cache is expired or doesn't exist
       const url = `${Baseurl}/api/v1/cardPromotion/cardPromotion`;
       const response = await axios.get(url);
-      const freshData = response.data.cardPromotions;
-      
-      // Update cache with fresh data
-      if (typeof window !== "undefined") {
-        localStorage.setItem("cardPromotions", JSON.stringify({
-          data: freshData,
-          timestamp: now
-        }));
-      }
-      
-      return freshData;
+      return response.data.cardPromotions;
     } catch (error) {
-      // Fallback to cached data if available
-      const cachedData = typeof window !== "undefined" && localStorage.getItem("cardPromotions");
-      if (cachedData) {
-        const { data } = JSON.parse(cachedData);
-        return data;
-      }
-      
-      console.error(error);
       return thunkAPI.rejectWithValue(
         error.response?.data?.message || error.message
       );
@@ -58,16 +37,17 @@ export const fetchCardPromotions = createAsyncThunk(
 );
 
 export const cardPromotionSlice = createSlice({
-  name: "cardPromotion",
+  name: "cPromotion",
   initialState,
   reducers: {
     resetCardPromotions: (state) => {
       state.cardPromotions = [];
-      state.lastUpdated = null;
+      state.status = "idle";
+      state.error = null;
+      if (typeof window !== "undefined") {
+        localStorage.removeItem(STORAGE_KEY);
+      }
     },
-    forceRefreshCardPromotions: (state) => {
-      state.lastUpdated = null;
-    }
   },
   extraReducers: (builder) => {
     builder
@@ -77,7 +57,18 @@ export const cardPromotionSlice = createSlice({
       .addCase(fetchCardPromotions.fulfilled, (state, action) => {
         state.status = "succeeded";
         state.cardPromotions = action.payload;
-        state.lastUpdated = Date.now();
+
+        // 🔥 SAVE AFTER 10 SECONDS (ONLY ON PAGE REFRESH)
+        setTimeout(() => {
+          try {
+            localStorage.setItem(
+              STORAGE_KEY,
+              JSON.stringify(action.payload)
+            );
+          } catch (e) {
+            console.warn("Card promotions LS save failed", e);
+          }
+        }, 10000);
       })
       .addCase(fetchCardPromotions.rejected, (state, action) => {
         state.status = "failed";
@@ -86,5 +77,5 @@ export const cardPromotionSlice = createSlice({
   },
 });
 
-export const { resetCardPromotions, forceRefreshCardPromotions } = cardPromotionSlice.actions;
+export const { resetCardPromotions } = cardPromotionSlice.actions;
 export default cardPromotionSlice.reducer;
