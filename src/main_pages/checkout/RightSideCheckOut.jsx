@@ -3,53 +3,128 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { FaAngleDown, FaAngleUp } from "react-icons/fa";
-import { getCartData } from "../../redux/cart/CartSlice";
+import { 
+  getCartTotal, // Add this import
+  removeCoupon, 
+  clearCouponError,
+  // fetchCouponByCode,
+  hydrateAllData 
+} from "../../redux/cart/CartSlice";
+import toast from "react-hot-toast";
 
 const RightSideCheckOut = () => {
   const [priceDetails, setPriceDetails] = useState(true);
+  const [couponInput, setCouponInput] = useState("");
   const router = useRouter();
   const dispatch = useDispatch();
 
+  // Get all cart state including coupon data
   const {
     CartItems,
     DeliveryCharge,
     SmallCartFee,
     RainFee,
     HandlingFee,
-    wallet,
     coupon,
+    couponData,
+    couponError,
+    couponLoading,
+    appliedCouponCode,
     amountToGetfeeDelivery,
+    TotalMrp,
+    TotalPrice,
+    TotalAmount,
+    Netpayable,
+    all_amount_data // Add this
   } = useSelector((state) => state.cart);
 
   useEffect(() => {
-    dispatch(getCartData());
+    // Hydrate all data including cart and coupon
+    dispatch(hydrateAllData());
+    // Recalculate totals
+    dispatch(getCartTotal());
   }, [dispatch]);
 
-  const TotalMrp = CartItems.reduce(
+  // Parse all_amount_data for savings
+  const amountData = all_amount_data ? JSON.parse(all_amount_data) : null;
+  const totalSavingsFromData = amountData?.totalSavings || 0;
+
+  // Handle coupon application
+  const handleApplyCoupon = async () => {
+    if (!couponInput.trim()) {
+      toast.error("Please enter a coupon code");
+      return;
+    }
+
+    const couponCode = couponInput.trim().toUpperCase();
+    
+    if (appliedCouponCode === couponCode) {
+      toast.info("This coupon is already applied");
+      return;
+    }
+    
+    try {
+      const result = await dispatch(fetchCouponByCode(couponCode));
+      
+      if (result.meta.requestStatus === 'fulfilled') {
+        setCouponInput("");
+      }
+    } catch (error) {
+      console.error("Error applying coupon:", error);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    dispatch(removeCoupon());
+    setCouponInput("");
+    dispatch(clearCouponError());
+  };
+
+  // Calculate values based on current state
+  const calculatedTotalMrp = CartItems.reduce(
     (total, item) => total + (item.Product_total_Mrp || 0),
     0
   );
-  const TotalPrice = CartItems.reduce(
+  const calculatedTotalPrice = CartItems.reduce(
     (total, item) => total + (item.Product_total_Price || 0),
     0
   );
-  const discountAmount = Math.max(TotalMrp - TotalPrice, 0);
+  
+  // Use state values when available, fallback to calculated
+  const displayTotalMrp = TotalMrp || calculatedTotalMrp;
+  const displayTotalPrice = TotalPrice || calculatedTotalPrice;
+  
+  // Discount on MRP
+  const discountOnMrp = Math.max(displayTotalMrp - displayTotalPrice, 0);
+  
+  // Coupon discount
   const couponDiscount = coupon || 0;
-  const totalSavings = discountAmount + couponDiscount;
+  
+  // Check if coupon provides free delivery
+  const isFreeDeliveryFromCoupon = couponData?.freeDelivery || false;
+  
+  // Calculate delivery savings (if delivery is free when it would normally cost ₹40)
+  const deliverySavings = (displayTotalPrice < 500 && DeliveryCharge === 0) ? 40 : 0;
+  
+  // Calculate total savings - MATCHING YOUR IMAGE LOGIC
+  const totalSavings = discountOnMrp + couponDiscount + deliverySavings;
+  
+  // Calculate amount needed for free delivery
+  const amountNeededForFreeDelivery = amountToGetfeeDelivery || 
+    (displayTotalPrice < 500 ? Math.max(0, 500 - displayTotalPrice) : 0);
 
-  const calculatedTotalAmount =
-    TotalPrice +
-    (DeliveryCharge || 0) +
-    (SmallCartFee || 0) +
-    (RainFee || 0) +
-    (HandlingFee || 0) -
-    couponDiscount -
-    (wallet || 0);
-
-  const calculatedNetPayable = Math.max(calculatedTotalAmount, 0);
+  // Calculate subtotal before coupon (for display)
+  const subtotalBeforeCoupon = displayTotalPrice + DeliveryCharge + RainFee + HandlingFee + SmallCartFee;
+  
+  // Get final amounts from state
+  const finalTotalAmount = TotalAmount || subtotalBeforeCoupon;
+  const finalNetPayable = Netpayable || (subtotalBeforeCoupon - couponDiscount);
 
   return (
     <div className="bg-white w-full px-3 py-3 rounded-sm">
+      {/* Coupon Section (keep as is) */}
+
+
       {/* Price Details Header */}
       <div
         className="flex justify-between items-center cursor-pointer"
@@ -66,134 +141,135 @@ const RightSideCheckOut = () => {
           <div className="grid grid-cols-2">
             <span>Total MRP</span>
             <span className="flex justify-end">
-              ₹{TotalMrp.toLocaleString()}
+              {displayTotalMrp.toLocaleString()}
             </span>
           </div>
 
           <div className="grid grid-cols-2">
             <span>Total Price</span>
             <span className="flex justify-end">
-              ₹{TotalPrice.toLocaleString()}
+              {displayTotalPrice.toLocaleString()}
             </span>
           </div>
 
           <div className="grid grid-cols-2">
-            <span>Discount</span>
+            <span>Discount on MRP</span>
             <span className="flex justify-end text-green-600">
-              -₹{discountAmount.toLocaleString()}
+              -{discountOnMrp.toLocaleString()}
             </span>
           </div>
 
-          <div className="grid grid-cols-2">
-            <span>Coupon</span>
-            <span
-              className={`flex justify-end ${
-                couponDiscount > 0 ? "text-green-600" : "text-gray-400"
-              }`}
-            >
-              {couponDiscount > 0
-                ? `-₹${couponDiscount.toLocaleString()}`
-                : "Not Available"}
-            </span>
-          </div>
-
-          {wallet > 0 && (
+          {/* Show coupon discount if applied */}
+          {couponDiscount > 0 && (
             <div className="grid grid-cols-2">
-              <span>Wallet Balance</span>
+              <span>Coupon Discount ({appliedCouponCode})</span>
               <span className="flex justify-end text-green-600">
-                -₹{wallet.toLocaleString()}
+                -{couponDiscount.toLocaleString()}
               </span>
             </div>
           )}
 
-          {DeliveryCharge > 0 && (
-            <div className="grid grid-cols-2">
-              <span>Delivery Charge</span>
-              <span className="flex justify-end">
-                ₹{DeliveryCharge.toLocaleString()}
-              </span>
-            </div>
-          )}
+          {/* Delivery Charge - MATCHING YOUR IMAGE FORMAT */}
+          <div className="grid grid-cols-2">
+            <span>Delivery Charge</span>
+            <span className={`flex justify-end ${DeliveryCharge === 0 ? "text-green-600" : ""}`}>
+              {DeliveryCharge === 0 ? "FREE" : `${DeliveryCharge.toLocaleString()}`}
+              {DeliveryCharge > 0 && !isFreeDeliveryFromCoupon && (
+                <span className="text-xs text-gray-500 ml-1">
+                
+                </span>
+              )}
+            </span>
+          </div>
+
+          {/* Show other fees if they exist */}
           {SmallCartFee > 0 && (
             <div className="grid grid-cols-2">
               <span>Small Cart Fee</span>
               <span className="flex justify-end">
-                ₹{SmallCartFee.toLocaleString()}
-              </span>
+                {SmallCartFee.toLocaleString()}
+            </span>
             </div>
           )}
           {RainFee > 0 && (
             <div className="grid grid-cols-2">
               <span>Rain Protection Fee</span>
               <span className="flex justify-end">
-                ₹{RainFee.toLocaleString()}
-              </span>
+                {RainFee.toLocaleString()}
+            </span>
             </div>
           )}
           {HandlingFee > 0 && (
             <div className="grid grid-cols-2">
               <span>Handling Fee</span>
               <span className="flex justify-end">
-                ₹{HandlingFee.toLocaleString()}
+                {HandlingFee.toLocaleString()}
               </span>
             </div>
           )}
 
-          <div className="grid grid-cols-2 text-green-600">
-            <span>You Saved</span>
+          {/* Show Total Amount (after all charges, before coupon) - MATCHING YOUR IMAGE */}
+          <div className="grid grid-cols-2 font-semibold border-t pt-2 mt-2">
+            <span>Total Amount</span>
             <span className="flex justify-end">
-              ₹{totalSavings.toLocaleString()}
+              {subtotalBeforeCoupon.toLocaleString()}
+            </span>
+          </div>
+
+          {/* Show Net Payable (after coupon) - MATCHING YOUR IMAGE */}
+          <div className="grid grid-cols-2 font-bold text-lg border-t pt-2">
+            <span>Net Payable</span>
+            <span className="flex justify-end text-[#143741]">
+              {finalNetPayable.toLocaleString()}
+            </span>
+          </div>
+
+          {/* Show Total Savings - MATCHING YOUR IMAGE */}
+          <div className="grid grid-cols-2 text-green-600 pt-2 border-t">
+            <span>Total Savings</span>
+            <span className="flex justify-end">
+              {totalSavingsFromData || totalSavings.toLocaleString()}
             </span>
           </div>
         </div>
       )}
 
+      {/* This should show Net Payable, not Total Amount - MATCHING YOUR IMAGE */}
       <div className="grid grid-cols-2 my-4 py-2 border-b border-gray-200">
-        <span className="text-sm sm:text-lg font-semibold">Total Amount</span>
+        <span className="text-sm sm:text-lg font-semibold">Net Payable</span> {/* Changed from Total Amount */}
         <span className="flex justify-end font-semibold text-lg">
-          ₹{calculatedTotalAmount.toLocaleString()}
+          {finalNetPayable.toLocaleString()}
         </span>
       </div>
 
-      {calculatedNetPayable !== calculatedTotalAmount && (
-        <div className="grid grid-cols-2 my-2">
-          <span className="font-semibold">Net Payable</span>
-          <span className="flex justify-end font-semibold">
-            ₹{calculatedNetPayable.toLocaleString()}
-          </span>
-        </div>
-      )}
-
-      {DeliveryCharge > 0 && amountToGetfeeDelivery > 0 && (
-        <div className="text-center mb-4 text-sm text-gray-600">
-          Add ₹{amountToGetfeeDelivery.toLocaleString()} more for free shipping
-        </div>
-      )}
-
-      {/* <div className="hidden lg:block mt-4">
-        <button
-          onClick={() => router.push("/checkout")}
-          className="w-full py-3 bg-[#143741] hover:bg-[#0e2a33] text-white rounded-sm transition-colors"
-        >
-          Proceed To Checkout
-        </button>
-      </div> */}
-
+      {/* Mobile Bottom Bar */}
       <div className="lg:hidden fixed bottom-0 left-0 z-[100] px-4 right-0 bg-white border-t border-gray-200 p-2">
         <div className="flex justify-between items-center px-7 py-2">
-            <div className="text-xs">Total Amount</div>
+          <div className="text-xs">Net Payable</div>
           <div>
             <div className="font-semibold text-sm">
-              ₹{calculatedNetPayable.toLocaleString()}
+              {finalNetPayable.toLocaleString()}
             </div>
           </div>
-          {/* <buttonk
-            onClick={() => router.push("/checkout")}
-            className="px-7 py-2 bg-[#143741] hover:bg-[#0e2a33] text-white text-sm transition-colors"
-          >
-            Place Order
-          </buttonk> */}
         </div>
+        
+        <button
+          onClick={() => {
+            if (CartItems.length === 0) {
+              toast.error("Your cart is empty");
+              return;
+            }
+            router.push("/checkout");
+          }}
+          className={`w-full py-3 rounded-sm font-semibold text-white transition-colors ${
+            CartItems.length === 0
+              ? "bg-gray-300 cursor-not-allowed"
+              : "bg-[#143741] hover:bg-[#0e2a33]"
+          }`}
+          disabled={CartItems.length === 0}
+        >
+          {CartItems.length === 0 ? "Cart is Empty" : "Checkout"}
+        </button>
       </div>
     </div>
   );

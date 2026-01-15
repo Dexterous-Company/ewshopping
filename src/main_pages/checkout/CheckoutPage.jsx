@@ -7,7 +7,8 @@ import PaymentOptions from "./PaymentOptionsCheckOut";
 import { useSelector } from "react-redux";
 import CheckOutAddress from "./CheckoutAddress";
 import { motion, AnimatePresence } from "framer-motion";
-import useCartPriceUpdater from "../../hooks/useCartPriceUpdater"; // Adjust path as needed
+import useCartPriceUpdater from "../../hooks/useCartPriceUpdater";
+import CouponSection from "./CouponSection"; // Import the new coupon component
 
 const CheckoutPage = () => {
   const { isAuth } = useSelector((store) => store.Athentication);
@@ -18,7 +19,7 @@ const CheckoutPage = () => {
   
   const updateCartPrices = useCartPriceUpdater();
 
-  // Update prices when component mounts and when cart items change
+  // Update prices when component mounts
   useEffect(() => {
     const updatePrices = async () => {
       if (CartItems && CartItems.length > 0) {
@@ -34,7 +35,7 @@ const CheckoutPage = () => {
             });
             
             if (priceChanges.length > 0) {
-            
+              // Optional: Show notification about price changes
             }
           }
         } catch (error) {
@@ -48,7 +49,7 @@ const CheckoutPage = () => {
     updatePrices();
   }, []); // Run once when component mounts
 
-  // Define the 4-step progression with price update status
+  // Define the 4-step progression
   const steps = [
     {
       step: 1,
@@ -228,6 +229,16 @@ const CheckoutPage = () => {
           {/* Right section - Sticky sidebar */}
           <div className="w-full lg:w-1/3 lg:min-w-[350px]">
             <div className="space-y-4 sm:space-y-6">
+              {/* Coupon Section - Now separate and before Order Summary */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.4, delay: 0.1 }}
+                className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden"
+              >
+                <CouponSection />
+              </motion.div>
+
               {/* Order Summary Card */}
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
@@ -272,7 +283,6 @@ const CheckoutPage = () => {
                   </div>
                 </div>
               </motion.div>
-
             </div>
           </div>
         </div>
