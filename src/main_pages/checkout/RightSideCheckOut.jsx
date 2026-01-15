@@ -242,35 +242,7 @@ const RightSideCheckOut = () => {
         </span>
       </div>
 
-      {/* Mobile Bottom Bar */}
-      <div className="lg:hidden fixed bottom-0 left-0 z-[100] px-4 right-0 bg-white border-t border-gray-200 p-2">
-        <div className="flex justify-between items-center px-7 py-2">
-          <div className="text-xs">Net Payable</div>
-          <div>
-            <div className="font-semibold text-sm">
-              {finalNetPayable.toLocaleString()}
-            </div>
-          </div>
-        </div>
-        
-        <button
-          onClick={() => {
-            if (CartItems.length === 0) {
-              toast.error("Your cart is empty");
-              return;
-            }
-            router.push("/checkout");
-          }}
-          className={`w-full py-3 rounded-sm font-semibold text-white transition-colors ${
-            CartItems.length === 0
-              ? "bg-gray-300 cursor-not-allowed"
-              : "bg-[#143741] hover:bg-[#0e2a33]"
-          }`}
-          disabled={CartItems.length === 0}
-        >
-          {CartItems.length === 0 ? "Cart is Empty" : "Checkout"}
-        </button>
-      </div>
+    
     </div>
   );
 };
